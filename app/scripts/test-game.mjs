@@ -1,0 +1,137 @@
+import{introFrame,INTRO_DURATION,COUNTDOWN_DURATION}from'../public/intro.js';
+import assert from 'node:assert/strict';import{readFileSync}from'node:fs';import*as g from '../src/logic.js';import{createPath}from'../public/route.js';import{copy}from'../public/copy.js';
+let checks=0;const check=(name,f)=>{f();console.log('PASS',name);checks++;};const start=(seed=123,mode='classic')=>g.applyAction(g.setup(['p']),'p',{type:'start',seed,mode,route:'summit'});const action=(s,a)=>g.applyAction(s,'p',a);
+check('six pure exports and single-player contract',()=>{assert.deepEqual(Object.keys(g).sort(),['meta','setup','applyAction','validateAction','isGameOver','viewFor'].sort());assert.equal(g.meta.maxPlayers,1);});
+check('input validation rejects spectators, time skips, invalid values and old modes',()=>{const s=start();for(const a of[null,[],{},{type:'steer',lane:3},{type:'steer',lane:NaN},{type:'step',ticks:50},{type:'bank'},{type:'turn',direction:1}])assert.equal(g.validateAction(s,'p',a).ok,false);assert.equal(g.validateAction(s,'other',{type:'step'}).ok,false);assert.equal(g.validateAction(g.setup(['p']),'p',{type:'start',seed:1,mode:'classic',route:'journey'}).ok,false);});
+check('deterministic, immutable simulation and copied public views',()=>{const s=start();const old=JSON.stringify(s);assert.deepEqual(action(s,{type:'step'}),action(s,{type:'step'}));assert.equal(JSON.stringify(s),old);const v=g.viewFor(s,'spectator');assert(v.spectator);assert.notEqual(v.objects,s.objects);});
+function collision(kind,{jump=0,duck=0,lane=1,approach=0}={}){let s={...start(),distance:100,nextRow:10000,x:1,target:1,jump,duck,objects:[{id:1,kind,lane,d:100.9,approach}]};return action(s,{type:'step'});}
+check('small coins score and count; approaching objects collide in relative motion',()=>{assert.equal(collision('coin',{approach:6}).coins,1);assert.equal(collision('bike',{approach:6}).lives,2);assert.equal(collision('bike',{lane:0,approach:6}).lives,3);});
+check('jump and slide have distinct collision semantics',()=>{for(const kind of['iceBlock','log','barrier','crevasse'])assert.equal(collision(kind,{jump:10,approach:6}).lives,3);assert.equal(collision('iceArch',{duck:10,approach:6}).lives,3);assert.equal(collision('iceArch',{jump:10,approach:6}).lives,2);assert.equal(collision('sheep',{jump:10,approach:6}).lives,2);});
+check('jump buffer and landing emit the matching audio events',()=>{let s={...start(),jump:3};s=action(s,{type:'duck'});assert.equal(s.queued,'duck');for(let i=0;i<3;i++)s=action(s,{type:'step'});assert.equal(s.duck,16);assert(s.events.some(e=>e.kind==='land'));assert(s.events.some(e=>e.kind==='duck'));});
+check('turns share exact path schedule and missed turns cost a life',()=>{let s={...start(),distance:259.8,nextRow:10000};const path=createPath(s.seed);assert(Math.hypot(path.frame(260).x-path.frame(259.999).x,path.frame(260).z-path.frame(259.999).z)<.001);let right=action(s,{type:'turn',direction:path.direction(0)});right=action(right,{type:'step'});assert.equal(right.turns,1);assert.equal(right.nextTurn,940);assert.equal(action(s,{type:'step'}).lives,2);});
+check('summit is won after exactly 15 active minutes, with no further steps',()=>{const s={...start(),tick:17999,elapsed:899.95,distance:100,nextTurn:10000,nextRow:10000,checkpoints:7};const out=action(s,{type:'step'});assert.equal(out.elapsed,900);assert.equal(out.phase,'won');assert.equal(g.isGameOver(out).over,true);assert.equal(g.isGameOver(out).winner,'p');assert(out.events.some(e=>e.kind==='summit'));assert(out.score>=2000);assert.equal(action(out,{type:'step'}),out);});
+check('all five locales have complete UI keys and no obsolete theme',()=>{assert.deepEqual(Object.keys(copy),['en','de','fr','ja','zh']);for(const l of Object.values(copy)){assert.deepEqual(Object.keys(l).sort(),Object.keys(copy.en).sort());assert(Object.values(l).every(v=>typeof v==='string'&&v.length));assert(!/onsen|wellness|ab ins spa/i.test(JSON.stringify(l)));}});
+function bot(seed,seconds=1260){let s=start(seed,'relaxed');while(s.phase==='playing'&&s.elapsed<seconds){if(s.nextTurn-s.distance<s.speed*1.3)s=action(s,{type:'turn',direction:((s.seed+s.turnIndex*13)%5)<2?-1:1});const ahead=s.objects.filter(o=>!o.resolved&&o.d-(o.front||0)>s.distance&&o.d-(o.front||0)-s.distance<(s.speed+(o.approach||0))*1.3);const bad=ahead.filter(o=>['carriage','scooter','skiers','snowboarders','influencer','lostTourists','snowman','flamingo','manhole','electric','photographers','bike','hiker','pedestrian','sheep','marmot','iceBlock','crevasse','luggage','trolley','planter','cafe','awning','boulder','rockfall','lowRock','ridgeGap'].includes(o.kind));const coin=ahead.find(o=>o.kind==='coin');let lane=coin?.lane??s.target;const blocked=l=>bad.some(o=>Math.abs(o.lane-l)<(o.hitWidth||.38));if(blocked(lane))lane=[0,1,2].find(l=>!blocked(l))??s.target;s=action(s,{type:'steer',lane});const close=ahead.filter(o=>o.d-s.distance<(s.speed+(o.approach||0))*.38&&(o.lane===-1||Math.abs(o.lane-s.x)<.4)).sort((a,b)=>a.d-b.d)[0];if(close&&!s.jump&&!s.duck){if(['iceArch','branch','awning','rope'].includes(close.kind))s=action(s,{type:'duck'});else if(['iceBlock','log','barrier','crevasse','ridgeGap','lowRock'].includes(close.kind))s=action(s,{type:'jump'});}s=action(s,{type:'step'});assert(s.objects.length<100);}return s;}
+check('full 15-minute journey reaches the summit with bounded state',()=>{const s=bot(20261029);assert.equal(s.phase,'won',JSON.stringify({elapsed:s.elapsed,reason:s.failReason}));assert.equal(s.elapsed,900);assert.equal(s.arrivals,0);assert(s.coins>100);console.log('RUN',JSON.stringify({elapsed:s.elapsed,distance:Math.floor(s.distance),coins:s.coins,arrivals:s.arrivals,turns:s.turns}));});
+check('environment-specific hazards remain appropriate and every variant is reachable',()=>{
+ const profiles={
+  3:['snowman','luggage','trolley','planter','electric','photographers','manhole','carriage','scooter','skiers','snowboarders','influencer','lostTourists','pedestrian','bike'],
+  6:['hiker','marmot','sheep','log','branch','bike'],7:['hiker','marmot','sheep','log','branch','bike'],8:['hiker','marmot','sheep','log','branch','bike'],1:['hiker','marmot','sheep','log','branch','bike'],
+  9:['hiker','lowRock','ridgeGap','rope','rockfall','boulder'],4:['hiker','lowRock','ridgeGap','rope','rockfall','boulder'],10:['hiker','lowRock','ridgeGap','rope','rockfall','boulder'],0:['iceBlock','crevasse','iceArch'],5:['iceBlock','crevasse','iceArch']};
+ for(const [elapsed,z]of [[30,3],[110,6],[200,7],[290,8],[390,1],[480,9],[570,4],[660,0],[750,10],[840,5]]){const found=new Set();for(let seed=1;seed<90;seed++){
+  const state={...start(seed),flamingoSpawned:true,tick:elapsed*20,elapsed,distance:1000,nextRow:1030,nextTurn:99999,row:20};
+  for(const o of action(state,{type:'step'}).objects){if(['coin','magnet','heart','shieldOrb','coinBoost','rushCharge'].includes(o.kind))continue;assert.equal(o.biome,z);assert(profiles[z].includes(o.kind),'wrong biome: '+o.kind);found.add(o.kind);}
+ }assert.deepEqual([...found].sort(),profiles[z].sort());}
+});
+check('walkers, photo groups, bikes and wildlife approach with each simulation step',()=>{const s={...start(),nextRow:9999,objects:['hiker','pedestrian','photographers','bike','sheep'].map((kind,id)=>({id,kind,d:150,lane:0,approach:2.4}))};const out=action(s,{type:'step'});for(const o of out.objects)assert.equal(o.d,149.88);});
+check('all new hazards support intended jump, duck or dodge collision rules',()=>{for(const kind of ['iceArch','branch','awning','rope']){assert.equal(collision(kind,{duck:9,approach:6}).lives,3);assert.equal(collision(kind,{jump:9,approach:6}).lives,2);}for(const kind of ['skiers','snowboarders','scooter','electric','photographers','hiker','pedestrian','marmot','sheep','bike','cafe','luggage','trolley','planter','boulder','rockfall']){assert.equal(collision(kind,{lane:0,approach:6}).lives,3);assert.equal(collision(kind,{jump:9,approach:6}).lives,2);}});
+check('coin series and successful jumps emit joyful feedback events',()=>{let s={...start(),chain:7,distance:100,nextRow:9999,objects:[{id:1,kind:'coin',lane:1,d:100.4}]};s=action(s,{type:'step'});assert(s.events.some(e=>e.kind==='combo'));assert.equal(s.multiplier,2);assert(collision('crevasse',{jump:10,approach:6}).events.some(e=>e.kind==='clear'));});
+check('server and browser use identical rules',()=>assert.equal(readFileSync(new URL('../src/logic.js',import.meta.url),'utf8'),readFileSync(new URL('../public/rules.js',import.meta.url),'utf8')));
+check('ten environments appear in the requested order at the exact active-time boundaries',()=>{
+ for(const [seconds,z] of [[90,6],[180,7],[270,8],[360,1],[450,9],[540,4],[630,0],[720,10],[810,5]]){
+  const before={...start(),tick:seconds*20-2,elapsed:seconds-.1,distance:100,nextRow:99999,nextTurn:99999,lives:2};
+  const near=action(before,{type:'step'});assert(!near.events.some(e=>e.kind==='world'));
+  const after=action(near,{type:'step'});assert(after.events.some(e=>e.kind==='world'&&e.zone===z));assert.equal(after.lives,3);assert(after.score>=250);
+ }
+});
+check('dense rows retain an open lane or one consistent jump/slide action',()=>{
+ let paired=0,incoming=0;
+ for(let seed=1;seed<=50;seed++)for(const elapsed of [30,110,200,290,390,480,570,660,750,840]){
+  const initial={...start(seed),flamingoSpawned:true,tick:elapsed*20,elapsed,distance:1100,nextRow:1120,nextTurn:99999,row:20};
+  const s=action(initial,{type:'step'}),rows=new Map();
+  for(const o of s.objects){if(['coin','magnet','heart','shieldOrb','coinBoost','rushCharge'].includes(o.kind))continue;if(!rows.has(o.rowId))rows.set(o.rowId,[]);rows.get(o.rowId).push(o);if(o.approach>0){incoming++;assert(Math.abs((o.d-(o.front||0)-s.distance)/(s.speed+o.approach)-(o.encounter-s.distance)/s.speed)<.00001);}}
+  for(const obstacles of rows.values()){
+   if(obstacles.some(o=>o.lane===-1)){assert.equal(obstacles.length,1);continue;}
+   assert([0,1,2].some(l=>obstacles.every(o=>Math.abs(o.lane-l)>=(o.hitWidth||.38))),'a safe lane remains');if(obstacles.length===2)paired++;
+  }
+ }
+ assert(paired>300);assert(incoming>250);console.log('PATTERNS',JSON.stringify({paired,incoming}));
+});
+check('incoming threats and walkers move at their intended speeds',()=>{
+ const seen=new Map();for(let seed=1;seed<50;seed++)for(const elapsed of [30,160,300]){
+  const s=action({...start(seed),flamingoSpawned:true,tick:elapsed*20,elapsed,distance:1000,nextRow:1030,nextTurn:99999,row:20},{type:'step'});
+  for(const o of s.objects)seen.set(o.kind,o.approach);
+ }
+ for(const [kind,min]of [['bike',8],['marmot',3.8],['sheep',2.8],['trolley',4.5],['luggage',2]])assert(seen.get(kind)>=min,kind);
+ assert.equal(seen.get('hiker'),2.4);assert.equal(seen.get('pedestrian'),2.4);
+});
+check('new mountain gaps and low rocks can be jumped, while boulders must be dodged',()=>{for(const kind of ['ridgeGap','lowRock'])assert.equal(collision(kind,{jump:10,approach:6}).lives,3);assert.equal(collision('boulder',{jump:10,approach:6}).lives,2);});
+check('three lives in both modes and each unprotected impact removes one',()=>{for(const mode of['classic','relaxed']){const s=start(123,mode);assert.equal(s.lives,3);assert.equal(s.maxLives,3);}assert.equal(collision('bike').lives,2);});
+function heart(lives=2,lane=1,magnet=0){return action({...start(),lives,magnet,distance:100,nextRow:99999,objects:[{id:71,kind:'heart',lane,d:100.4}]},{type:'step'});}
+check('a heart restores exactly one life, is removed and cannot be collected twice',()=>{const s=heart();assert.equal(s.lives,3);assert.equal(s.hearts,1);assert.equal(s.objects.length,0);assert(s.events.some(e=>e.kind==='heart'&&e.gained));const next=action(s,{type:'step'});assert.equal(next.hearts,1);assert.equal(next.lives,3);assert(!next.events.some(e=>e.kind==='heart'));});
+check('hearts cap at three lives, rewarding fifty points when already full',()=>{const s=heart(3);assert.equal(s.lives,3);assert.equal(s.score,50);assert(s.events.some(e=>e.kind==='heart'&&!e.gained&&e.points===50));});
+check('hearts in other lanes do not heal or harm and are not drawn by coin magnets',()=>{for(const magnet of[0,100]){const s=heart(1,0,magnet);assert.equal(s.lives,1);assert.equal(s.hearts,0);assert(!s.events.some(e=>e.kind==='heart'));}});
+check('periodic heart rows use a clear lane and stay away from corner hazards',()=>{let found=0;for(let seed=1;seed<40;seed++)for(const elapsed of[45,110,200,290,390,480,570,660,750,840]){const s=action({...start(seed),elapsed,tick:elapsed*20,distance:1100,nextRow:1120,nextTurn:99999,row:20,nextHeartAt:0},{type:'step'});for(const h of s.objects.filter(o=>o.kind==='heart')){found++;const hazards=s.objects.filter(o=>o.rowId===h.rowId&&!['coin','magnet','heart','shieldOrb','coinBoost','rushCharge'].includes(o.kind));assert(hazards.every(o=>Math.abs(o.lane-h.lane)>=(o.hitWidth||.38)&&o.lane!==-1));const nearest=260+Math.max(0,Math.round((h.encounter-11-260)/680))*680;assert(Math.abs(h.encounter-11-nearest)>80);assert(s.nextHeartAt>elapsed+50);}}assert(found>100);});
+check('zero lives ends the run even if a heart or world transition occurs in that tick',()=>{const base={...start(),lives:1,elapsed:89.95,tick:1799,distance:100,nextRow:99999,nextTurn:99999,objects:[{id:1,kind:'bike',lane:1,d:100.2},{id:2,kind:'heart',lane:1,d:100.3}]};const s=action(base,{type:'step'});assert.equal(s.phase,'lost');assert.equal(s.lives,0);assert.equal(s.hearts,0);});
+check('Horn Rush requires thirty collected coins and cannot retrigger while active',()=>{let s={...start(),nextRow:99999,nextTurn:99999};assert.equal(g.validateAction(s,'p',{type:'power'}).ok,false);for(let i=0;i<30;i++){s={...s,objects:[{id:i,kind:'coin',d:s.distance+.4,lane:1}]};s=action(s,{type:'step'});}assert.equal(s.powerCharge,30);assert(s.events.some(e=>e.kind==='powerReady'));s=action(s,{type:'power'});assert.equal(s.powerTicks,120);assert.equal(s.powerCharge,0);assert.equal(s.powerUses,1);assert.equal(g.validateAction(s,'p',{type:'power'}).ok,false);});
+check('Rush lasts exactly six active seconds and ends with a short safe handover',()=>{let s=action({...start(),powerCharge:30,nextRow:99999,nextTurn:99999},{type:'power'});for(let i=0;i<119;i++)s=action(s,{type:'step'});assert.equal(s.powerTicks,1);s=action(s,{type:'step'});assert.equal(s.powerTicks,0);assert.equal(s.invulnerable,20);assert(s.events.some(e=>e.kind==='powerEnd'));});
+check('Rush protects against every biome hazard and clears contacted obstacles once',()=>{for(const kind of['bike','hiker','marmot','sheep','trolley','iceBlock','iceArch','crevasse','ridgeGap','rope','log','branch','barrier','boulder']){const s=action({...start(),powerTicks:100,distance:100,nextRow:99999,objects:[{id:1,kind,lane:1,d:100.4}]},{type:'step'});assert.equal(s.lives,3,kind);assert.equal(s.objects.length,0,kind);assert(s.events.some(e=>e.kind==='powerClear'),kind);}});
+check('Rush attracts coins without recharging itself and handles route corners',()=>{let s=action({...start(),powerTicks:100,powerCharge:0,distance:100,nextRow:99999,objects:[{id:1,kind:'coin',lane:0,d:100.4}]},{type:'step'});assert.equal(s.coins,1);assert.equal(s.powerCharge,0);s=action({...s,distance:259.8,objects:[],nextTurn:260,turnChoice:0},{type:'step'});assert.equal(s.lives,3);assert.equal(s.turns,1);});
+check('photo entrance choreography exits the doorway then orbits exactly 180 degrees',()=>{assert.equal(COUNTDOWN_DURATION,3);const start=introFrame(0),out=introFrame(2.65),end=introFrame(INTRO_DURATION);assert.equal(start.z,13.75);assert.equal(start.doorOpen,0);assert.equal(start.orbitDegrees,0);assert.equal(out.z,0);assert.equal(end.orbitDegrees,180);assert(Math.abs(end.eye[0])<.00001);assert.equal(end.eye[2],10.3);assert.deepEqual(end.target,[0,1.25,-11]);for(let t=0;t<=INTRO_DURATION;t+=.1){const pose=introFrame(t);assert(pose.eye.every(Number.isFinite));assert(pose.eye[2]<12);assert(pose.z>=0&&pose.z<=13.75);}assert.deepEqual(introFrame(INTRO_DURATION,false).eye,[0,4.7,9.5]);});
+
+
+check('Rush ramps to 155 percent speed, settles before expiry, and never changes the 900-second target',()=>{let s=action({...start(),powerCharge:30,nextRow:99999,nextTurn:99999},{type:'power'});const speeds=[];for(let i=0;i<120;i++){s=action(s,{type:'step'});speeds.push(s.speed);}assert(speeds[15]>27);assert(speeds[119]<21);assert(s.distance>150);assert.equal(s.elapsed,6);s=action(s,{type:'step'});assert(s.speed<20);});
+check('Shockwave clears three lanes once, retains distant hazards and provides knockback origins',()=>{let s={...start(),powerTicks:100,distance:100,nextRow:99999,nextTurn:99999,objects:[{id:11,kind:'electric',lane:0,d:109},{id:12,kind:'photographers',lane:2,d:110},{id:13,kind:'bike',lane:1,d:140},{id:14,kind:'heart',lane:0,d:108}]};s=action(s,{type:'step'});const e=s.events.filter(e=>e.kind==='powerClear');assert.equal(e.length,2);assert(e.every(e=>e.id&&e.d>100));assert(s.objects.some(o=>o.kind==='heart'));assert(s.objects.some(o=>o.id===13));s=action(s,{type:'step'});assert(!s.events.some(e=>e.kind==='powerClear'));});
+check('Electric vehicles and photo groups approach and require dodging without power',()=>{for(const kind of['electric','photographers']){assert.equal(collision(kind).lives,2);assert.equal(collision(kind,{lane:0}).lives,3);assert.equal(collision(kind,{jump:9}).lives,2);assert.equal(collision(kind,{duck:9}).lives,2);}const s=action({...start(),nextRow:99999,objects:[{id:1,kind:'electric',lane:0,d:50,approach:7},{id:2,kind:'photographers',lane:2,d:50,approach:2.4}]},{type:'step'});assert.equal(s.objects[0].d,49.65);assert.equal(s.objects[1].d,49.88);});
+
+
+
+check('double jump preserves height, gains a second impulse, rejects a third and resets at landing',()=>{let s=action({...start(),nextRow:99999,nextTurn:99999},{type:'jump'});for(let i=0;i<7;i++)s=action(s,{type:'step'});const y=s.jumpY;assert(y>.8);s=action(s,{type:'jump'});assert.equal(s.jumpY,y);assert.equal(s.jumpCount,2);assert.equal(s.jump,18);assert(s.events.some(e=>e.kind==='doubleJump'));assert.equal(g.validateAction(s,'p',{type:'jump'}).ok,false);for(let i=0;i<6;i++)s=action(s,{type:'step'});assert(s.jumpY>1.4);for(let i=0;i<12;i++)s=action(s,{type:'step'});assert.equal(s.jumpY,0);assert.equal(s.jumpCount,0);assert.equal(g.validateAction(s,'p',{type:'jump'}).ok,true);});
+check('open manholes cause one-life falls, can be jumped/dodged, and cannot defeat the rush',()=>{let s=collision('manhole');assert.equal(s.lives,2);assert.equal(s.fallTicks,20);assert(s.events.some(e=>e.kind==='fall'));assert.equal(collision('manhole',{jump:9}).lives,3);assert.equal(collision('manhole',{lane:0}).lives,3);s=action({...start(),powerTicks:100,distance:100,nextRow:99999,objects:[{id:1,kind:'manhole',lane:1,d:101}]},{type:'step'});assert.equal(s.lives,3);assert.equal(s.fallTicks,0);});
+
+
+check('carriage hits either occupied lane at the horses, leaving the third lane clear',()=>{
+ for(const center of[.5,1.5])for(const lane of[0,1,2]){
+  const s=action({...start(),x:lane,target:lane,distance:100,nextRow:99999,nextTurn:99999,objects:[{id:1,kind:'carriage',lane:center,d:105.7,front:5,hitWidth:.91,approach:4.2}]},{type:'step'});
+  assert.equal(s.lives,Math.abs(lane-center)<.91?2:3);
+ }
+});
+check('new moving encounters require dodging and rush clears each safely',()=>{
+ for(const kind of['carriage','scooter','skiers','snowboarders','influencer','lostTourists','snowman','flamingo']){
+  assert.equal(collision(kind).lives,2,kind);assert.equal(collision(kind,{lane:0}).lives,3,kind);
+  assert.equal(collision(kind,{jump:9}).lives,2,kind);
+  const s=action({...start(),powerTicks:60,distance:100,nextRow:99999,nextTurn:99999,objects:[{id:1,kind,lane:1,d:108}]},{type:'step'});assert.equal(s.lives,3);assert(s.events.some(e=>e.kind==='powerClear'));
+ }
+});
+check('one flamingo per full run, survives world changes, resets on a new run',()=>{
+ for(const seed of[1,123,20261029,9876]){
+  let s=start(seed),found=new Set();
+  for(let i=0;i<18000;i++){
+   s=action({...s,invulnerable:30,shield:30,nextTurn:999999},{type:'step'});
+   for(const o of s.objects)if(o.kind==='flamingo'){found.add(o.id);assert([2,3].includes(o.biome));}
+  }
+  assert.equal(s.phase,'won');assert.equal(found.size,1);assert(s.flamingoSpawned);assert.equal(start(seed).flamingoSpawned,false);
+ }
+});
+
+
+check('new pickups do not damage the player, refresh timers and trigger clear feedback',()=>{
+ for(const [kind,field,value]of[['magnet','magnet',160],['shieldOrb','shield',1],['coinBoost','coinBoost',200],['rushCharge','powerCharge',15]]){
+  const s=collision(kind);assert.equal(s.lives,3,kind);assert.equal(s[field],value,kind);assert.equal(s.objects.length,0);assert(s.events.some(e=>['magnet','powerPickup'].includes(e.kind)));
+ }
+});
+check('gold fever doubles collected coins and score, but expires after exactly ten active seconds',()=>{
+ const s=action({...start(),coinBoost:100,distance:100,nextRow:99999,nextTurn:99999,objects:[{id:1,kind:'coin',lane:1,d:100.4}]},{type:'step'});assert.equal(s.coins,2);assert.equal(s.powerCharge,2);assert(s.events.some(e=>e.kind==='pickup'&&e.points===20));
+ let q={...collision('coinBoost'),nextRow:99999,nextTurn:99999};for(let i=0;i<200;i++)q=action(q,{type:'step'});assert.equal(q.coinBoost,0);
+});
+check('shield absorbs exactly one hazard and a spark caps Rush energy at thirty',()=>{
+ let s=collision('shieldOrb');s={...s,objects:[{id:2,kind:'bike',lane:1,d:s.distance+.3}],nextRow:99999};s=action(s,{type:'step'});assert.equal(s.lives,3);assert.equal(s.shield,0);assert(s.events.some(e=>e.kind==='shieldHit'));
+ s=action({...start(),powerCharge:22,distance:100,nextRow:99999,objects:[{id:1,kind:'rushCharge',lane:1,d:100.3}]},{type:'step'});assert.equal(s.powerCharge,30);assert(s.events.some(e=>e.kind==='powerReady'));
+});
+check('Rush preserves collectible power-ups and each is collectible only once',()=>{
+ for(const kind of['magnet','shieldOrb','coinBoost','rushCharge']){const s=action({...start(),powerTicks:60,distance:100,nextRow:99999,nextTurn:99999,objects:[{id:1,kind,lane:0,d:106}]},{type:'step'});assert(s.objects.some(o=>o.kind===kind));assert(!s.events.some(e=>e.kind==='powerClear'));}
+});
+check('all four collectible power-ups spawn in safe lanes',()=>{
+ const found=new Set();for(let row=9;row<100;row++)for(let seed=1;seed<20;seed++){
+  const s=action({...start(seed),flamingoSpawned:true,elapsed:120,tick:2400,distance:1000,nextRow:1030,nextTurn:99999,row},{type:'step'});
+  for(const p of s.objects.filter(o=>['magnet','shieldOrb','coinBoost','rushCharge'].includes(o.kind))){found.add(p.kind);assert(s.objects.filter(o=>o.rowId===p.rowId&&!['coin','heart','magnet','shieldOrb','coinBoost','rushCharge'].includes(o.kind)).every(o=>o.lane===-1||Math.abs(o.lane-p.lane)>=(o.hitWidth||.38)));}
+ }assert.equal(found.size,4);
+});
+check('mountain bikes are materially more frequent below the alpine rock stages',()=>{
+ let bikes=0,rows=0;for(let seed=1;seed<80;seed++){
+  const s=action({...start(seed),flamingoSpawned:true,elapsed:120,tick:2400,distance:1000,nextRow:1030,nextTurn:99999,row:30},{type:'step'});
+  const hazards=s.objects.filter(o=>!['coin','heart','magnet','shieldOrb','coinBoost','rushCharge'].includes(o.kind));bikes+=hazards.filter(o=>o.kind==='bike').length;rows+=new Set(hazards.map(o=>o.rowId)).size;
+ }assert(bikes/rows>.30);console.log('BIKES_PER_ROW',bikes/rows);
+});
+
+console.log(`${checks} rule checks passed`);

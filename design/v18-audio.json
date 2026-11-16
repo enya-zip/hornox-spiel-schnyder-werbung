@@ -1,0 +1,24 @@
+{
+  "version": 18,
+  "job_id": "fb68e506-a0f2-471b-be5e-60fd1902c5c8",
+  "source_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3JjDpOAFtnbtpW0lE7YJ0GDDCcc/hf_20261030_003248_fb68e506-a0f2-471b-be5e-60fd1902c5c8.m4a",
+  "params": {
+    "model": "sonilo_music",
+    "duration": 210,
+    "count": 1,
+    "prompt": "Create a 210-second through-composed instrumental soundtrack for a joyful, funny Swiss alpine running game at a fast 148 BPM: authentic Schwyzeroergeli button accordion, nimble clarinet and fiddle, playful short alphorn calls, plucked upright bass, tuned Swiss cowbells, handclaps and crisp driving acoustic drums, sunny major keys, cheeky syncopated accents and exuberant mountain-festival energy, warm detailed modern production. Keep the full 3 minutes 30 seconds continuously developing with fresh melodies, key changes, instrument handoffs, rising variations and brief comic call-and-response fills every 20–30 seconds; no copy-pasted loops, no repeated complete sections, no long intro or quiet breakdown, no lyrics or voices, start immediately and sustain joyful forward momentum to a tidy ending."
+  },
+  "media_id": "70fb5c1a-99ef-42d5-954d-19f11552be10",
+  "normalized_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_3JjDpOAFtnbtpW0lE7YJ0GDDCcc/70fb5c1a-99ef-42d5-954d-19f11552be10.mp3",
+  "asset": "app/public/assets/hornox-alpine-party-210s.mp3",
+  "duration": 210.050612,
+  "codec": "mp3",
+  "bitrate": 128000,
+  "sample_rate": 44100,
+  "channels": 2,
+  "size_bytes": 3361404,
+  "integrated_lufs": -19.43,
+  "true_peak_dbfs": -6.38,
+  "lra": 5.2,
+  "short_loop_concat": false
+}

@@ -1,0 +1,28 @@
+@Higgsfield
+Stelle HORNOX RUN für Alpen Resort Zermatt aus dem beigefügten Export-ZIP in diesem
+Higgsfield-Zielaccount als neues eigenständiges Game wieder her.
+
+Verwende den vorhandenen Quellcode und sämtliche vorhandenen Assets aus dem ZIP.
+Übernimm den bestehenden Stand v20 unverändert in Funktion und Gestaltung:
+zehn Levels, je 90 Sekunden, drei Leben, Classic/Relaxed, fünf Sprachen,
+Power-ups, Musik, Sounds, Hornox-Figur, Alpen-Resort-Branding sowie Trotinettfahrer,
+Skiträger und Snowboardträger. Keine neuen Medien generieren.
+
+Lies zuerst README_IMPORT.txt und export.json. Übernimm den Inhalt von app/
+vollständig in das neue Gameprojekt. Paketsnapshots und Lockfile gehören dazu.
+Verwende eine verfügbare Arcade-Kategorie und eine freie Zieladresse, abgeleitet
+von hornox-run-alpen-resort. Überschreibe kein bestehendes Projekt.
+
+Übernimm app/app.manifest.json und lasse die Plattform alle Ressourcen für das
+Zielprojekt neu anlegen. Keine Infrastruktur-ID und keine Account-Zuordnung
+des Quellprojekts übernehmen. Für das Quellprojekt waren keine Secrets hinterlegt.
+
+Ersetze ausschließlich die alten absoluten Spieladressen in app/src/app-meta.json,
+app/public/index.html und app/public/sitemap.xml durch die neue Zieladresse.
+Die betreffenden Grafiken liegen lokal in app/public/. Hotel-Links beibehalten.
+
+Prüfe die Dateiprüfsummen vor den Anpassungen. Verwende den vorgesehenen
+Higgsfield-Buildprozess. Teste Laden der Grafiken/Modelle/Audios, Startbildschirm,
+Menü, Classic/Relaxed, Sprache, Steuerung und einen Spieldurchlauf auf Mobil-
+und Desktopansicht. Stelle das neue Game bereit und gib mir den neuen Link.
+Das Game nicht ungefragt im Community-Feed veröffentlichen.
