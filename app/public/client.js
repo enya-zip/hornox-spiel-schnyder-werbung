@@ -44,9 +44,23 @@ function input(kind){
   else if(!tilt)dispatch({type:"steer",lane:Math.max(0,Math.min(2,Math.round(state.target)+dir))});
  }else dispatch({type:kind});
 }
+// TEST-CHEAT: ?level=N in der Adresse startet direkt im Level N (1–10).
+// Beispiel: https://…/?level=7 – Bestwerte werden dabei nicht gespeichert.
+const testLevel=Math.max(1,Math.min(stages.length,Math.floor(Number(q.get("level"))||1)));
+function skipToLevel(){
+ if(testLevel<=1||state.phase!=="playing")return;
+ const tick=stages[testLevel-1].start*20,relaxed=state.mode==="relaxed";let distance=0;
+ for(let i=1;i<=tick;i++)distance+=((relaxed?14:19)+Math.min(relaxed?6:8,i*.05/42))*.05;
+ let turnIndex=0,heading=0;
+ while(260+turnIndex*680<=distance){heading+=(((state.seed+turnIndex*13)%5)<2?-1:1)*Math.PI/2;turnIndex++;}
+ const elapsed=tick*.05;
+ state={...state,tick,elapsed,distance,score:Math.floor(distance),turnIndex,turns:turnIndex,heading,nextTurn:260+turnIndex*680,turnChoice:0,
+  nextRow:distance+30,row:Math.floor(distance/24),checkpoints:Math.floor(elapsed/120),nextHeartAt:elapsed+20,objects:[],events:[]};
+ renderDistance=distance;introElapsed=INTRO_DURATION;
+}
 function start(){
  if(!loaded)return;$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;state=setup([player]);dispatch({type:"start",seed,mode,route});setScreen("play");acc=0;renderDistance=0;countdown=0;introElapsed=0;lastCount=-1;resultSaved=false;tiltBase=null;$("countdown").hidden=true;$("countdown").textContent="";
- audio.unlock().catch(()=>{});audio.setActive(true);controls.reset();scene?.resetEffects();$("feedback-label").textContent="";hud();
+ audio.unlock().catch(()=>{});audio.setActive(true);controls.reset();scene?.resetEffects();$("feedback-label").textContent="";skipToLevel();hud();
 }
 function home(){introElapsed=-1;$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;audio.setActive(true);scene?.resetEffects();$("feedback-label").textContent="";state=setup([player]);setScreen("home");selectMenu("run");countdown=0;renderDistance=0;$("countdown").hidden=true;$("turn-cue").hidden=true;$("tutorial").hidden=true;$("powerup").hidden=true;$("resort-arrival").hidden=true;updateCopy();}
 function pause(value=true){if(screen!=="play")return;paused=value;acc=0;$("pause-overlay").hidden=!value;if(value){audio.setActive(false);$("resume").focus();}else {audio.unlock().catch(()=>{});audio.setActive(true);}}
@@ -56,7 +70,7 @@ function resultCopy(){
  $("result-score").textContent=fmt(state.score);$("result-details").textContent=fmt(state.distance)+" m · "+fmt(state.coins)+" "+t("coins");
  $("result-note").textContent=t(state.phase==="won"?"wonText":"lostText",{distance:fmt(state.distance),coins:fmt(state.coins)});
 }
-function finish(){if(resultSaved)return;resultSaved=true;audio.setActive(false);if(state.score>best(state.route,state.mode))save(bestKey(state.route,state.mode),state.score);setScreen("result");$("turn-cue").hidden=true;$("tutorial").hidden=true;$("resort-arrival").hidden=true;resultCopy();$("again").focus();}
+function finish(){if(resultSaved)return;resultSaved=true;audio.setActive(false);if(testLevel<=1&&state.score>best(state.route,state.mode))save(bestKey(state.route,state.mode),state.score);setScreen("result");$("turn-cue").hidden=true;$("tutorial").hidden=true;$("resort-arrival").hidden=true;resultCopy();$("again").focus();}
 function heartFeedback(gained){const node=$('heart-feedback');node.querySelector('span').textContent=t(gained?'heartGain':'heartFull');node.hidden=false;node.getAnimations().forEach(a=>a.cancel());const target=$('lives').getBoundingClientRect(),x=target.left+target.width/2-innerWidth/2,y=target.top+target.height/2-innerHeight*.40;node.animate(reduced?[{opacity:1},{opacity:1,offset:.75},{opacity:0}]:[{opacity:0,transform:'translate(-50%,-50%) scale(.6)'},{opacity:1,transform:'translate(-50%,-50%) scale(1.15)',offset:.18},{opacity:1,transform:'translate(-50%,-50%) scale(1)',offset:.60},{opacity:0,transform:`translate(calc(-50% + ${x}px),calc(-50% + ${y}px)) scale(.22)`}],{duration:reduced?1000:1350,fill:'forwards'});audio.play('pickup',1.6,.85);}
 function processEvents(){
  for(const e of state.events){scene?.emit(e,state);if(["jump","duck","land","pickup","bump"].includes(e.kind))audio.play(e.kind,e.kind==="pickup"?1+(state.chain%8)*.035:1);
