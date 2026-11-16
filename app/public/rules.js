@@ -84,7 +84,7 @@ export function applyAction(s,p,a){
     if(aligned){const before=powerCharge;powerCharge=Math.min(30,powerCharge+15);if(before===30)score+=100;events.push({kind:'powerPickup',power:'pickupCharge'});if(before<30&&powerCharge===30)events.push({kind:'powerReady'});}
    }else if(aligned&&powering){score+=25;events.push({kind:"powerClear",object:item.kind,lane:item.lane,d:item.d,id:item.id,points:25});item.powerCleared=true;
    }else if(aligned){
-    const safe=["iceBlock","log","barrier","lowRock"].includes(item.kind)?height>.4:["crevasse","ridgeGap","manhole"].includes(item.kind)?height>.5:["iceArch","branch","awning","rope"].includes(item.kind)?duck>0:false;
+    const safe=["iceArch","branch","awning","rope"].includes(item.kind)?duck>0:["crevasse","ridgeGap","manhole"].includes(item.kind)?height>.5:height>.4;
     if(!safe&&!invulnerable){
      if(shield){shield=0;invulnerable=25;events.push({kind:"shieldHit"});}
      else{lives--;chain=0;multiplier=1;score=Math.max(0,score-40);invulnerable=30;slow=12;failReason=item.kind;events.push({kind:"bump",object:item.kind});if(item.kind==='manhole'){fallTicks=20;jump=0;jumpCount=0;jumpBase=0;height=0;events.push({kind:'fall'});}}
