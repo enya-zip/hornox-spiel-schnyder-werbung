@@ -21,6 +21,10 @@ const t=(k,v={})=>{let s=copy[lang][k]||copy.en[k]||k;for(const key in v)s=s.rep
 const fmt=n=>new Intl.NumberFormat(({en:"en-GB",de:"de-CH",fr:"fr-CH",ja:"ja-JP",zh:"zh-CN"})[lang]).format(Math.floor(n));
 const bestKey=(r=route,m=mode)=>"hornox.v17."+r+"."+m,best=(r=route,m=mode)=>Math.max(0,Number(read(bestKey(r,m)))||0);
 const audio=createAudio();audio.setEnabled(sound);
+// Level-Meldung: "Level X geschafft!" + Name und Nummer des nächsten Levels.
+let bannerTimer=0;
+function levelBanner(stage){const b=$("level-banner");$("level-done").textContent=t("levelDone",{done:stage});$("level-name").textContent=t(stages[stage].key);$("level-next").textContent=t("levelNext",{next:stage+1});b.hidden=false;b.classList.add("visible");clearTimeout(bannerTimer);bannerTimer=setTimeout(()=>{b.classList.remove("visible");bannerTimer=setTimeout(()=>{b.hidden=true;},400);},3200);}
+function hideLevelBanner(){clearTimeout(bannerTimer);$("level-banner").classList.remove("visible");$("level-banner").hidden=true;}
 function toast(value,seconds=1.8){$("toast").textContent=value;$("toast").classList.add("visible");toastUntil=time+seconds;}
 function updateCopy(){
  document.documentElement.lang=lang;document.querySelectorAll("[data-i18n]").forEach(e=>e.textContent=t(e.dataset.i18n));document.querySelectorAll("[data-label]").forEach(e=>e.setAttribute("aria-label",t(e.dataset.label)));
@@ -60,10 +64,10 @@ function skipToLevel(){
  renderDistance=distance;introElapsed=INTRO_DURATION;
 }
 function start(){
- if(!loaded)return;$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;state=setup([player]);dispatch({type:"start",seed,mode,route});setScreen("play");acc=0;renderDistance=0;countdown=0;introElapsed=0;lastCount=-1;resultSaved=false;tiltBase=null;$("countdown").hidden=true;$("countdown").textContent="";
+ if(!loaded)return;hideLevelBanner();$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;state=setup([player]);dispatch({type:"start",seed,mode,route});setScreen("play");acc=0;renderDistance=0;countdown=0;introElapsed=0;lastCount=-1;resultSaved=false;tiltBase=null;$("countdown").hidden=true;$("countdown").textContent="";
  audio.unlock().catch(()=>{});audio.setActive(true);controls.reset();scene?.resetEffects();$("feedback-label").textContent="";skipToLevel();hud();
 }
-function home(){introElapsed=-1;$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;audio.setActive(true);scene?.resetEffects();$("feedback-label").textContent="";state=setup([player]);setScreen("home");selectMenu("run");countdown=0;renderDistance=0;$("countdown").hidden=true;$("turn-cue").hidden=true;$("tutorial").hidden=true;$("powerup").hidden=true;$("resort-arrival").hidden=true;updateCopy();}
+function home(){introElapsed=-1;hideLevelBanner();$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;audio.setActive(true);scene?.resetEffects();$("feedback-label").textContent="";state=setup([player]);setScreen("home");selectMenu("run");countdown=0;renderDistance=0;$("countdown").hidden=true;$("turn-cue").hidden=true;$("tutorial").hidden=true;$("powerup").hidden=true;$("resort-arrival").hidden=true;updateCopy();}
 function pause(value=true){if(screen!=="play")return;paused=value;acc=0;$("pause-overlay").hidden=!value;if(value){audio.setActive(false);$("resume").focus();}else {audio.unlock().catch(()=>{});audio.setActive(true);}}
 function openDialog(id){if(screen==="play"&&!paused)pause(true);$(id).showModal();}
 function resultCopy(){
@@ -83,7 +87,7 @@ function processEvents(){
  if(e.kind==="powerClear")audio.play("pickup",1.3,.55);
  if(e.kind==="powerPickup"){toast(t(e.power),2.5);audio.play("pickup",1.6,.8);}
  if(e.kind==="heart")heartFeedback(e.gained);if(e.kind==="world"&&e.gained)heartFeedback(true);
- if(e.kind==="world")toast(t("newWorld",{world:t(stages[e.stage].key)}),2);
+ if(e.kind==="world")levelBanner(e.stage);
  if(e.kind==="bump")toast(t(e.object==="sheep"?"sheepBump":"bump"));else if(e.kind==="checkpoint")toast(t("checkpoint"),2.5);else if(e.kind==="arrival"){$("toast").classList.remove("visible");toastUntil=0;}else if(e.kind==="magnet")toast(t("magnet"),2.3);else if(e.kind==="shieldHit")toast(t("shieldHit"));else if(e.kind==="missedTurn")toast(t("turnMiss"));}
 }
 function hud(){
