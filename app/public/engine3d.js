@@ -66,7 +66,7 @@ void main(){
  if(vMaterial>2.5&&vMaterial<3.5)albedo=texture(stoneMap,worldUV/9.).rgb;
  if(vMaterial>9.5&&vMaterial<13.5){float k=floor(vMaterial+.1)-10.;vec2 quadrant=vec2(mod(k,2.),1.-floor(k/2.));vec2 uv=abs(fract(worldUV/(k==0.?17.:k==1.?10.:k==2.?7.:5.)*.5)*2.-1.);albedo=textureGrad(surfaceMap,(quadrant+mix(vec2(.008),vec2(.992),uv))*.5,dFdx(worldUV)*.025,dFdy(worldUV)*.025).rgb;}
  if(vMaterial>13.5&&vMaterial<17.5){float k=floor(vMaterial+.1)-14.;vec2 quadrant=vec2(mod(k,2.),1.-floor(k/2.));albedo=texture(facadeMap,(quadrant+mix(vec2(.007),vec2(.993),vUV))*.5).rgb;}
- if(vMaterial>17.5&&vMaterial<19.5)albedo=landscape(vMaterial<18.5,worldUV);
+ if(vMaterial>17.5&&vMaterial<19.5)albedo=landscape(vMaterial<18.5,worldUV)*(vMaterial<18.5?vColour:vec3(1.));
  if(vMaterial>19.5&&vMaterial<20.5){albedo=mix(surface(0.,worldUV),vec3(.59,.83,.93),.55);}
  if(vMaterial>20.5&&vMaterial<21.5){float edge=pow(abs(vUV.y-.5)*2.,2.);albedo=mix(vec3(.004,.025,.045),vec3(.035,.28,.40),edge);}
  if(vMaterial>28.5&&vMaterial<29.5){vec2 uv=abs(n.y)>.7?worldUV:abs(n.x)>.6?vWorld.zy:vWorld.xy;float crag=noise(uv*.035)*.50+noise(uv*.11)*.30+noise(uv*.34)*.20;float strata=sin(vWorld.y*.15+noise(uv*.018)*9.);albedo*=.78+crag*.34+strata*.035;if(environmentTime>600.){float snow=smoothstep(600.,690.,environmentTime)*smoothstep(.15,.65,n.y);albedo=mix(albedo,vec3(.84,.89,.91),snow*.85);}}

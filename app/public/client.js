@@ -1,11 +1,12 @@
 import {INTRO_DURATION,COUNTDOWN_DURATION} from './intro.js?v=17';
 import {stages,getStage,DURATION} from "./journey.js?v=17";
-import {createScene} from "./scene3d.js?v=20";
-import {setup,validateAction,applyAction} from "./rules.js?v=20";
+import {createScene} from "./scene3d.js?v=21";
+import {setup,validateAction,applyAction} from "./rules.js?v=21";
 import {installControls} from "./controls.js?v=17";
 import {createAudio} from "./audio.js?v=18";
-import {getZone} from "./scene3d.js?v=20";
+import {getZone} from "./scene3d.js?v=21";
 import {copy} from "./copy.js?v=19";
+import {turnDirection} from "./route.js?v=21";
 const $=id=>document.getElementById(id),q=new URLSearchParams(location.search),app=$("app"),canvas=$("world"),player="guest";
 const read=k=>{try{return localStorage.getItem(k);}catch{return null;}},save=(k,v)=>{try{localStorage.setItem(k,String(v));}catch{}};
 const today=Number(new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Zurich",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date()).replaceAll("-",""));
@@ -52,7 +53,7 @@ function skipToLevel(){
  const tick=stages[testLevel-1].start*20,relaxed=state.mode==="relaxed";let distance=0;
  for(let i=1;i<=tick;i++)distance+=((relaxed?14:19)+Math.min(relaxed?6:8,i*.05/42))*.05;
  let turnIndex=0,heading=0;
- while(260+turnIndex*680<=distance){heading+=(((state.seed+turnIndex*13)%5)<2?-1:1)*Math.PI/2;turnIndex++;}
+ while(260+turnIndex*680<=distance){heading+=turnDirection(state.seed,0,turnIndex)*Math.PI/2;turnIndex++;}
  const elapsed=tick*.05;
  state={...state,tick,elapsed,distance,score:Math.floor(distance),turnIndex,turns:turnIndex,heading,nextTurn:260+turnIndex*680,turnChoice:0,
   nextRow:distance+30,row:Math.floor(distance/24),checkpoints:Math.floor(elapsed/120),nextHeartAt:elapsed+20,objects:[],events:[]};
@@ -95,7 +96,7 @@ function hud(){
  const active=screen==="play",intro=introElapsed>=0;app.classList.toggle("intro-active",intro);$("intro-caption").hidden=!intro;$("intro-caption").querySelector("span").textContent=t("introCaption");$("tutorial").hidden=!active||intro||state.distance>70||countdown>0;
  const rem=state.nextTurn-state.distance,show=active&&state.nextTurn>0&&rem<state.speed*2.8&&state.elapsed<892;
  $("turn-cue").hidden=!show;
- if(show){const direction=((state.seed+state.turnIndex*13)%5)<2?-1:1,ready=state.turnChoice===direction;$("turn-arrow").textContent=direction<0?"↰":"↱";$("turn-label").textContent=t(direction<0?"turnLeft":"turnRight");$("turn-distance").textContent=ready?t("turnReady"):inTurn()?t("turnNow"):Math.ceil(rem)+" m";$("turn-cue").classList.toggle("now",inTurn()&&!ready);$("turn-cue").classList.toggle("accepted",ready);}
+ if(show){const direction=turnDirection(state.seed,state.summitTurn,state.turnIndex),ready=state.turnChoice===direction;$("turn-arrow").textContent=direction<0?"↰":"↱";$("turn-label").textContent=t(direction<0?"turnLeft":"turnRight");$("turn-distance").textContent=ready?t("turnReady"):inTurn()?t("turnNow"):Math.ceil(rem)+" m";$("turn-cue").classList.toggle("now",inTurn()&&!ready);$("turn-cue").classList.toggle("accepted",ready);}
  const power=[state.magnet>0?t("magnetShort",{n:Math.ceil(state.magnet/20)}):"",state.shield?t("shieldShort"):"",state.coinBoost>0?t("boostShort",{n:Math.ceil(state.coinBoost/20)}):""].filter(Boolean).join(" · ");
  $("powerup").hidden=!active||!power;$("powerup").textContent=power;
 
