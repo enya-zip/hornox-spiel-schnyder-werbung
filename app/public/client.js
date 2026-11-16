@@ -45,7 +45,9 @@ function input(kind){
  if(screen!=="play"||paused||introElapsed>=0||countdown>0||document.querySelector("dialog[open]"))return;
  if(kind==="left"||kind==="right"){
   const dir=kind==="left"?-1:1;
-  if(inTurn())dispatch({type:"turn",direction:dir});
+  // In der Kurve: nur die richtige Richtung nimmt die Kurve (einmal). Alles andere wechselt die Spur.
+  const need=turnDirection(state.seed,state.summitTurn,state.turnIndex);
+  if(inTurn()&&state.turnChoice!==need&&dir===need)dispatch({type:"turn",direction:dir});
   else if(!tilt)dispatch({type:"steer",lane:Math.max(0,Math.min(2,Math.round(state.target)+dir))});
  }else dispatch({type:kind});
 }
