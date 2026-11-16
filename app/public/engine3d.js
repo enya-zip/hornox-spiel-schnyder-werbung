@@ -160,8 +160,8 @@ export function createRenderer(canvas){
  async function loadSigns(){
   const c=document.createElement('canvas');c.width=c.height=2048;const g=c.getContext('2d');
   const files=['alpen-resort.svg','hornox.svg','the-dude.svg','peakfine.svg','phoenix.svg','la-perle.svg','patricia.png'];
-  const positive=new Image();positive.src='/assets/logo-blue.png';await positive.decode();
-  const logos=await Promise.all(files.map(async f=>{const im=new Image();im.src='/assets/brand-'+f;await im.decode();return im;}));
+  const positive=new Image();positive.src='assets/logo-blue.png';await positive.decode();
+  const logos=await Promise.all(files.map(async f=>{const im=new Image();im.src='assets/brand-'+f;await im.decode();return im;}));
   for(let i=0;i<16;i++){
    const x=i%4*512,y=Math.floor(i/4)*512;g.fillStyle=i===10?'#dedccc':'#0e1211';g.fillRect(x,y,512,512);
    if(i<7){const im=logos[i];signAspects[i]=im.naturalWidth/im.naturalHeight;g.drawImage(im,x+20,y+20,472,472);}
@@ -171,7 +171,7 @@ export function createRenderer(canvas){
   }
   const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,c);gl.generateMipmap(gl.TEXTURE_2D);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);textures.sign=t;
  }
- const ready=Promise.all([loadTexture("collection","/assets/collection-mark.png"),loadSigns(),loadTexture("stone","/assets/stone.jpg"),loadTexture("surface","/assets/surfaces.jpg")]);
+ const ready=Promise.all([loadTexture("collection","assets/collection-mark.png"),loadSigns(),loadTexture("stone","assets/stone.jpg"),loadTexture("surface","assets/surfaces.jpg")]);
  function bindTextures(){gl.activeTexture(gl.TEXTURE9);gl.bindTexture(gl.TEXTURE_2D,textures.collection);gl.activeTexture(gl.TEXTURE8);gl.bindTexture(gl.TEXTURE_2D,textures.sign);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,textures.fir||null);gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,textures.stone);gl.activeTexture(gl.TEXTURE5);gl.bindTexture(gl.TEXTURE_2D,textures.surface);gl.activeTexture(gl.TEXTURE6);gl.bindTexture(gl.TEXTURE_2D,textures.facade||null);}
  const context={vp,lightVP,eye,fog,software};
  const local=new Float32Array(16),result=new Float32Array(16),stack=Array.from({length:16},()=>new Float32Array(16));let level=0;identity(stack[0]);

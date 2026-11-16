@@ -5,20 +5,20 @@
 <meta name="description" content="A 15-minute adventure from Alpen Resort through Zermatt, alpine meadows and glaciers to the Matterhorn summit.">
 <meta property="og:type" content="website"><meta property="og:title" content="Hornox Run · Zermatt"><meta property="og:description" content="From Alpen Resort to the Matterhorn. Ten levels, a new world every 90 seconds, power-ups and Swiss music.">
 <meta property="og:image" content="https://ab-ins-spa-alpen-resort.higgsfield.app/assets/og-image.jpg"><meta property="og:url" content="https://ab-ins-spa-alpen-resort.higgsfield.app">
-<meta name="twitter:card" content="summary_large_image"><link rel="canonical" href="https://ab-ins-spa-alpen-resort.higgsfield.app"><link rel="icon" href="/hornox-icon.svg" type="image/svg+xml"><link rel="manifest" href="/site.webmanifest"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="stylesheet" href="/style.css?v=19">
-<link rel="preload" as="image" href="/assets/launch-scene.webp"><link rel="stylesheet" href="/front.css?v=19"></head><body>
+<meta name="twitter:card" content="summary_large_image"><link rel="canonical" href="https://ab-ins-spa-alpen-resort.higgsfield.app"><link rel="icon" href="hornox-icon.svg" type="image/svg+xml"><link rel="manifest" href="site.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="style.css?v=19">
+<link rel="preload" as="image" href="assets/launch-scene.webp"><link rel="stylesheet" href="front.css?v=19"></head><body>
 <main id="app" data-screen="home" data-front="cover">
  <div id="heart-feedback" hidden aria-live="polite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21C9 18 2 13 2 7.7C2 2.6 8.5 1 12 5.5C15.5 1 22 2.6 22 7.7C22 13 15 18 12 21Z"/></svg><span></span></div><canvas id="world" aria-label="Hornox in the mountains of Zermatt"></canvas><div class="vignette" aria-hidden="true"></div>
- <header id="brandbar"><a href="https://www.alpenresort.com/" target="_blank" rel="noopener" data-label="hotel"><img src="/assets/logo-blue.png" width="156" height="42" alt="Alpen Resort Hotel & Spa Zermatt"></a><div class="tools"><select id="language" class="icon" aria-label="Language / Sprache / Langue / 言語 / 语言"><option value="en">EN</option><option value="de">DE</option><option value="fr">FR</option><option value="ja">日本語</option><option value="zh">中文</option></select><button id="settings" class="icon" data-label="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2.5"/><circle cx="15" cy="17" r="2.5"/></svg></button></div></header>
+ <header id="brandbar"><a href="https://www.alpenresort.com/" target="_blank" rel="noopener" data-label="hotel"><img src="assets/logo-blue.png" width="156" height="42" alt="Alpen Resort Hotel & Spa Zermatt"></a><div class="tools"><select id="language" class="icon" aria-label="Language / Sprache / Langue / 言語 / 语言"><option value="en">EN</option><option value="de">DE</option><option value="fr">FR</option><option value="ja">日本語</option><option value="zh">中文</option></select><button id="settings" class="icon" data-label="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2.5"/><circle cx="15" cy="17" r="2.5"/></svg></button></div></header>
  <section id="splash" aria-labelledby="splash-title">
-  <img class="splash-art" src="/assets/launch-scene.webp" alt="" fetchpriority="high"><div class="splash-shade"></div>
-  <img class="splash-brand" src="/assets/logo-blue.png" alt="Alpen Resort Zermatt">
+  <img class="splash-art" src="assets/launch-scene.webp" alt="" fetchpriority="high"><div class="splash-shade"></div>
+  <img class="splash-brand" src="assets/logo-blue.png" alt="Alpen Resort Zermatt">
   <div class="splash-title"><p class="eyebrow">ZERMATT · SWITZERLAND</p><h1 id="splash-title">HORNOX<span>RUN</span></h1></div>
   <div class="splash-bottom"><p data-i18n="splashLine">A little courage. A mighty mountain.</p><button id="enter-game" class="primary" data-i18n="enterGame">ENTER THE ADVENTURE</button><span class="splash-foot">ALPEN RESORT · AUFDENBLATTEN COLLECTION</span></div>
  </section>
  <section id="home" aria-label="Main menu">
-  <div class="menu-art" aria-hidden="true"><img src="/assets/launch-scene.webp" alt=""></div>
+  <div class="menu-art" aria-hidden="true"><img src="assets/launch-scene.webp" alt=""></div>
   <div class="menu-heading"><p class="eyebrow" data-i18n="menuKicker">YOUR ALPINE ADVENTURE</p><h2>HORNOX <span>RUN</span></h2><p data-i18n="subtitle"></p></div>
   <div class="menu-content">
    <section id="menu-run" class="menu-view">
@@ -37,14 +37,14 @@
   <div class="journey"><span id="stage">ALPEN RESORT</span><strong id="distance">0 m</strong><div class="progress"><span id="progress"></span></div><div id="lives"><span id="lives-label">Lives</span><span id="life-hearts"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21C9 18 2 13 2 7.7C2 2.6 8.5 1 12 5.5C15.5 1 22 2.6 22 7.7C22 13 15 18 12 21Z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21C9 18 2 13 2 7.7C2 2.6 8.5 1 12 5.5C15.5 1 22 2.6 22 7.7C22 13 15 18 12 21Z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21C9 18 2 13 2 7.7C2 2.6 8.5 1 12 5.5C15.5 1 22 2.6 22 7.7C22 13 15 18 12 21Z"/></svg></span></div></div>
   <div class="score-box"><strong id="score">0</strong><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5"/></svg><b id="coins">0</b><b id="combo"></b></span></div>
  </section>
- <div id="intro-caption" hidden><img src="/assets/logo-blue.png" alt="Alpen Resort Hotel & Spa Zermatt"><span></span></div>
+ <div id="intro-caption" hidden><img src="assets/logo-blue.png" alt="Alpen Resort Hotel & Spa Zermatt"><span></span></div>
  <button id="rush-button" hidden type="button"><span class="rush-disc"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2 4 14h7l-1 8 10-12h-7Z"/></svg><b id="rush-value">0/30</b></span><span id="rush-name">HORN RUSH</span><kbd id="rush-key">E</kbd></button><div id="power-callout" role="status" aria-live="polite"></div>
  <div id="turn-cue" hidden><strong id="turn-arrow">↱</strong><div><span id="turn-label"></span><b id="turn-distance"></b></div></div>
  <div id="tutorial" hidden><div><b>↑</b><span data-i18n="jump"></span></div><div><b>↓</b><span data-i18n="duck"></span></div><div><b>← →</b><span data-i18n="move"></span></div></div>
- <div id="powerup" hidden></div><div id="resort-arrival" hidden><img src="/assets/logo-blue.png" alt="Alpen Resort Zermatt"><span data-i18n="arrival"></span></div>
+ <div id="powerup" hidden></div><div id="resort-arrival" hidden><img src="assets/logo-blue.png" alt="Alpen Resort Zermatt"><span data-i18n="arrival"></span></div>
  <div id="feedback-label" aria-live="polite"></div><div id="toast" role="status" aria-live="polite"></div><div id="countdown" hidden></div>
  <div id="touch-controls" hidden><button data-action="left" class="icon" data-label="left">←</button><button data-action="jump" class="icon" data-label="jump">↑</button><button data-action="duck" class="icon" data-label="duck">↓</button><button data-action="right" class="icon" data-label="right">→</button></div>
- <div id="game-brand"><img src="/assets/logo-blue.png" alt="Alpen Resort Zermatt"></div><button id="quick-sound" class="icon" data-label="sound">♪</button>
+ <div id="game-brand"><img src="assets/logo-blue.png" alt="Alpen Resort Zermatt"></div><button id="quick-sound" class="icon" data-label="sound">♪</button>
  <div id="pause-overlay" class="overlay" hidden><section class="panel"><p class="eyebrow" data-i18n="pause"></p><h2 data-i18n="pauseTitle"></h2><button id="resume" class="primary" data-i18n="resume"></button><button id="restart" class="secondary" data-i18n="restart"></button><button id="pause-settings" class="text-button" data-i18n="settings"></button><button class="text-button go-home" data-i18n="exit"></button></section></div>
  <div id="result" class="overlay" hidden><section class="panel result-panel"><p id="result-kicker" class="eyebrow"></p><h2 id="result-title"></h2><strong id="result-score">0</strong><p id="result-details"></p><p id="result-note"></p><button id="again" class="primary" data-i18n="again"></button><button id="share" class="secondary" data-i18n="share"></button><div id="copy-link-wrap" hidden><label for="copy-link" data-i18n="shareFallback"></label><input id="copy-link" readonly></div><a class="hotel-link" href="https://www.alpenresort.com/" target="_blank" rel="noopener"><span data-i18n="hotel"></span> ↗</a><button class="text-button go-home" data-i18n="exit"></button></section></div>
 </main>
@@ -57,4 +57,4 @@
 <label class="setting"><span data-i18n="showButtons"></span><input id="buttons-toggle" type="checkbox"></label>
 <div class="setting"><span data-i18n="tilt"></span><button id="tilt-toggle" class="small-button" data-i18n="activate"></button></div><p id="tilt-status" class="note" data-i18n="tiltHelp"></p>
 <p class="key-title" data-i18n="keys"></p><div class="key-grid"><button id="bind-left" data-bind="left" class="key-button"></button><button id="bind-right" data-bind="right" class="key-button"></button><button id="bind-jump" data-bind="jump" class="key-button"></button><button id="bind-duck" data-bind="duck" class="key-button"></button></div><button id="keys-reset" class="text-button" data-i18n="keysReset"></button><p class="note" data-i18n="assistNote"></p><button class="primary" data-close data-i18n="close"></button>
-</dialog><script type="module" src="/client.js?v=20"></script></body></html>
+</dialog><script type="module" src="client.js?v=20"></script></body></html>

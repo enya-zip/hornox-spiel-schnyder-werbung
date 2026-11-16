@@ -1,5 +1,5 @@
 export function createAudio(){
- const urls={music:"/assets/hornox-alpine-party-210s.mp3",jump:"/assets/jump-funny.mp3",duck:"/assets/slide.mp3",pickup:"/assets/cowbell-coin.mp3",land:"/assets/land.mp3",bump:"/assets/bonk-funny.mp3"};
+ const urls={music:"assets/hornox-alpine-party-210s.mp3",jump:"assets/jump-funny.mp3",duck:"assets/slide.mp3",pickup:"assets/cowbell-coin.mp3",land:"assets/land.mp3",bump:"assets/bonk-funny.mp3"};
  let context,master,musicNode,musicGain,enabled=true,active=false,foreground=!document.hidden,readyPromise=null,resuming=null,musicOffset=0,musicStarted=0;
  const buffers={},stats={played:0,last:"",musicStarts:0};
  const files=Promise.all(Object.entries(urls).map(async([k,url])=>{const r=await fetch(url);if(!r.ok)throw Error(url);return[k,await r.arrayBuffer()];})).catch(e=>{console.warn("Audio preload",e.message);return[];});
