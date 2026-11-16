@@ -1,5 +1,6 @@
 import {createAlpine} from './alpine.js?v=17';
 import {createPowerups} from './powerups.js?v=17';
+import {createSummit} from './summit.js?v=1';
 import {createEncounters} from './encounters.js?v=20';
 import {createSpecials} from './specials.js?v=17';
 import {introFrame} from './intro.js?v=17';
@@ -12,11 +13,12 @@ import {getZone} from './journey.js?v=17';
 export {getZone};
 const PI=Math.PI,C={ice:[.74,.87,.9,10],grass:[.44,.58,.30,11],gravel:[.7,.63,.48,12],cobble:[.65,.66,.61,13],snow:[.86,.92,.94,2],rock:[.48,.52,.53,1],wood:[.32,.22,.15,4],gold:[1,.74,.24,9],dark:[.12,.2,.23],fir:[1,1,1,7],red:[.85,.16,.19],flower:[.97,.85,.40]};
 export function createScene(canvas){
- const r=createRenderer(canvas),a=r.add,push=r.push,pop=r.pop,fx=createEffects(r),arch=createArchitecture(r),special=createSpecials(r),encounters=createEncounters(r),alpine=createAlpine(r),powerups=createPowerups(r);let actor,showcase,npc={},path,key='',origin={x:0,z:0,h:0},lane=1,cam=0,jump=0,lastD=0,anim=0,visibleActor,instances=[],zone=3,trackD=0,grade=0,streetBuildings=[],cinematic=null,cinematicMetrics=null,rushFov=0,tossed=[],touristGroups=[],flamingoInstances=0;const placementCache=new Map(),clearCache=new Map();let visualSubtick=0,mtn=null,mtnFade=0;
+ const r=createRenderer(canvas),a=r.add,push=r.push,pop=r.pop,fx=createEffects(r),arch=createArchitecture(r),special=createSpecials(r),encounters=createEncounters(r),alpine=createAlpine(r),powerups=createPowerups(r),summit=createSummit(r);let actor,showcase,npc={},path,key='',origin={x:0,z:0,h:0},lane=1,cam=0,jump=0,lastD=0,anim=0,visibleActor,instances=[],zone=3,trackD=0,grade=0,streetBuildings=[],cinematic=null,cinematicMetrics=null,rushFov=0,tossed=[],touristGroups=[],flamingoInstances=0;const placementCache=new Map(),clearCache=new Map();let visualSubtick=0,mtn=null,mtnFade=0;
  const ready=Promise.all([r.ready,createActor(r.gl,'assets/hornox-run.glb','assets/hornox-jump.glb',{brand:true}),createActor(r.gl,'assets/hornox-showcase.glb',null,{brand:true}),...['sheep','marmot','hiker','bike'].map((name,i)=>createActor(r.gl,'assets/'+(name==='hiker'?'hiker-standing':name)+'.glb',null,{height:[1.5,.85,2.35,2.4][i],walk:name==='hiker'}))]).then(([,run,still,...models])=>{actor=run;showcase=still;['sheep','marmot','hiker','bike'].forEach((n,i)=>npc[n]=models[i]);visibleActor=still;r.setExtra((pass,ctx)=>{for(const ins of instances){ins.actor.update(ins.pose);ins.actor.draw(pass,ctx);}visibleActor.draw(pass,ctx);});});
  // Level 10: pyramidenförmiger Gipfel (wie das Matterhorn). Der Zickzack-Weg verläuft nur in zwei
  // Richtungen auf den Gipfel zu, daher steigt er mit der L1-Distanz gleichmässig bis zur Spitze an.
- function peak(X,Z){if(!mtn)return 0;const l=Math.abs(X-mtn.x)+Math.abs(Z-mtn.z);return mtnFade*mtn.k*Math.max(0,mtn.R-Math.max(l,mtn.p));}
+ // Der Bergfuss ist weich gerundet (Breite 300), damit die grobe Bodenfläche nie über dem Weg liegt.
+ function peak(X,Z){if(!mtn)return 0;const l=Math.abs(X-mtn.x)+Math.abs(Z-mtn.z),t=mtn.R-Math.max(l,mtn.p),W=300,f=t>=W?t:t<=-W?0:(t+W)*(t+W)/(4*W);return mtnFade*mtn.k*f;}
  function groundY(x,z){return grade*(x*.55-z*.83)+(mtn?peak(x+origin.x,z+origin.z)-peak(origin.x,origin.z):0);}
  function at(d,offset=0,y=0){const p=path.frame(d);const x=p.x-origin.x+Math.cos(p.h)*offset,z=p.z-origin.z+Math.sin(p.h)*offset;push(x,y+groundY(x,z),z,0,-p.h);return p;}
  function point(d,offset=0){const p=path.frame(d);const x=p.x-origin.x+Math.cos(p.h)*offset,z=p.z-origin.z+Math.sin(p.h)*offset;return{x,y:groundY(x,z),z,h:p.h};}
@@ -35,10 +37,10 @@ export function createScene(canvas){
   for(let i=0;i<points.length-1;i++){const w=points[i],e=edges(w),f=edges(points[i+1]),z=getZone(Math.max(0,elapsed+(w-d)/speed)),out=batches[[4,6,7,8,9,10].includes(z)?1:z===5?0:z];for(const p of[e[0],f[0],e[1],e[1],f[0],f[1]])out.push(...p,0,1,0,1,1,1);}
   for(let i=0;i<points.length-1;i++)if([2,3].includes(getZone(Math.max(0,elapsed+(points[i]-d)/speed)))){const inner=edges(points[i],4.17),outer=edges(points[i],6.30),nextInner=edges(points[i+1],4.17),nextOuter=edges(points[i+1],6.30);for(let side=0;side<2;side++){const quad=[inner[side],outer[side],nextOuter[side],nextInner[side]].map(p=>[p[0],p[1]+.075,p[2]]);for(const j of[0,1,2,0,2,3])pavement.push(...quad[j],0,1,0,.60,.61,.57);const lo=[inner[side],nextInner[side]],hi=lo.map(p=>[p[0],p[1]+.075,p[2]]);for(const p of[lo[0],hi[0],hi[1],lo[0],hi[1],lo[1]])pavement.push(...p,0,1,0,.85,.86,.84);}}
   r.setGeometry('pavement',pavement,24);
-  const cell=mtn?90:grade===0?3600:300,gx=mtn?Math.floor((origin.x-mtn.x-1800)/cell)*cell+mtn.x-origin.x:-1800,gz=mtn?Math.floor((origin.z-mtn.z-1800)/cell)*cell+mtn.z-origin.z:-1800;for(let x=gx;x<gx+3600;x+=cell)for(let z=gz;z<gz+3600;z+=cell){const v=(xx,zz)=>[xx,groundY(xx,zz)-.27,zz];const a=v(x,z),b=v(x+cell,z),c=v(x+cell,z+cell),e=v(x,z+cell);if(!mtn){for(const p of[a,e,c,a,c,b])terrain.push(...p,0,1,0,1,1,1);continue;}
+  const cell=mtn?90:grade===0?3600:300,gx=mtn?Math.floor((origin.x-mtn.x-1800)/cell)*cell+mtn.x-origin.x:-1800,gz=mtn?Math.floor((origin.z-mtn.z-1800)/cell)*cell+mtn.z-origin.z:-1800;for(let x=gx;x<gx+3600;x+=cell)for(let z=gz;z<gz+3600;z+=cell){const v=(xx,zz)=>[xx,groundY(xx,zz)-(mtn?1.1:.27),zz];const a=v(x,z),b=v(x+cell,z),c=v(x+cell,z+cell),e=v(x,z+cell);if(!mtn){for(const p of[a,e,c,a,c,b])terrain.push(...p,0,1,0,1,1,1);continue;}
    // Bergflanken: echte Flächennormalen für Licht/Schatten, unten Fels, oben Schnee.
    for(const tri of[[a,e,c],[a,c,b]]){const[p0,p1,p2]=tri,ux=p1[0]-p0[0],uy=p1[1]-p0[1],uz=p1[2]-p0[2],vx=p2[0]-p0[0],vy=p2[1]-p0[1],vz=p2[2]-p0[2];let nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx;let nl=Math.hypot(nx,ny,nz)||1;if(ny<0)nl*=-1;nx/=nl;ny/=nl;nz/=nl;
-    const cx=(p0[0]+p1[0]+p2[0])/3+origin.x,cz=(p0[2]+p1[2]+p2[2])/3+origin.z,top=mtn.k*mtn.R*mtnFade||1,h=peak(cx,cz)/top,snow=Math.max(0,Math.min(1,(h-.45)/.3)),col=[.46+.54*snow,.43+.57*snow,.41+.59*snow];
+    const cx=(p0[0]+p1[0]+p2[0])/3+origin.x,cz=(p0[2]+p1[2]+p2[2])/3+origin.z,top=mtn.k*(mtn.R-mtn.p)*mtnFade||1,h=peak(cx,cz)/top,snow=Math.max(0,Math.min(1,(h-.45)/.3)),col=[.46+.54*snow,.43+.57*snow,.41+.59*snow];
     for(const q of tri)terrain.push(...q,nx,ny,nz,...col);}}
   r.setGeometry('terrain',terrain,18);batches.forEach((b,i)=>r.setGeometry('road'+i,b,19));
  }
@@ -104,8 +106,15 @@ export function createScene(canvas){
    push(x,y,z,0,-h,(toss?.lean||0)+sway,style===4?.83:scale);encounters.accessory(poseStyle,variant,pace);pop();
   }
  }
- function obstacle(o,d,time,toss=null){const od=o.d-(toss?0:(o.approach||0)*visualSubtick);if(!toss&&(od<d-8||od>d+180||(o.resolved&&['coin','magnet','heart','shieldOrb','coinBoost','rushCharge'].includes(o.kind))))return;const off=(o.lane<0?0:(o.lane-1)*2.5)+(toss?.side||0),p=point(od,off),rise=toss?.y||0;
+ function obstacle(o,d,time,toss=null){const od=o.d-(toss?0:(o.approach||0)*visualSubtick);if(!toss&&(od<d-8||od>d+180||(o.resolved&&['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes'].includes(o.kind))))return;const off=(o.lane<0?0:(o.lane-1)*2.5)+(toss?.side||0),p=point(od,off),rise=toss?.y||0;
   if(['pedestrian','hiker','photographers','influencer','lostTourists','scooter','skiers','snowboarders'].includes(o.kind)){visitors(o,p,time,toss);if(o.kind!=='scooter')return;}
+  if(o.kind==='ibex'&&!toss){
+   // Steinbock wartet neben der Piste auf einem Felsen und springt kurz vor Hornox auf seine Spur.
+   const side=o.id%2?1:-1,gap=od-d,u=Math.max(0,Math.min(1,(52-gap)/18)),ease=u*u*(3-2*u),lat=side*7.5*(1-ease),q=point(od,off+lat);
+   push(q.x,q.y,q.z,0,-q.h+(u>0&&u<1?-side*PI/2:u>=1?PI:-side*PI/2));
+   if(u<1)a('rock',0,-.1+(1-ease)*.25,0,1.4*(1-ease)+.01,.7*(1-ease)+.01,1.4*(1-ease)+.01,C.rock,0,o.id);
+   push(0,(1-ease)*.55+Math.sin(u*PI)*2.4,0);summit.ibex(time,u>0&&u<1?u:0,o.id);pop();pop();return;}
+  if(o.kind==='crow'){at(od,off,rise+1.75);if(toss)push(0,0,0,0,toss.spin,toss.lean);push(0,0,0,0,PI);summit.crow(time,o.id);pop();if(toss)pop();pop();return;}
   if(o.kind==='flamingo')flamingoInstances++;
   const model=o.kind==='scooter'?null:o.kind;
   if(npc[model]){const animal=['marmot','sheep'].includes(o.kind),idle=model==='hiker';instances.push({actor:npc[model],pose:{x:p.x,z:p.z,y:p.y+rise+(animal?Math.abs(Math.sin(time*(model==='marmot'?10:6)+o.id))*(model==='marmot'?.14:.05):0),heading:(toss?.spin||0)-PI/2-p.h+(idle?Math.sin(time*.7+o.id)*.035:0),distance:idle?0:time*3,home:idle,lean:toss?toss.lean:animal?Math.sin(time*7+o.id)*.025:0}});return;}
@@ -119,6 +128,8 @@ export function createScene(canvas){
   else if(o.kind==='heart'){a('heart',0,2.12+Math.sin(time*3+o.id)*.12,0,.62,.62,.62,[1,.12,.27,49],0,Math.sin(time*1.4+o.id)*.35);a('ring',0,.08,0,.55,.55,.045,[1,.35,.45,49],PI/2);}
   else if(o.kind==='coin')special.coin(time,o.id);
   else if(['magnet','shieldOrb','coinBoost','rushCharge'].includes(o.kind))powerups.pickup(o.kind,time,o.id);
+  else if(o.kind==='climbGear'||o.kind==='snowshoes')summit.pickup(o.kind,time,o.id);
+  else if(o.kind==='ibex')summit.ibex(time,0,o.id);
   else if(o.kind==='crevasse'||o.kind==='ridgeGap'){const width=o.lane<0?8.3:2.3;a('crack',0,.025,1.15,width,2.3,1,o.kind==='ridgeGap'?[.10,.09,.07]:[.02,.12,.19,21],-PI/2);for(let i=0;i<7;i++)for(const side of[-1,1]){const x=(i/6-.5)*width,z=side*(1.03+Math.sin(i*5.2+o.id)*.1);a('rock',x,.03,z,width/14,.09,.16,o.kind==='ridgeGap'?C.rock:[.66,.88,.97,20],0,i);}}
   else if(['lowRock','rockfall','boulder'].includes(o.kind)){const small=o.kind==='lowRock';a('rock',0,small?.42:.8,0,small?.8:1,small?.62:1.1,.8,C.rock,o.kind==='rockfall'?time*2:0,o.id*.7);}
   else if(o.kind==='rope'){for(const side of[-1,1])a('cylinder',side*4.3,1.5,0,.06,3,.06,C.wood);a('cylinder',0,2.25,0,.07,8.6,.07,[.69,.46,.24],0,0,PI/2);}
@@ -152,7 +163,7 @@ export function createScene(canvas){
   const offset=active?(lane-1)*2.5:0,ax=Math.cos(p.h)*offset,az=cinematic?cinematic.z:Math.sin(p.h)*offset,powered=s.powerTicks>0,lift=(powered?.28:0)-(s.fallTicks?Math.sin((20-s.fallTicks)/20*PI)*2.7:0);
   a('billboard',ax,groundY(ax,az)+.025,az,2.2,1.5,1,[.1,.16,.17,8],-PI/2);
   visibleActor=active?actor:showcase;visibleActor.update({distance:cinematic?cinematic.runDistance:active?d:0,time:anim,jump:active?s.jump:0,duck:active?s.duck:0,home:!active||waiting||!!cinematic&&!cinematic.walking,x:ax,y:active?groundY(ax,az)+jump*2.2+lift:0,z:az,heading:active?PI-cam:PI,impact:fx.impact(),lean:reduced?0:(s.target-lane)*-.1+fx.wobble()});
-  if(active&&(s.shield||s.coinBoost>0||s.magnet>0)){push(ax,groundY(ax,az)+jump*2.2+lift,az,0,-cam);powerups.aura(s,anim);pop();}
+  if(active&&(s.shield||s.coinBoost>0||s.magnet>0||s.climb>0||s.shoes>0)){push(ax,groundY(ax,az)+jump*2.2+lift,az,0,-cam);powerups.aura(s,anim);summit.aura(s,anim);pop();}
   rushFov+=((powered?1:0)-rushFov)*Math.min(1,delta*5);if(powered){push(ax,groundY(ax,az)+jump*2.2+lift,az,0,-cam);special.rush(anim,reduced,rushFov);pop();}
   const follow=active?offset*.35:0,dist=mobile?10.3:9.5,ex=-Math.sin(cam)*dist+Math.cos(cam)*follow,ez=Math.cos(cam)*dist+Math.sin(cam)*follow;
   fx.render(delta,p,{paused:paused||screen!=="play"||!!cinematic,reduced,state:s,path});

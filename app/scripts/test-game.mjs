@@ -17,10 +17,10 @@ check('environment-specific hazards remain appropriate and every variant is reac
  const profiles={
   3:['snowman','luggage','trolley','planter','electric','photographers','manhole','carriage','scooter','skiers','snowboarders','influencer','lostTourists','pedestrian','bike'],
   6:['hiker','marmot','sheep','log','branch','bike'],7:['hiker','marmot','sheep','log','branch','bike'],8:['hiker','marmot','sheep','log','branch','bike'],1:['hiker','marmot','sheep','log','branch','bike'],
-  9:['hiker','lowRock','ridgeGap','rope','rockfall','boulder'],4:['hiker','lowRock','ridgeGap','rope','rockfall','boulder'],10:['hiker','lowRock','ridgeGap','rope','rockfall','boulder'],0:['iceBlock','crevasse','iceArch'],5:['iceBlock','crevasse','iceArch']};
+  9:['hiker','lowRock','ridgeGap','rope','rockfall','boulder'],4:['hiker','lowRock','ridgeGap','rope','rockfall','boulder'],10:['hiker','lowRock','ridgeGap','rope','rockfall','boulder'],0:['iceBlock','crevasse','iceArch'],5:['iceBlock','crevasse','iceArch','crow','ibex']};
  for(const [elapsed,z]of [[30,3],[110,6],[200,7],[290,8],[390,1],[480,9],[570,4],[660,0],[750,10],[840,5]]){const found=new Set();for(let seed=1;seed<90;seed++){
   const state={...start(seed),flamingoSpawned:true,tick:elapsed*20,elapsed,distance:1000,nextRow:1030,nextTurn:99999,row:20};
-  for(const o of action(state,{type:'step'}).objects){if(['coin','magnet','heart','shieldOrb','coinBoost','rushCharge'].includes(o.kind))continue;assert.equal(o.biome,z);assert(profiles[z].includes(o.kind),'wrong biome: '+o.kind);found.add(o.kind);}
+  for(const o of action(state,{type:'step'}).objects){if(['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes'].includes(o.kind))continue;assert.equal(o.biome,z);assert(profiles[z].includes(o.kind),'wrong biome: '+o.kind);found.add(o.kind);}
  }assert.deepEqual([...found].sort(),profiles[z].sort());}
 });
 check('walkers, photo groups, bikes and wildlife approach with each simulation step',()=>{const s={...start(),nextRow:9999,objects:['hiker','pedestrian','photographers','bike','sheep'].map((kind,id)=>({id,kind,d:150,lane:0,approach:2.4}))};const out=action(s,{type:'step'});for(const o of out.objects)assert.equal(o.d,149.88);});
@@ -39,7 +39,7 @@ check('dense rows retain an open lane or one consistent jump/slide action',()=>{
  for(let seed=1;seed<=50;seed++)for(const elapsed of [30,110,200,290,390,480,570,660,750,840]){
   const initial={...start(seed),flamingoSpawned:true,tick:elapsed*20,elapsed,distance:1100,nextRow:1120,nextTurn:99999,row:20};
   const s=action(initial,{type:'step'}),rows=new Map();
-  for(const o of s.objects){if(['coin','magnet','heart','shieldOrb','coinBoost','rushCharge'].includes(o.kind))continue;if(!rows.has(o.rowId))rows.set(o.rowId,[]);rows.get(o.rowId).push(o);if(o.approach>0){incoming++;assert(Math.abs((o.d-(o.front||0)-s.distance)/(s.speed+o.approach)-(o.encounter-s.distance)/s.speed)<.00001);}}
+  for(const o of s.objects){if(['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes'].includes(o.kind))continue;if(!rows.has(o.rowId))rows.set(o.rowId,[]);rows.get(o.rowId).push(o);if(o.approach>0){incoming++;assert(Math.abs((o.d-(o.front||0)-s.distance)/(s.speed+o.approach)-(o.encounter-s.distance)/s.speed)<.00001);}}
   for(const obstacles of rows.values()){
    if(obstacles.some(o=>o.lane===-1)){assert.equal(obstacles.length,1);continue;}
    assert([0,1,2].some(l=>obstacles.every(o=>Math.abs(o.lane-l)>=(o.hitWidth||.38))),'a safe lane remains');if(obstacles.length===2)paired++;
@@ -134,4 +134,12 @@ check('mountain bikes are materially more frequent below the alpine rock stages'
  }assert(bikes/rows>.30);console.log('BIKES_PER_ROW',bikes/rows);
 });
 
+check('level 10: climbing gear protects for 10s, snowshoes speed up, crows steal coins but no lives',()=>{
+ const gear=action({...start(),distance:100,nextRow:10000,x:1,objects:[{id:1,kind:'climbGear',lane:1,d:100.9}]},{type:'step'});assert.equal(gear.climb,200);
+ const safe=action({...start(),climb:100,distance:100,nextRow:10000,x:1,objects:[{id:1,kind:'boulder',lane:1,d:100.9}]},{type:'step'});assert.equal(safe.lives,3);
+ const shoes=action({...start(),distance:100,nextRow:10000,x:1,objects:[{id:1,kind:'snowshoes',lane:1,d:100.9}]},{type:'step'});assert.equal(shoes.shoes,200);
+ const base=action({...start(),distance:100,nextRow:10000,objects:[]},{type:'step'}),fast=action({...start(),shoes:50,slow:10,distance:100,nextRow:10000,objects:[]},{type:'step'});assert(Math.abs(fast.speed/base.speed-1.2)<1e-9);
+ const crow=action({...start(),coins:25,distance:100,nextRow:10000,x:1,objects:[{id:1,kind:'crow',lane:1,d:100.9}]},{type:'step'});assert.equal(crow.coins,15);assert.equal(crow.lives,3);assert(crow.events.some(e=>e.kind==='crow'&&e.lost===10));
+ assert.equal(collision('crow',{duck:9}).lives,3);assert.equal(collision('ibex').lives,2);assert.equal(collision('ibex',{lane:0}).lives,3);
+});
 console.log(`${checks} rule checks passed`);
