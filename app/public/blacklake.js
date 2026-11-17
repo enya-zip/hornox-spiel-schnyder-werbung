@@ -34,5 +34,15 @@ export function createBlackLake(r){
  function lily(time,k){a('cylinder',0,.03,0,.7,.02,.7,[.25,.6,.25]);if(k%2===0){for(let j=0;j<6;j++){const t=j*PI/3;a('sphere',Math.cos(t)*.14,.1,Math.sin(t)*.14,.1,.05,.06,k%4?[1,.75,.85]:[1,1,.96],0,-t,0);}a('sphere',0,.12,0,.06,.05,.06,[1,.85,.2]);}}
  // Ufer-Schilf.
  function reeds(k){for(let j=0;j<5;j++){const h=.9+((k+j)%3)*.3;a('cylinder',(j-2)*.14,h/2,(j%2)*.15,.02,h,.02,[.35,.55,.24]);if(j%2===0)a('cylinder',(j-2)*.14,h,(j%2)*.15,.05,.22,.05,[.45,.28,.14]);}}
- return{frog,fly,swarm,floatLog,stone,lily,reeds};
+ // Laufstrecke auf dem Wasser: Floss aus Brettern mit Seilbindung (quer über alle drei Spuren).
+ function raft(time,k){const bob=Math.sin(time*1.8+k)*.04;push(0,bob,0,Math.sin(time*1.3+k)*.015,0,0);for(let j=0;j<3;j++)a('box',0,.1,(j-1)*.74,8.4,.16,.68,[[.62,.44,.26],[.55,.38,.22],[.66,.48,.3]][(k+j)%3]);for(const x of[-3.6,0,3.6])a('box',x,.2,0,.12,.04,2.3,[.85,.78,.6]);pop();}
+ // Bündel aus Baumstämmen (längs zur Laufrichtung), auf dem man läuft.
+ function logRaft(time,k){const bob=Math.sin(time*1.6+k)*.05;push(0,bob,0);for(const x of[-3.4,-2.2,-1,.2,1.4,2.6,3.6])a('cylinder',x,.14,0,.34,2.35,.34,[[.5,.34,.2],[.45,.3,.18]][(Math.round(x*5)+k)&1],PI/2);for(const z of[-.8,.8])a('box',0,.42,z,8.2,.05,.1,[.85,.78,.6]);pop();}
+ // Runde Holzplattform auf Schwimmern.
+ function platform(time,k){const bob=Math.sin(time*2+k)*.05;push(0,bob,0);a('cylinder',0,.08,0,4.4,.2,1.3,[.58,.42,.25]);for(let j=-3;j<=3;j++)a('box',j*1.2,.19,0,.05,.02,2.4,[.42,.3,.18]);for(const x of[-3.8,3.8])a('cylinder',x,-.05,0,.35,.3,.35,[.9,.3,.25]);pop();}
+ // Luftblasen und Ringe, wo ein Frosch unter Wasser lauert.
+ function bubbles(time,k){for(let j=0;j<4;j++){const ph=(time*1.5+j*.25+k)%1;a('sphere',Math.sin(j*2.1+k)*.3,ph*.4,Math.cos(j*1.7)*.3,.06+ph*.04,.06+ph*.04,.06+ph*.04,[.85,.95,1,49]);}a('ring',0,.03,0,.5+((time*.8+k)%1)*.6,.5+((time*.8+k)%1)*.6,.02,[.85,.95,1,49],PI/2);}
+ // Spritzer beim Auftauchen.
+ function splash(u){if(u<=0||u>=1)return;for(let j=0;j<8;j++){const t=j*PI/4,r=.4+u*1.2,y=Math.sin(u*PI)*1.1;a('sphere',Math.cos(t)*r,y*(.6+(j%3)*.25),Math.sin(t)*r,.12*(1-u)+.03,.16*(1-u)+.03,.12*(1-u)+.03,[.88,.96,1,49]);}a('ring',0,.04,0,.6+u*1.6,.6+u*1.6,.03,[.9,.97,1,49],PI/2);}
+ return{frog,fly,swarm,floatLog,stone,lily,reeds,raft,logRaft,platform,bubbles,splash};
 }

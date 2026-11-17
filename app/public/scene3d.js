@@ -11,7 +11,7 @@ import {createActor} from './actor.js?v=22';
 import {createEffects} from './effects.js?v=17';
 import {createPath} from './route.js?v=21';
 import {getZone,bridgeAt,fogAt,forestSection,meadowSection,lakeSection,stoneAt} from './journey.js?v=24';
-import {createBlackLake} from './blacklake.js?v=1';
+import {createBlackLake} from './blacklake.js?v=2';
 import {createMeadow} from './meadow.js?v=3';
 import {createForest} from './forest.js?v=4';
 export {getZone};
@@ -38,7 +38,7 @@ export function createScene(canvas){
   const ds=[];for(let w=Math.floor((d-32)/8)*8;w<d+650;w+=8)ds.push(w);
   const i=Math.max(0,Math.floor((d-260)/680));for(let j=i;j<i+4;j++){const v=260+j*680;if(v>ds[0]&&v<ds[ds.length-1])ds.push(v);}ds.sort((a,b)=>a-b);const points=[...new Set(ds)],batches=[[],[],[],[]],terrain=[],pavement=[];
   const edges=(w,width=4.15)=>{const p=point(w),before=path.frame(w-.01).h,after=path.frame(w+.01).h;let nx=Math.cos(before)+Math.cos(after),nz=Math.sin(before)+Math.sin(after);const denom=1+Math.cos(before-after);nx=nx/denom*width;nz=nz/denom*width;return[[p.x-nx,groundY(p.x-nx,p.z-nz),p.z-nz],[p.x+nx,groundY(p.x+nx,p.z+nz),p.z+nz]];};
-  for(let i=0;i<points.length-1;i++){const w=points[i],z=getZone(Math.max(0,elapsed+(w-d)/speed)),wd=z===7?3.3:4.15,e=edges(w,wd),f=edges(points[i+1],wd),out=batches[[4,6,7,8,9,10].includes(z)?1:z===5?0:z];for(const p of[e[0],f[0],e[1],e[1],f[0],f[1]])out.push(...p,0,1,0,1,1,1);}
+  for(let i=0;i<points.length-1;i++){const w=points[i],z=getZone(Math.max(0,elapsed+(w-d)/speed));if(z===9)continue;/* Schwarzsee: kein Weg, nur Wasser */const wd=z===7?3.3:4.15,e=edges(w,wd),f=edges(points[i+1],wd),out=batches[[4,6,7,8,9,10].includes(z)?1:z===5?0:z];for(const p of[e[0],f[0],e[1],e[1],f[0],f[1]])out.push(...p,0,1,0,1,1,1);}
   for(let i=0;i<points.length-1;i++)if([2,3].includes(getZone(Math.max(0,elapsed+(points[i]-d)/speed)))){const inner=edges(points[i],4.17),outer=edges(points[i],6.30),nextInner=edges(points[i+1],4.17),nextOuter=edges(points[i+1],6.30);for(let side=0;side<2;side++){const quad=[inner[side],outer[side],nextOuter[side],nextInner[side]].map(p=>[p[0],p[1]+.075,p[2]]);for(const j of[0,1,2,0,2,3])pavement.push(...quad[j],0,1,0,.60,.61,.57);const lo=[inner[side],nextInner[side]],hi=lo.map(p=>[p[0],p[1]+.075,p[2]]);for(const p of[lo[0],hi[0],hi[1],lo[0],hi[1],lo[1]])pavement.push(...p,0,1,0,.85,.86,.84);}}
   r.setGeometry('pavement',pavement,24);
   const cell=mtn?90:grade===0?3600:300,gx=mtn?Math.floor((origin.x-mtn.x-1800)/cell)*cell+mtn.x-origin.x:-1800,gz=mtn?Math.floor((origin.z-mtn.z-1800)/cell)*cell+mtn.z-origin.z:-1800;for(let x=gx;x<gx+3600;x+=cell)for(let z=gz;z<gz+3600;z+=cell){const v=(xx,zz)=>[xx,groundY(xx,zz)-(mtn?1.1:.27),zz];const a=v(x,z),b=v(x+cell,z),c=v(x+cell,z+cell),e=v(x,z+cell);if(!mtn){for(const p of[a,e,c,a,c,b])terrain.push(...p,0,1,0,1,1,1);continue;}
@@ -137,23 +137,26 @@ export function createScene(canvas){
    }
   }
  }
- // Level 6: Schwarzsee – Wasser überall, Uferweg, Holzsteg und Steinpfad über den See, Seerosen, Schilf,
- // Fliegenschwärme, Frösche auf Seerosenblättern und die Kapelle am Ufer.
+ // Level 6: Schwarzsee – die ganze Welt liegt auf dem Wasser. Die Strecke besteht aus Flössen, Baumstamm-Bündeln,
+ // Plattformen und (im Steinpfad) Trittsteinen; rundherum nur Wasser, Seerosen, Schilfinseln, Fliegen und Frösche,
+ // in der Ferne eine Kapelleninsel, das Matterhorn und die Berge von Zermatt.
  function lakeScenery9(d,elapsed,speed){
   const gaps=curObjects.filter(o=>o.kind==='waterGap').map(o=>o.d);
-  for(let w=Math.floor((d-30)/6)*6;w<d+430;w+=6){const t=Math.max(0,elapsed+(w-d)/speed);if(getZone(t)!==9)continue;const k=Math.round(w/6),sec=lakeSection(t),stones=stoneAt(t),steg=sec>=2&&!stones;
+  for(let w=Math.floor((d-30)/6)*6;w<d+430;w+=6){const t=Math.max(0,elapsed+(w-d)/speed);if(getZone(t)!==9)continue;const k=Math.round(w/6),sec=lakeSection(t),stones=stoneAt(t);
+   // Wasserfläche quer über die ganze Breite (folgt der Geländeneigung, keine Streifen)
+   {const h=path.frame(w).h,sx=grade*(.55*Math.cos(h)-.83*Math.sin(h)),sz=grade*(-.55*Math.sin(h)-.83*Math.cos(h));at(w,0);push(0,0,0,Math.atan(-sz),0,Math.atan(sx));a('box',0,-.1,0,130,.12,6.02,[.08,.3,.42,26]);pop();pop();}
+   // Laufstrecke: schwimmende Elemente im Abstand von 2,4, Lücken nur bei echten Wasserlücken
+   for(let j=0;j<6;j+=2.4){const sw=w+j,n=Math.round(sw/2.4);if(gaps.some(g=>Math.abs(g-sw)<2.6))continue;at(sw,0);
+    if(stones)for(const off of[-2.5,0,2.5]){push(off,0,0);blacklake.stone(Math.abs(n+off|0));pop();}
+    else{const kind=(n+(sec===2?1:0))%5;if(kind===0||kind===3)blacklake.raft(anim,n);else if(kind===1||kind===4)blacklake.logRaft(anim,n);else blacklake.platform(anim,n);}
+    pop();}
    for(const side of[-1,1]){
-    const wet=side<0||sec>=2;
-    if(wet){const h=path.frame(w).h,sx=grade*(.55*Math.cos(h)-.83*Math.sin(h)),sz=grade*(-.55*Math.sin(h)-.83*Math.cos(h)),tilt=()=>push(0,0,0,Math.atan(-sz),0,Math.atan(sx));const c=point(w,side*15);if(clear(c.x,c.z,9,w)){at(w,side*15);tilt();a('box',0,-.13,0,22,.12,6.02,[.08,.3,.42,26]);pop();pop();}const f=point(w,side*40);if(clear(f.x,f.z,12,w)){at(w,side*40);tilt();a('box',0,-.14,0,28,.12,6.02,[.08,.3,.42,26]);pop();pop();}}
-    else if(k%2===0){at(w,side*(8+(k%3)*2));a('rock',0,.1,0,1.4,.6,1.1,C.rock,0,k);pop();if(k%3===0){at(w,side*5.4);blacklake.reeds(k);pop();}}
-    if(wet&&w<d+260){if(k%2===0){at(w+1,side*(7+(k%3)*1.5));blacklake.lily(anim,k);pop();}if(!steg&&!stones&&k%3===1){at(w,side*5.2);blacklake.reeds(k);pop();}}
-    if(wet&&k%4===side+2&&w<d+220){at(w,side*7.5);blacklake.swarm(anim,k,5,1.4);pop();}
-    if(wet&&k%13===(side>0?5:11)&&w<d+240){at(w,side*9);a('cylinder',0,.03,0,1.1,.03,1.1,[.25,.6,.25]);push(0,.04,0,0,-side*PI/2,0,1.2);const ph=(anim*.7+k*.37)%1;blacklake.frog(anim,k,0,0,ph>.85?Math.sin((ph-.85)/.15*PI)*1.6:0,ph>.92);pop();pop();}
-    if(side>0&&sec===1&&k%45===7){const cp=point(w,side*17);if(clear(cp.x,cp.z,6,w)){at(w,side*17);push(0,0,0,0,-PI/2);alpine.chapel();pop();pop();}}
+    if(w<d+260&&k%2===0){at(w+1,side*(6.5+(k%3)*1.6));blacklake.lily(anim,k);pop();}
+    if(k%7===(side>0?2:5)&&w<d+300){at(w,side*(11+(k%4)*2));a('rock',0,.05,0,1.2,.5,1,C.rock,0,k);blacklake.reeds(k);pop();}
+    if(k%3===(side>0?1:0)&&w<d+220){at(w,side*(6+(k%2)*2));blacklake.swarm(anim,k,5,1.4);pop();}
+    if(k%11===(side>0?4:9)&&w<d+240){const ph=(anim*.5+k*.37)%1,up=ph>.3;at(w,side*9);if(!up){blacklake.bubbles(anim,k);}else{a('cylinder',0,.03,0,1.1,.03,1.1,[.25,.6,.25]);push(0,.04-(ph<.36?(.36-ph)*8:0),0,0,-side*PI/2,0,1.2);blacklake.frog(anim,k,0,0,ph>.85?Math.sin((ph-.85)/.15*PI)*1.6:0,ph>.92);pop();blacklake.splash((ph-.3)/.12);}pop();}
+    if(k%60===(side>0?17:47)){const cp=point(w,side*55);if(clear(cp.x,cp.z,8,w)){at(w,side*55);a('rock',0,-.3,0,9,1.6,7,[.4,.45,.35],0,k);a('sphere',0,.6,0,6,.8,5,[.32,.55,.24]);push(0,1,0,0,-side*PI/2);alpine.chapel();pop();pop();}}
    }
-   if(steg||stones){at(w,0);a('box',0,.012,0,8.8,.02,6.02,[.1,.38,.52,26]);pop();}
-   if(steg)for(let j=0;j<6;j+=1.5){const pk=Math.round((w+j)/1.5);at(w+j,0);forest.plank(pk);if(pk%4===0)forest.rail();pop();}
-   if(stones)for(let j=0;j<6;j+=2.4){const sw=w+j;if(gaps.some(g=>Math.abs(g-sw)<2.6))continue;for(const off of[-2.5,0,2.5]){at(sw,off);blacklake.stone(Math.abs(Math.round(k+off)));pop();}}
   }
  }
  function environment(d,elapsed,speed){zone=getZone(elapsed);landscape(d,elapsed);road(d,elapsed,speed);street(d,elapsed,speed);lakeside(d,elapsed,speed);bridge(d,elapsed,speed);forestScenery(d,elapsed,speed);meadowScenery(d,elapsed,speed);lakeScenery9(d,elapsed,speed);
@@ -229,9 +232,13 @@ export function createScene(canvas){
    if(tongueDrawn.has(o.attackId))return;tongueDrawn.add(o.attackId);
    const side=o.side||-1,lanes=curObjects.filter(q=>q.kind==='tongue'&&q.attackId===o.attackId).map(q=>q.lane),far=side<0?Math.max(...lanes):Math.min(...lanes),frogOff=side*5.2,tipOff=(far-1)*2.5-side*1.1,len=Math.abs(tipOff-frogOff)-1;
    const gapT=(od-d)/Math.max(1,speedNow),warn=Math.max(0,Math.min(1,(1.5-gapT)/1.1)),shoot=gapT<.35&&gapT>-.65?(gapT>.05?1-(gapT-.05)/.3:gapT>-.3?1:Math.max(0,1-(-.3-gapT)/.35)):0;
-   const fp=point(od,frogOff);push(fp.x,fp.y,fp.z,0,-fp.h);a('cylinder',0,.06,0,1.1,.12,1,[.55,.58,.6]);push(0,.12,0,0,-side*PI/2,0,1.6);/* Maul und Zunge zeigen zur Strecke */
-   blacklake.frog(time,o.id,warn*(gapT>.35?1:.3),warn*(.5+.5*Math.sin(time*14)),len/1.6*shoot,gapT<-.3);pop();pop();
-   if(shoot<.95){const tp=point(od,(far-1)*2.5);push(tp.x,tp.y,tp.z);blacklake.swarm(time,o.id,3,.6);pop();}
+   // Auftauchen: unter Wasser nur Blasen und Augen, ~1,7 s vorher springt der Frosch mit Spritzer aus dem See.
+   const emerge=Math.max(0,Math.min(1,(1.75-gapT)/.25)),fp=point(od,frogOff);push(fp.x,fp.y,fp.z,0,-fp.h);
+   if(emerge<1)blacklake.bubbles(time,o.id);if(emerge>0){a('cylinder',0,.03,0,1.15,.03,1.15,[.25,.6,.25]);}
+   push(0,.06-(1-emerge)*1.05,0,0,-side*PI/2,0,1.6);blacklake.frog(time,o.id,warn*(gapT>.35?1:.3),warn*(.5+.5*Math.sin(time*14)),len/1.6*shoot,gapT<=.05&&shoot>0);pop();
+   blacklake.splash((1.75-gapT)/.5);pop();
+   // Fliege über der Spur, bis die Zunge sie schnappt
+   if(gapT>.05){const tp=point(od,(far-1)*2.5);push(tp.x+Math.sin(time*7+o.id)*.4,tp.y+.55+Math.sin(time*9)*.25,tp.z+Math.cos(time*6)*.3,0,time*4);blacklake.fly(time,o.id);pop();}
    return;}
   if(['fence','gate','haystack','trough','ditch','woodstack','hayBale'].includes(o.kind)){
    // Level 5: Weide-Hindernisse.

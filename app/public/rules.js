@@ -256,7 +256,7 @@ export function applyAction(s,p,a){
    else if(pattern===5){add("pedestrian",one);if(busy)add("cafe",two);}
    else if(pattern===6)add("carriage",(one+two)/2);
   }else if(z===9){
-   // Level 6 «Schwarzsee»: 1 Uferweg, 2 Holzsteg über dem See (treibende Baumstämme), 3 Steinpfad (von Stein zu Stein
+   // Level 6 «Schwarzsee» – alles auf dem Wasser: 1 Flösse, 2 Plattformen (treibende Baumstämme), 3 Steinpfad (von Stein zu Stein
    // springen, sonst ins Wasser), 4 Finale. Frösche sitzen links/rechts und schiessen ihre Zunge über 1–2 Spuren
    // (springen oder ausweichen); eine Spur bleibt immer frei.
    const sec=lakeSection(arrivalTime),covers=(side,reach)=>Array.from({length:reach},(_,k)=>side<0?k:2-k),tongue=(side,reach)=>{
@@ -266,8 +266,8 @@ export function applyAction(s,p,a){
     const id=row*10+(side>0?2:1);for(const l of covers(side,reach))add("tongue",l,0,{side,reach,attackId:id});};
    if(pattern===8){}
    else if(stoneAt(arrivalTime)){if(row%2===0)add("waterGap",-1);else if(sec===4||pattern%3===0)tongue(pattern%2?1:-1,1);}
-   else if(sec===1){[()=>tongue(-1,1),()=>add("boulder",one),()=>add("log",-1),()=>tongue(1,1),()=>{add("boulder",one);tongue(-1,1);},()=>tongue(-1,1),()=>add("log",-1),()=>tongue(1,1)][pattern]();}
-   else if(sec===4){[()=>{add("floatLog",-1);tongue(-1,1);},()=>tongue(-1,2),()=>tongue(1,2),()=>add("floatLog",-1),()=>{tongue(-1,1);tongue(1,1);},()=>add("floatLog",-1),()=>{tongue(-1,1);add("boulder",one);},()=>{add("floatLog",-1);tongue(1,1);}][pattern]();}
+   else if(sec===1){[()=>tongue(-1,1),()=>add("floatLog",-1),()=>tongue(1,1),()=>add("floatLog",-1),()=>tongue(-1,1),()=>tongue(1,1),()=>add("floatLog",-1),()=>tongue(-1,1)][pattern]();}
+   else if(sec===4){[()=>{add("floatLog",-1);tongue(-1,1);},()=>tongue(-1,2),()=>tongue(1,2),()=>add("floatLog",-1),()=>{tongue(-1,1);tongue(1,1);},()=>add("floatLog",-1),()=>{tongue(-1,1);tongue(1,1);},()=>{add("floatLog",-1);tongue(1,1);}][pattern]();}
    else{[()=>add("floatLog",-1),()=>tongue(-1,2),()=>tongue(1,1),()=>add("floatLog",-1),()=>{tongue(-1,1);tongue(1,1);},()=>add("floatLog",-1),()=>tongue(1,2),()=>tongue(-1,1)][pattern]();}
   }else if([4,10].includes(z)){
    if(pattern===0){add("hiker",one);if(busy)add("lowRock",two);}

@@ -229,10 +229,10 @@ check('level 5 Alpweiden: sections, herd/cows/hay challenges, shepherd dog chase
  assert(action({...start(),distance:100,nextRow:10000,x:1,jump:10,objects:[{id:1,kind:'goldBell',high:true,lane:1,d:100.9}]},{type:'step'}).events.some(e=>e.kind==='meadowPickup'));
 });
 check('level 6 Schwarzsee: floating logs, stepping stones over the water and frog tongues',()=>{
- const allowed=['floatLog','tongue','waterGap','boulder','log','coin','heart','magnet','shieldOrb','coinBoost','rushCharge'];const seen=new Set();
+ const allowed=['floatLog','tongue','waterGap','coin','heart','magnet','shieldOrb','coinBoost','rushCharge'];const seen=new Set();
  for(let seed=1;seed<10;seed++){let r={...start(seed),tick:9000,elapsed:450,distance:11500,nextRow:11530,nextTurn:1e9,row:70};while(r.elapsed<538){r=action({...r,lives:9,invulnerable:1},{type:'step'});for(const o of r.objects)if(o.biome===9){assert(allowed.includes(o.kind),o.kind);seen.add(o.kind);
   if(o.kind==='tongue'){const same=r.objects.filter(q=>q.kind==='tongue'&&q.rowId===o.rowId);assert(new Set(same.map(q=>q.lane)).size<3,'Zungen sperren alle Spuren');}}}}
- for(const k of['floatLog','tongue','waterGap','boulder'])assert(seen.has(k),'fehlt: '+k);
+ for(const k of['floatLog','tongue','waterGap'])assert(seen.has(k),'fehlt: '+k);
  // Wasserlücken nur auf dem Steinpfad
  for(const t of[460,480,520]){const r=action({...start(4),tick:t*20,elapsed:t,distance:12000,nextRow:12030,nextTurn:1e9,row:80},{type:'step'});assert(!r.objects.some(o=>o.kind==='waterGap'&&t+(o.encounter-12000)/r.speed<t+3&&t+3<497));}
  // Ins Wasser fallen kostet ein Leben (mit Sturz), springen rettet
