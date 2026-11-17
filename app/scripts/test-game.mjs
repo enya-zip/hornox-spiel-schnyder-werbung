@@ -18,7 +18,7 @@ check('environment-specific hazards remain appropriate and every variant is reac
   3:['snowman','luggage','trolley','planter','electric','photographers','manhole','carriage','scooter','skiers','snowboarders','influencer','lostTourists','pedestrian','bike'],
   6:['hiker','marmot','sheep','log','branch','bike'],7:['fish','beaverLog','gull'],8:['roots','log','boulder','sign','trunk'],1:['fence','hayBale','trough','boulder','woodstack','log','sheepCross'],
   9:['floatLog','tongue'],4:['hiker','lowRock','ridgeGap','rope','rockfall','boulder'],10:['hiker','lowRock','ridgeGap','rope','rockfall','boulder'],0:['iceBlock','crevasse','iceArch'],5:['iceBlock','crevasse','iceArch','crow','ibex']};
- for(const [elapsed,z]of [[30,3],[110,6],[200,7],[276,8],[364,1],[480,9],[570,4],[660,0],[750,10],[840,5]]){const found=new Set();for(let seed=1;seed<90;seed++){
+ for(const [elapsed,z]of [[30,3],[110,6],[200,7],[276,8],[364,1],[455,9],[570,4],[660,0],[750,10],[840,5]]){const found=new Set();for(let seed=1;seed<90;seed++){
   const state={...start(seed),flamingoSpawned:true,tick:elapsed*20,elapsed,distance:1000,nextRow:1030,nextTurn:99999,row:20,nextFishAt:seed%3===0?0:9999};
   for(const o of action(state,{type:'step'}).objects){if(['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom','herb','cheese','goldBell','edelweiss'].includes(o.kind))continue;assert.equal(o.biome,z);assert(profiles[z].includes(o.kind),'wrong biome: '+o.kind);found.add(o.kind);}
  }assert.deepEqual([...found].sort(),profiles[z].sort());}
@@ -234,7 +234,10 @@ check('level 6 Schwarzsee: floating logs, stepping stones over the water and fro
   if(o.kind==='tongue'){const same=r.objects.filter(q=>q.kind==='tongue'&&q.rowId===o.rowId);assert(new Set(same.map(q=>q.lane)).size<3,'Zungen sperren alle Spuren');}}}}
  for(const k of['floatLog','tongue','waterGap'])assert(seen.has(k),'fehlt: '+k);
  // Wasserlücken nur auf dem Steinpfad
- for(const t of[460,480,520]){const r=action({...start(4),tick:t*20,elapsed:t,distance:12000,nextRow:12030,nextTurn:1e9,row:80},{type:'step'});assert(!r.objects.some(o=>o.kind==='waterGap'&&t+(o.encounter-12000)/r.speed<t+3&&t+3<497));}
+ for(const t of[455,495,511]){const r=action({...start(4),tick:t*20,elapsed:t,distance:12000,nextRow:12030,nextTurn:1e9,row:80},{type:'step'});assert(!r.objects.some(o=>o.kind==='waterGap'&&t+(o.encounter-12000)/r.speed<t+3),'Lücke ausserhalb des Steinpfads bei '+t);}
+ // Hauptaufgaben dominieren: viel mehr Baumstämme und Wasserlücken als Froschzungen, Frösche mindestens 5 s auseinander
+ let main=0,frogs=0;for(let seed=1;seed<10;seed++){let r={...start(seed),tick:9000,elapsed:450,distance:11500,nextRow:11530,nextTurn:1e9,row:70};const seen2=new Set();let last=-99;while(r.elapsed<538){r=action({...r,lives:9,invulnerable:1},{type:'step'});for(const o of r.objects){if(o.biome!==9||seen2.has(o.id))continue;seen2.add(o.id);if(o.kind==='floatLog'||o.kind==='waterGap')main++;if(o.kind==='tongue'){frogs++;const at=r.elapsed+(o.d-r.distance)/r.speed;assert(at-last>=4.9,'Frösche zu dicht');last=at;}}}}
+ assert(main>frogs*4,'main '+main+' frogs '+frogs);
  // Ins Wasser fallen kostet ein Leben (mit Sturz), springen rettet
  const fall=collision('waterGap',{lane:-1});assert.equal(fall.lives,2);assert(fall.fallTicks>0);assert(fall.events.some(e=>e.kind==='splash'));assert.equal(collision('waterGap',{lane:-1,jump:10}).lives,3);
  // Froschzunge: springen oder Spur wechseln; Treffer = ein Leben, zwei Zungen-Spuren treffen nur einmal

@@ -25,4 +25,4 @@ export const meadowSection=t=>t<360||t>=450?0:t<382.5?1:t<405?2:t<427.5?3:4;
 export const meadowWindows={herd:[388,394],cows:[398,404],hay:[409,421]};
 // Level 6 «Schwarzsee» (7:30–9:00): Abschnitte und Steinpfad-Fenster (müssen mit rules.js übereinstimmen).
 export const lakeSection=t=>t<450||t>=540?0:t<472.5?1:t<495?2:t<517.5?3:4;
-export const stoneAt=t=>t>=497&&t<513||t>=528&&t<534;
+export const stoneAt=t=>t>=474&&t<492||t>=500&&t<508||t>=519&&t<538;

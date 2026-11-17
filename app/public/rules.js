@@ -2,7 +2,7 @@ export const meta={game:"Hornox Run · Zermatt",minPlayers:1,maxPlayers:1};
 export function setup(players){
  return{version:17,player:players[0]||"guest",phase:"ready",mode:"classic",route:"summit",
  tick:0,elapsed:0,distance:0,speed:18,x:1,target:1,lives:3,maxLives:3,jump:0,jumpCount:0,jumpBase:0,jumpY:0,fallTicks:0,duck:0,queued:"",buffer:0,
- flamingoSpawned:false,coins:0,powerCharge:0,powerTicks:0,powerUses:0,hearts:0,nextHeartAt:40,score:0,chain:0,bestChain:0,multiplier:1,shield:0,magnet:0,coinBoost:0,climb:0,climbReady:0,shoes:0,nextCrowAt:0,nextFishAt:0,nextBeaverAt:0,nextGullAt:0,lastHazardAt:0,fish:0,angry:0,chaseGap:0,nextCastTick:0,lastBumpTick:0,attackSeq:0,boar:0,boarGap:0,boarBump:0,dog:0,dogGap:0,dogBump:0,dogMode:0,scared:0,checkpoints:0,arrivals:0,
+ flamingoSpawned:false,coins:0,powerCharge:0,powerTicks:0,powerUses:0,hearts:0,nextHeartAt:40,score:0,chain:0,bestChain:0,multiplier:1,shield:0,magnet:0,coinBoost:0,climb:0,climbReady:0,shoes:0,nextCrowAt:0,nextFishAt:0,nextBeaverAt:0,nextGullAt:0,lastHazardAt:0,nextFrogAt:0,fish:0,angry:0,chaseGap:0,nextCastTick:0,lastBumpTick:0,attackSeq:0,boar:0,boarGap:0,boarBump:0,dog:0,dogGap:0,dogBump:0,dogMode:0,scared:0,checkpoints:0,arrivals:0,
  turnIndex:0,nextTurn:260,turnChoice:0,summitTurn:0,heading:0,turns:0,failReason:"",
  seed:20261029,rng:20261029,nextId:1,nextRow:30,row:0,invulnerable:0,slow:0,objects:[],events:[]};
 }
@@ -37,7 +37,7 @@ function meadowSection(t){return t<360||t>=450?0:t<382.5?1:t<405?2:t<427.5?3:4;}
 const HERD=[388,394],COWS=[398,404],HAY=[409,421];
 // Level 6 «Schwarzsee» (7:30–9:00): Abschnitte und Steinpfad-Fenster (gleich wie in journey.js).
 function lakeSection(t){return t<450||t>=540?0:t<472.5?1:t<495?2:t<517.5?3:4;}
-function stoneAt(t){return t>=497&&t<513||t>=528&&t<534;}
+function stoneAt(t){return t>=474&&t<492||t>=500&&t<508||t>=519&&t<538;}
 // Level 10: ab summitTurn wechseln die Kurven immer ab (Zickzack zum Gipfel).
 function turnDir(seed,summitTurn,i){const base=k=>((seed+k*13)%5)<2?-1:1;return !summitTurn||i<summitTurn?base(i):base(summitTurn-1)*((i-summitTurn)%2?1:-1);}
 export function applyAction(s,p,a){
@@ -67,7 +67,7 @@ export function applyAction(s,p,a){
  let flamingoSpawned=s.flamingoSpawned||false;
  let hearts=s.hearts||0,nextHeartAt=s.nextHeartAt??40;
  let lives=s.lives,score=s.score+Math.floor(distance)-Math.floor(s.distance),coins=s.coins,chain=s.chain,bestChain=s.bestChain,multiplier=s.multiplier;
- let shield=s.shield,magnet=Math.max(0,s.magnet-1),coinBoost=Math.max(0,(s.coinBoost||0)-1),climb=Math.max(0,(s.climb||0)-1),climbReady=s.climbReady||0,nextCrowAt=s.nextCrowAt||0,nextFishAt=s.nextFishAt||0,nextBeaverAt=s.nextBeaverAt||0,nextGullAt=s.nextGullAt||0,lastHazardAt=s.lastHazardAt||0,chaseGap=s.chaseGap||0,nextCastTick=s.nextCastTick||0,lastBumpTick=s.lastBumpTick||0,attackSeq=s.attackSeq||0,hookedAttack=0,boar=Math.max(0,(s.boar||0)-1),boarGap=s.boarGap||0,boarBump=s.boarBump||0,dog=Math.max(0,(s.dog||0)-1),dogGap=s.dogGap||0,dogBump=s.dogBump||0,dogMode=s.dogMode||0,scared=s.scared||0,fish=s.fish||0,angry=Math.max(0,(s.angry||0)-1),shoes=Math.max(0,(s.shoes||0)-1),invulnerable=Math.max(0,s.invulnerable-1),slow=Math.max(0,s.slow-1);
+ let shield=s.shield,magnet=Math.max(0,s.magnet-1),coinBoost=Math.max(0,(s.coinBoost||0)-1),climb=Math.max(0,(s.climb||0)-1),climbReady=s.climbReady||0,nextCrowAt=s.nextCrowAt||0,nextFishAt=s.nextFishAt||0,nextBeaverAt=s.nextBeaverAt||0,nextGullAt=s.nextGullAt||0,lastHazardAt=s.lastHazardAt||0,nextFrogAt=s.nextFrogAt||0,chaseGap=s.chaseGap||0,nextCastTick=s.nextCastTick||0,lastBumpTick=s.lastBumpTick||0,attackSeq=s.attackSeq||0,hookedAttack=0,boar=Math.max(0,(s.boar||0)-1),boarGap=s.boarGap||0,boarBump=s.boarBump||0,dog=Math.max(0,(s.dog||0)-1),dogGap=s.dogGap||0,dogBump=s.dogBump||0,dogMode=s.dogMode||0,scared=s.scared||0,fish=s.fish||0,angry=Math.max(0,(s.angry||0)-1),shoes=Math.max(0,(s.shoes||0)-1),invulnerable=Math.max(0,s.invulnerable-1),slow=Math.max(0,s.slow-1);
  let rng=s.rng,nextId=s.nextId,nextRow=s.nextRow,row=s.row,checkpoints=s.checkpoints,arrivals=s.arrivals;
  let summitTurn=s.summitTurn||0,turnIndex=s.turnIndex,nextTurn=s.nextTurn,turnChoice=s.turnChoice,heading=s.heading,turns=s.turns,failReason=s.failReason;
  if(s.powerTicks===1){invulnerable=Math.max(invulnerable,20);events.push({kind:"powerEnd"});}
@@ -256,7 +256,7 @@ export function applyAction(s,p,a){
    else if(pattern===5){add("pedestrian",one);if(busy)add("cafe",two);}
    else if(pattern===6)add("carriage",(one+two)/2);
   }else if(z===9){
-   // Level 6 «Schwarzsee» – alles auf dem Wasser: 1 Flösse, 2 Plattformen (treibende Baumstämme), 3 Steinpfad (von Stein zu Stein
+   // Level 6 «Schwarzsee» – alles auf dem Wasser: 1 treibende Baumstämme, 2 langer Steinpfad, 3 Stämme und Steine im Wechsel, 4 Finale (Stein zu Stein
    // springen, sonst ins Wasser), 4 Finale. Frösche sitzen links/rechts und schiessen ihre Zunge über 1–2 Spuren
    // (springen oder ausweichen); eine Spur bleibt immer frei.
    const sec=lakeSection(arrivalTime),covers=(side,reach)=>Array.from({length:reach},(_,k)=>side<0?k:2-k),tongue=(side,reach)=>{
@@ -264,11 +264,12 @@ export function applyAction(s,p,a){
     if(covers(side,reach).includes(safe))side=-side;if(covers(side,reach).includes(safe)){reach=1;side=safe===0?1:-1;}
     if(covers(side,reach).some(l=>objects.some(o=>o.kind==="tongue"&&o.rowId===row&&o.lane===l)))return;
     const id=row*10+(side>0?2:1);for(const l of covers(side,reach))add("tongue",l,0,{side,reach,attackId:id});};
+   // Hauptaufgaben: über treibende Baumstämme springen und auf dem Steinpfad von Stein zu Stein springen.
+   // Frösche sind nur eine Zusatz-Erschwernis: höchstens alle 5–7 s einer, Zunge über eine Spur.
+   const frog=()=>{if(arrivalTime>=nextFrogAt){tongue((rng&4096)?1:-1,1);nextFrogAt=arrivalTime+5+((rng>>>18)%3);}};
    if(pattern===8){}
-   else if(stoneAt(arrivalTime)){if(row%2===0)add("waterGap",-1);else if(sec===4||pattern%3===0)tongue(pattern%2?1:-1,1);}
-   else if(sec===1){[()=>tongue(-1,1),()=>add("floatLog",-1),()=>tongue(1,1),()=>add("floatLog",-1),()=>tongue(-1,1),()=>tongue(1,1),()=>add("floatLog",-1),()=>tongue(-1,1)][pattern]();}
-   else if(sec===4){[()=>{add("floatLog",-1);tongue(-1,1);},()=>tongue(-1,2),()=>tongue(1,2),()=>add("floatLog",-1),()=>{tongue(-1,1);tongue(1,1);},()=>add("floatLog",-1),()=>{tongue(-1,1);tongue(1,1);},()=>{add("floatLog",-1);tongue(1,1);}][pattern]();}
-   else{[()=>add("floatLog",-1),()=>tongue(-1,2),()=>tongue(1,1),()=>add("floatLog",-1),()=>{tongue(-1,1);tongue(1,1);},()=>add("floatLog",-1),()=>tongue(1,2),()=>tongue(-1,1)][pattern]();}
+   else if(stoneAt(arrivalTime)){if(row%2===0)add("waterGap",-1);else if(sec>=3&&pattern%2)frog();}
+   else{if(row%2===0)add("floatLog",-1);else if(pattern===3||pattern===6||sec===4&&pattern%2)frog();}
   }else if([4,10].includes(z)){
    if(pattern===0){add("hiker",one);if(busy)add("lowRock",two);}
    else if(pattern===1)add("ridgeGap",-1);
@@ -365,7 +366,7 @@ export function applyAction(s,p,a){
  }
  const phase=lives<=0?"lost":elapsed>=900?"won":"playing";
  if(phase==="won"){score+=2000;events.push({kind:"summit",points:2000});}
- return{...s,phase,tick,elapsed,distance,speed,x,lives,jump,jumpCount,jumpBase,jumpY:height,fallTicks,duck,queued,buffer,coins,flamingoSpawned,powerCharge,powerTicks,hearts,nextHeartAt,score,chain,bestChain,multiplier,shield,magnet,coinBoost,climb,climbReady,shoes,nextCrowAt,nextFishAt,nextBeaverAt,nextGullAt,lastHazardAt,fish,angry,chaseGap,nextCastTick,lastBumpTick,attackSeq,boar,boarGap,boarBump,dog,dogGap,dogBump,dogMode,scared,checkpoints,arrivals,turnIndex,nextTurn,turnChoice,summitTurn,heading,turns,failReason,invulnerable,slow,rng,nextId,nextRow,row,objects,events};
+ return{...s,phase,tick,elapsed,distance,speed,x,lives,jump,jumpCount,jumpBase,jumpY:height,fallTicks,duck,queued,buffer,coins,flamingoSpawned,powerCharge,powerTicks,hearts,nextHeartAt,score,chain,bestChain,multiplier,shield,magnet,coinBoost,climb,climbReady,shoes,nextCrowAt,nextFishAt,nextBeaverAt,nextGullAt,lastHazardAt,nextFrogAt,fish,angry,chaseGap,nextCastTick,lastBumpTick,attackSeq,boar,boarGap,boarBump,dog,dogGap,dogBump,dogMode,scared,checkpoints,arrivals,turnIndex,nextTurn,turnChoice,summitTurn,heading,turns,failReason,invulnerable,slow,rng,nextId,nextRow,row,objects,events};
 }
 export function isGameOver(s){return ["lost","won"].includes(s.phase)?{over:true,winner:s.phase==="won"?s.player:null,score:s.score,coins:s.coins,distance:Math.floor(s.distance),arrivals:s.arrivals}:{over:false};}
 export function viewFor(s,p){return{...s,objects:s.objects.map(o=>({...o})),events:s.events.map(e=>({...e})),spectator:p!==s.player};}

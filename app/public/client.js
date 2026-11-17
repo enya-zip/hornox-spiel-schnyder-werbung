@@ -1,11 +1,11 @@
 import {INTRO_DURATION,COUNTDOWN_DURATION} from './intro.js?v=17';
-import {stages,getStage,DURATION,fogAt,bridgeAt,forestSection,meadowSection,meadowWindows,lakeSection,stoneAt} from "./journey.js?v=24";
-import {createScene} from "./scene3d.js?v=55";
-import {setup,validateAction,applyAction} from "./rules.js?v=38";
+import {stages,getStage,DURATION,fogAt,bridgeAt,forestSection,meadowSection,meadowWindows,lakeSection,stoneAt} from "./journey.js?v=25";
+import {createScene} from "./scene3d.js?v=56";
+import {setup,validateAction,applyAction} from "./rules.js?v=39";
 import {installControls} from "./controls.js?v=17";
 import {createAudio} from "./audio.js?v=22";
-import {getZone} from "./scene3d.js?v=55";
-import {copy} from "./copy.js?v=35";
+import {getZone} from "./scene3d.js?v=56";
+import {copy} from "./copy.js?v=36";
 import {turnDirection} from "./route.js?v=21";
 const $=id=>document.getElementById(id),q=new URLSearchParams(location.search),app=$("app"),canvas=$("world"),player="guest";
 const read=k=>{try{return localStorage.getItem(k);}catch{return null;}},save=(k,v)=>{try{localStorage.setItem(k,String(v));}catch{}};
