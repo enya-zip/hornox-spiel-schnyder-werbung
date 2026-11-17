@@ -135,12 +135,13 @@ export function applyAction(s,p,a){
    else if(pattern===1)add("crevasse",-1);
    // Krähen-Angriffe: Sturzflug (Spur wechseln), Münzenklau (springen),
    // Scheinangriff (nicht zu früh reagieren) und Doppelangriff (zwei Krähen).
-   else if(pattern===2){add("crow",one,0,{attack:"dive"});if(busy)add("iceBlock",two);}
+   // Krähen kommen seltener: nur in Muster 5 und in jedem zweiten Muster 7 (rund jede 6. Reihe).
+   else if(pattern===2)add("iceArch",-1);
    else if(pattern===3){add("ibex",one);if(busy)add("iceBlock",two);}
-   else if(pattern===4){add("crow",one,0,{attack:"snatch"});if(busy)add("crevasse",two);}
-   else if(pattern===5){add("crow",one,0,{attack:"dive",double:busy});if(busy)add("crow",two,0,{attack:"dive",double:true});}
+   else if(pattern===4){add("crevasse",one);if(busy)add("iceArch",two);}
+   else if(pattern===5){const kind=row%3;if(kind===0)add("crow",one,0,{attack:"snatch"});else if(kind===1||!busy)add("crow",one,0,{attack:"dive"});else{add("crow",one,0,{attack:"dive",double:true});add("crow",two,0,{attack:"dive",double:true});}}
    else if(pattern===6){add("iceArch",two);if(busy)add("crevasse",one);}
-   else if(pattern===7){add("crow",safe,0,{attack:"feint",real:one});if(busy)add("ibex",two);}
+   else if(pattern===7){if(row%2)add("crow",safe,0,{attack:"feint",real:one});else add("ibex",one);if(busy)add("ibex",two);}
   }else if(z===0){
    if(pattern===0){add("iceBlock",one);if(busy)add("crevasse",two);}
    else if(pattern===1)add("crevasse",-1);
