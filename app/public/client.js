@@ -1,11 +1,11 @@
 import {INTRO_DURATION,COUNTDOWN_DURATION} from './intro.js?v=17';
-import {stages,getStage,DURATION} from "./journey.js?v=17";
-import {createScene} from "./scene3d.js?v=38";
-import {setup,validateAction,applyAction} from "./rules.js?v=32";
+import {stages,getStage,DURATION,fogAt,bridgeAt} from "./journey.js?v=21";
+import {createScene} from "./scene3d.js?v=40";
+import {setup,validateAction,applyAction} from "./rules.js?v=33";
 import {installControls} from "./controls.js?v=17";
 import {createAudio} from "./audio.js?v=18";
-import {getZone} from "./scene3d.js?v=38";
-import {copy} from "./copy.js?v=28";
+import {getZone} from "./scene3d.js?v=40";
+import {copy} from "./copy.js?v=30";
 import {turnDirection} from "./route.js?v=21";
 const $=id=>document.getElementById(id),q=new URLSearchParams(location.search),app=$("app"),canvas=$("world"),player="guest";
 const read=k=>{try{return localStorage.getItem(k);}catch{return null;}},save=(k,v)=>{try{localStorage.setItem(k,String(v));}catch{}};
@@ -26,7 +26,7 @@ let bannerTimer=0;
 function levelBanner(stage){const b=$("level-banner");$("level-done").textContent=t("levelDone",{done:stage});$("level-name").textContent=t(stages[stage].key);$("level-next").textContent=t("levelNext",{next:stage+1});b.hidden=false;b.classList.add("visible");clearTimeout(bannerTimer);bannerTimer=setTimeout(()=>{b.classList.remove("visible");bannerTimer=setTimeout(()=>{b.hidden=true;},400);},3200);}
 // Warnt einmal pro Krähe, sobald sie aus den Wolken auftaucht (etwa 2,6 s vor Hornox).
 let crowsSeen=new Set();
-function crowWarnings(){for(const o of state.objects){if((o.kind==="beaverLog"||o.kind==="gull")&&!o.resolved&&!crowsSeen.has(o.id)&&(o.d-state.distance)/Math.max(1,state.speed+(o.approach||0))<2.6){crowsSeen.add(o.id);toast(t(o.kind==="gull"?"gullWarn":"beaverWarn"),1.8);continue;}if(o.kind!=="crow"||o.resolved||crowsSeen.has(o.id))continue;const gap=(o.d-state.distance)/Math.max(1,state.speed+(o.approach||0));if(gap>2.6)continue;crowsSeen.add(o.id);if(o.double&&o.lane!==Math.min(...state.objects.filter(q=>q.kind==="crow"&&q.double&&!q.resolved).map(q=>q.lane)))continue;crowAlert(o.double);}}
+function crowWarnings(){const fog=fogAt(state.elapsed);if(fog>0&&!crowsSeen.has("fog"+Math.floor(state.elapsed/30))){crowsSeen.add("fog"+Math.floor(state.elapsed/30));toast(t("fogWarn"),2.6);}if(bridgeAt(state.elapsed+2)&&!crowsSeen.has("bridge")){crowsSeen.add("bridge");toast(t("bridgeWarn"),3);}for(const o of state.objects){if((o.kind==="beaverLog"||o.kind==="gull")&&!o.resolved&&!crowsSeen.has(o.id)&&(o.d-state.distance)/Math.max(1,state.speed+(o.approach||0))<2.6){crowsSeen.add(o.id);toast(t(o.kind==="gull"?"gullWarn":"beaverWarn"),1.8);continue;}if(o.kind!=="crow"||o.resolved||crowsSeen.has(o.id))continue;const gap=(o.d-state.distance)/Math.max(1,state.speed+(o.approach||0));if(gap>2.6)continue;crowsSeen.add(o.id);if(o.double&&o.lane!==Math.min(...state.objects.filter(q=>q.kind==="crow"&&q.double&&!q.resolved).map(q=>q.lane)))continue;crowAlert(o.double);}}
 // Grosse Warnung: «Achtung Angriff!» (1 Krähe) oder «Achtung Doppelangriff!» (2 Krähen).
 function crowAlert(double){bigAlert(t(double?"crowDouble":"crowAttack"));}
 function bigAlert(text){const n=$("power-callout");n.textContent=text;n.classList.add("alert");n.getAnimations().forEach(a=>a.cancel());const anim=n.animate([{opacity:0,transform:"translate(-50%,12px) scale(.8)"},{opacity:1,transform:"translate(-50%,0) scale(1.08)",offset:.15},{opacity:1,transform:"translate(-50%,0) scale(1)",offset:.8},{opacity:0,transform:"translate(-50%,-8px) scale(1)"}],{duration:1700,easing:"ease-out"});anim.onfinish=()=>n.classList.remove("alert");audio.play("bump",.7,.35);}
@@ -36,6 +36,11 @@ function bigAlert(text){const n=$("power-callout");n.textContent=text;n.classLis
 let fisherMood=1,fisherEscaped=false,fisherLast=0;
 function fisherBubble(){
  const b=$("fisher-bubble"),now=performance.now()/1000,dt=Math.min(.25,Math.max(0,now-(fisherLast||now)));fisherLast=now;
+ $("fog-layer").style.opacity=screen==="play"?String(fogAt(state.elapsed)*.92):"0";
+ // Wildschwein-Verfolgung (Level 4) nutzt dieselbe Bubble mit eigenem Porträt.
+ if(screen==="play"&&state.phase==="playing"&&state.boar>0){const gap=state.boarGap||14,mood=gap<6?4:3;b.hidden=false;b.dataset.who="boar";b.dataset.mood=mood;b.classList.toggle("near",mood===4);b.classList.toggle("attack",false);b.classList.toggle("flash",gap<5);b.classList.toggle("with-touch",!$("touch-controls").hidden);
+  $("fb-state").textContent=t(mood===4?"boarClose":"boarChase");$("fb-note").textContent=t("boarNote",{s:Math.ceil(state.boar/20)});$("fb-meter").style.width=Math.round(Math.max(0,Math.min(1,1-(gap-3)/13))*100)+"%";return;}
+ b.dataset.who="fisher";
  const angry=state.angry||0,fish=state.fish||0;if(angry>0)fisherEscaped=false;
  const gap=state.chaseGap||16,attacking=angry>30&&((state.nextCastTick-state.tick)<10||state.objects.some(o=>o.kind==="hook"&&o.landTick&&state.tick<o.landTick)),target=angry>0?(gap<7||attacking?4:3):fisherEscaped?1:fish>=10?2:1;
  if(!paused)fisherMood=target>=fisherMood?target:Math.max(target,fisherMood-.35*dt);
@@ -135,7 +140,7 @@ function processEvents(){
  if(e.kind==="powerPickup"){toast(t(e.power),2.5);audio.play("pickup",1.6,.8);}
  if(e.kind==="heart")heartFeedback(e.gained);if(e.kind==="world"&&e.gained)heartFeedback(true);
  if(e.kind==="world")levelBanner(e.stage);
- if(e.kind==="bump")toast(t(e.object==="sheep"?"sheepBump":e.object==="fish"?"fishBump":e.object==="beaverLog"?"beaverBump":e.object==="hook"?"hookBump":"bump"));else if(e.kind==="checkpoint")toast(t("checkpoint"),2.5);else if(e.kind==="arrival"){$("toast").classList.remove("visible");toastUntil=0;}else if(e.kind==="magnet")toast(t("magnet"),2.3);else if(e.kind==="fishCatch")audio.play("pickup",1.5,.7);else if(e.kind==="fisherNotice"){toast(t("fisherNotice"),3.2);audio.play("pickup",.8,.7);}else if(e.kind==="gull"){toast(t(e.lost>0?"gullSteal":"gullEmpty",{n:e.lost}),2.4);audio.play("bump",1.6,.6);}else if(e.kind==="fisherAngry"){bigAlert(t("fisherAngry"));toast(t("fisherHint"),3);}else if(e.kind==="fisherCast")audio.play("jump",.55,.55);else if(e.kind==="hooked"){const f=$("hit-flash");f.getAnimations().forEach(a=>a.cancel());f.animate([{opacity:.75},{opacity:0}],{duration:650,easing:"ease-out"});try{navigator.vibrate?.(140);}catch{}}else if(e.kind==="fisherQuit"){fisherEscaped=true;toast(t("fisherQuit"),2.6);audio.play("pickup",1.1,.8);}else if(e.kind==="crow"){toast(t(e.lost>0?"crowHit":"crowHitEmpty",{n:e.lost}),2.4);audio.play("bump",1.4,.8);}else if(e.kind==="shieldHit")toast(t("shieldHit"));else if(e.kind==="missedTurn")toast(t("turnMiss"));}
+ if(e.kind==="bump")toast(t(e.object==="sheep"?"sheepBump":e.object==="fish"?"fishBump":e.object==="beaverLog"?"beaverBump":e.object==="hook"?"hookBump":"bump"));else if(e.kind==="checkpoint")toast(t("checkpoint"),2.5);else if(e.kind==="arrival"){$("toast").classList.remove("visible");toastUntil=0;}else if(e.kind==="magnet")toast(t("magnet"),2.3);else if(e.kind==="fishCatch")audio.play("pickup",1.5,.7);else if(e.kind==="fisherNotice"){toast(t("fisherNotice"),3.2);audio.play("pickup",.8,.7);}else if(e.kind==="gull"){toast(t(e.lost>0?"gullSteal":"gullEmpty",{n:e.lost}),2.4);audio.play("bump",1.6,.6);}else if(e.kind==="fisherAngry"){bigAlert(t("fisherAngry"));toast(t("fisherHint"),3);}else if(e.kind==="boarAppear"){bigAlert(t("boarAlert"));toast(t("boarHint"),3);}else if(e.kind==="boarRam"){const f=$("hit-flash");f.getAnimations().forEach(a=>a.cancel());f.animate([{opacity:.75},{opacity:0}],{duration:650,easing:"ease-out"});toast(t("boarRam"),2.4);audio.play("bump",.8,.9);try{navigator.vibrate?.(160);}catch{}}else if(e.kind==="boarQuit")toast(t("boarQuit"),2.6);else if(e.kind==="mushroom"){toast(t("mushroom"),1.6);audio.play("pickup",2,.8);}else if(e.kind==="fisherCast")audio.play("jump",.55,.55);else if(e.kind==="hooked"){const f=$("hit-flash");f.getAnimations().forEach(a=>a.cancel());f.animate([{opacity:.75},{opacity:0}],{duration:650,easing:"ease-out"});try{navigator.vibrate?.(140);}catch{}}else if(e.kind==="fisherQuit"){fisherEscaped=true;toast(t("fisherQuit"),2.6);audio.play("pickup",1.1,.8);}else if(e.kind==="crow"){toast(t(e.lost>0?"crowHit":"crowHitEmpty",{n:e.lost}),2.4);audio.play("bump",1.4,.8);}else if(e.kind==="shieldHit")toast(t("shieldHit"));else if(e.kind==="missedTurn")toast(t("turnMiss"));}
 }
 function hud(){if(screen==="play"&&state.phase==="playing")crowWarnings();fisherBubble();
  $("score").textContent=fmt(state.score);$("coins").textContent=state.coins;$("combo").textContent=state.multiplier>1?"×"+state.multiplier:"";

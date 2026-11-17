@@ -13,3 +13,8 @@ export const stages=[
 ];
 export const getStage=t=>Math.min(9,Math.floor(Math.max(0,t)/90));
 export const getZone=t=>stages[getStage(t)].biome;
+// Level 4 (Furi · Waldpfad): Zeitfenster der besonderen Herausforderungen.
+// bridgeAt muss mit rules.js übereinstimmen (dort steht eine Kopie, weil die Regeln keine Imports haben dürfen).
+export const bridgeAt=t=>t>=315&&t<325;
+// Nebelstärke 0..1: zwei Nebelbänke mit 2 s Ein- und Ausblenden.
+export const fogAt=t=>{let f=0;for(const [a,b] of [[300,312],[345,355]])f=Math.max(f,Math.min(1,(t-a)/2,(b-t)/2));return Math.max(0,f);};

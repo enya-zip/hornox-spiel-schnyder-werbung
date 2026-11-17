@@ -2,7 +2,7 @@ export const meta={game:"Hornox Run · Zermatt",minPlayers:1,maxPlayers:1};
 export function setup(players){
  return{version:17,player:players[0]||"guest",phase:"ready",mode:"classic",route:"summit",
  tick:0,elapsed:0,distance:0,speed:18,x:1,target:1,lives:3,maxLives:3,jump:0,jumpCount:0,jumpBase:0,jumpY:0,fallTicks:0,duck:0,queued:"",buffer:0,
- flamingoSpawned:false,coins:0,powerCharge:0,powerTicks:0,powerUses:0,hearts:0,nextHeartAt:40,score:0,chain:0,bestChain:0,multiplier:1,shield:0,magnet:0,coinBoost:0,climb:0,climbReady:0,shoes:0,nextCrowAt:0,nextFishAt:0,nextBeaverAt:0,nextGullAt:0,lastHazardAt:0,fish:0,angry:0,chaseGap:0,nextCastTick:0,lastBumpTick:0,attackSeq:0,checkpoints:0,arrivals:0,
+ flamingoSpawned:false,coins:0,powerCharge:0,powerTicks:0,powerUses:0,hearts:0,nextHeartAt:40,score:0,chain:0,bestChain:0,multiplier:1,shield:0,magnet:0,coinBoost:0,climb:0,climbReady:0,shoes:0,nextCrowAt:0,nextFishAt:0,nextBeaverAt:0,nextGullAt:0,lastHazardAt:0,fish:0,angry:0,chaseGap:0,nextCastTick:0,lastBumpTick:0,attackSeq:0,boar:0,boarGap:0,boarBump:0,checkpoints:0,arrivals:0,
  turnIndex:0,nextTurn:260,turnChoice:0,summitTurn:0,heading:0,turns:0,failReason:"",
  seed:20261029,rng:20261029,nextId:1,nextRow:30,row:0,invulnerable:0,slow:0,objects:[],events:[]};
 }
@@ -29,7 +29,9 @@ export function validateAction(s,p,a){
 function random(n){return(n*1664525+1013904223)>>>0;}
 function stage(t){return Math.min(9,Math.floor(Math.max(0,t)/90));}
 function zone(t){return [3,6,7,8,1,9,4,0,10,5][stage(t)];}
-const pickups=['coin','heart','magnet','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch'];
+const pickups=['coin','heart','magnet','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom'];
+// Level 4 (Furi): morsche Holzbrücke über den Bach – in diesen Zeitfenstern brechen Bretter weg.
+function bridgeAt(t){return t>=315&&t<325;} // gleiche Zeiten wie in journey.js
 // Level 10: ab summitTurn wechseln die Kurven immer ab (Zickzack zum Gipfel).
 function turnDir(seed,summitTurn,i){const base=k=>((seed+k*13)%5)<2?-1:1;return !summitTurn||i<summitTurn?base(i):base(summitTurn-1)*((i-summitTurn)%2?1:-1);}
 export function applyAction(s,p,a){
@@ -59,7 +61,7 @@ export function applyAction(s,p,a){
  let flamingoSpawned=s.flamingoSpawned||false;
  let hearts=s.hearts||0,nextHeartAt=s.nextHeartAt??40;
  let lives=s.lives,score=s.score+Math.floor(distance)-Math.floor(s.distance),coins=s.coins,chain=s.chain,bestChain=s.bestChain,multiplier=s.multiplier;
- let shield=s.shield,magnet=Math.max(0,s.magnet-1),coinBoost=Math.max(0,(s.coinBoost||0)-1),climb=Math.max(0,(s.climb||0)-1),climbReady=s.climbReady||0,nextCrowAt=s.nextCrowAt||0,nextFishAt=s.nextFishAt||0,nextBeaverAt=s.nextBeaverAt||0,nextGullAt=s.nextGullAt||0,lastHazardAt=s.lastHazardAt||0,chaseGap=s.chaseGap||0,nextCastTick=s.nextCastTick||0,lastBumpTick=s.lastBumpTick||0,attackSeq=s.attackSeq||0,hookedAttack=0,fish=s.fish||0,angry=Math.max(0,(s.angry||0)-1),shoes=Math.max(0,(s.shoes||0)-1),invulnerable=Math.max(0,s.invulnerable-1),slow=Math.max(0,s.slow-1);
+ let shield=s.shield,magnet=Math.max(0,s.magnet-1),coinBoost=Math.max(0,(s.coinBoost||0)-1),climb=Math.max(0,(s.climb||0)-1),climbReady=s.climbReady||0,nextCrowAt=s.nextCrowAt||0,nextFishAt=s.nextFishAt||0,nextBeaverAt=s.nextBeaverAt||0,nextGullAt=s.nextGullAt||0,lastHazardAt=s.lastHazardAt||0,chaseGap=s.chaseGap||0,nextCastTick=s.nextCastTick||0,lastBumpTick=s.lastBumpTick||0,attackSeq=s.attackSeq||0,hookedAttack=0,boar=Math.max(0,(s.boar||0)-1),boarGap=s.boarGap||0,boarBump=s.boarBump||0,fish=s.fish||0,angry=Math.max(0,(s.angry||0)-1),shoes=Math.max(0,(s.shoes||0)-1),invulnerable=Math.max(0,s.invulnerable-1),slow=Math.max(0,s.slow-1);
  let rng=s.rng,nextId=s.nextId,nextRow=s.nextRow,row=s.row,checkpoints=s.checkpoints,arrivals=s.arrivals;
  let summitTurn=s.summitTurn||0,turnIndex=s.turnIndex,nextTurn=s.nextTurn,turnChoice=s.turnChoice,heading=s.heading,turns=s.turns,failReason=s.failReason;
  if(s.powerTicks===1){invulnerable=Math.max(invulnerable,20);events.push({kind:"powerEnd"});}
@@ -95,6 +97,9 @@ export function applyAction(s,p,a){
     // Level 3: Fische landen im Wanderrucksack. Bei 10 Fischen wird der Fischer aufmerksam,
     // bei 20 Fischen wütend: dann wirft er 20 Sekunden lang die Angel nach Hornox.
     if(aligned){fish++;events.push({kind:'fishCatch',fish});if(fish===10)events.push({kind:'fisherNotice'});if(fish===20&&!angry){angry=400;events.push({kind:'fisherAngry'});}}
+   }else if(item.kind==='mushroom'){
+    // Level 4: Glückspilz = Bonuspunkte.
+    if(aligned){score+=250;events.push({kind:'mushroom',points:250,lane:item.lane});}
    }else if(item.kind==='climbGear'){
     // Level 10: Kletterausrüstung wird eingepackt und später mit E / Button angezogen.
     if(aligned){climbReady=1;events.push({kind:'powerPickup',power:'pickupClimb'});}
@@ -105,7 +110,7 @@ export function applyAction(s,p,a){
     if(aligned){const before=powerCharge;powerCharge=Math.min(30,powerCharge+15);if(before===30)score+=100;events.push({kind:'powerPickup',power:'pickupCharge'});if(before<30&&powerCharge===30)events.push({kind:'powerReady'});}
    }else if(aligned&&powering){score+=25;events.push({kind:"powerClear",object:item.kind,lane:item.lane,d:item.d,id:item.id,points:25});item.powerCleared=true;
    }else if(aligned){
-    const safe=item.kind==="hook"?(item.attack==="high"?duck>0:height>.4):item.kind==="gull"?false:item.kind==="crow"?(item.attack==="snatch"&&height>.4):["iceArch","branch","awning","rope"].includes(item.kind)?duck>0:["crevasse","ridgeGap","manhole"].includes(item.kind)?height>.5:height>.4;
+    const safe=item.kind==="hook"?(item.attack==="high"?duck>0:height>.4):item.kind==="gull"?false:item.kind==="crow"?(item.attack==="snatch"&&height>.4):["iceArch","branch","awning","rope"].includes(item.kind)?duck>0:["crevasse","ridgeGap","manhole","plankGap"].includes(item.kind)?height>.5:height>.4;
     if(!safe&&!invulnerable&&!climb){
      // Möwe: kostet kein Leben, stiehlt aber bis zu 3 Fische aus dem Rucksack.
      if(item.kind==='gull'){const lost=Math.min(fish,3);fish-=lost;invulnerable=15;events.push({kind:'gull',lost,fish});}
@@ -175,6 +180,9 @@ export function applyAction(s,p,a){
     if(pick==="fish"){add("fish",one);nextFishAt=arrivalTime+10;}
     else if(pick==="beaverLog"){add("beaverLog",-1);nextBeaverAt=arrivalTime+13;fullRow=true;}
     else{add("gull",one);nextGullAt=arrivalTime+11;}}
+  }else if(z===8&&bridgeAt(arrivalTime)){
+   // Auf der Brücke: einzelne Bretter brechen weg (springen oder Spur wechseln), eine Spur bleibt immer frei.
+   if(pattern===8){}else if(pattern%3===0&&busy){add("plankGap",one);add("plankGap",two);}else add("plankGap",one);
   }else if([1,6,8].includes(z)){
    if(pattern===0){add("hiker",one);if(busy)add("sheep",two);}
    else if(pattern===1)add("log",-1);
@@ -216,6 +224,7 @@ export function applyAction(s,p,a){
   for(const offset of(heartDue?[5,17]:[5,9,13,17]))add("coin",safe,offset);
   // Level 3: jede zweite Reihe ein Fisch zum Sammeln, damit der Fischer nach rund 10–15 s wütend wird.
   if(z===7&&row%2===1&&!heartDue)add("fishCatch",safe,22);
+  if(z===8&&row%9===4&&!heartDue)add("mushroom",safe,22);
   if(row>8&&row%17===8&&pattern!==8)add(z===5?['climbGear','snowshoes'][Math.floor(row/17)%2]:['magnet','shieldOrb','coinBoost','rushCharge'][Math.floor(row/17)%4],safe,-8);
   row++;nextRow+=s.mode==="relaxed"?Math.max(34,38-elapsed/120):Math.max(23,26-elapsed/110);
  }
@@ -240,6 +249,17 @@ export function applyAction(s,p,a){
   }
  }else chaseGap=0;
  if(s.angry===1)events.push({kind:'fisherQuit'});
+ // Level 4: Wildschwein taucht plötzlich hinter Hornox auf (bei 4:42 und 5:28) und verfolgt ihn 15 Sekunden.
+ // boarGap = Abstand (14 = weit, 3 = rammt). Hindernis-Treffer lassen es aufholen, sauberes Laufen bringt Abstand,
+ // der Hornox-Ansturm verscheucht es.
+ if(!boar&&[282,328].some(t=>s.elapsed<t&&elapsed>=t)){boar=300;boarGap=14;boarBump=tick;events.push({kind:'boarAppear'});}
+ if(boar>0){
+  if(events.some(e=>e.kind==='bump'||e.kind==='shieldHit')){boarGap-=3.5;boarBump=tick;}
+  else if(tick-boarBump>60)boarGap+=.015;
+  boarGap+=powering?.06:-.022;boarGap=Math.min(16,boarGap);
+  if(boarGap<=3){boarGap=12;if(!invulnerable&&!climb){if(shield){shield=0;events.push({kind:'shieldHit'});}else{lives--;chain=0;multiplier=1;failReason='boar';}invulnerable=50;}events.push({kind:'boarRam'});}
+  if(boar===1)events.push({kind:'boarQuit'});
+ }else boarGap=0;
  if(!summitTurn&&elapsed>=785)summitTurn=Math.floor((distance+440)/680)+1;
  if(distance>=nextTurn&&elapsed<892){
   const direction=turnDir(s.seed,summitTurn,turnIndex);
@@ -254,7 +274,7 @@ export function applyAction(s,p,a){
  }
  const phase=lives<=0?"lost":elapsed>=900?"won":"playing";
  if(phase==="won"){score+=2000;events.push({kind:"summit",points:2000});}
- return{...s,phase,tick,elapsed,distance,speed,x,lives,jump,jumpCount,jumpBase,jumpY:height,fallTicks,duck,queued,buffer,coins,flamingoSpawned,powerCharge,powerTicks,hearts,nextHeartAt,score,chain,bestChain,multiplier,shield,magnet,coinBoost,climb,climbReady,shoes,nextCrowAt,nextFishAt,nextBeaverAt,nextGullAt,lastHazardAt,fish,angry,chaseGap,nextCastTick,lastBumpTick,attackSeq,checkpoints,arrivals,turnIndex,nextTurn,turnChoice,summitTurn,heading,turns,failReason,invulnerable,slow,rng,nextId,nextRow,row,objects,events};
+ return{...s,phase,tick,elapsed,distance,speed,x,lives,jump,jumpCount,jumpBase,jumpY:height,fallTicks,duck,queued,buffer,coins,flamingoSpawned,powerCharge,powerTicks,hearts,nextHeartAt,score,chain,bestChain,multiplier,shield,magnet,coinBoost,climb,climbReady,shoes,nextCrowAt,nextFishAt,nextBeaverAt,nextGullAt,lastHazardAt,fish,angry,chaseGap,nextCastTick,lastBumpTick,attackSeq,boar,boarGap,boarBump,checkpoints,arrivals,turnIndex,nextTurn,turnChoice,summitTurn,heading,turns,failReason,invulnerable,slow,rng,nextId,nextRow,row,objects,events};
 }
 export function isGameOver(s){return ["lost","won"].includes(s.phase)?{over:true,winner:s.phase==="won"?s.player:null,score:s.score,coins:s.coins,distance:Math.floor(s.distance),arrivals:s.arrivals}:{over:false};}
 export function viewFor(s,p){return{...s,objects:s.objects.map(o=>({...o})),events:s.events.map(e=>({...e})),spectator:p!==s.player};}

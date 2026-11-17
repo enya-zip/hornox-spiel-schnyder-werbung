@@ -115,3 +115,11 @@ html,body{position:fixed;inset:0;overscroll-behavior:none;overflow:hidden}#app{p
 @keyframes fb-idle{50%{transform:scale(1.05);box-shadow:0 0 0 3px #0f2d30,0 0 0 5px #e8c46a,0 0 34px var(--ring)}}
 @media (max-width:700px){#fisher-bubble{max-width:215px;padding:6px 12px 6px 6px}#fisher-bubble .fb-portrait{width:64px;height:64px;flex-basis:64px}#fisher-bubble.near .fb-portrait{width:70px;height:70px;flex-basis:70px}#fisher-bubble #fb-state{font-size:11px}#fisher-bubble .fb-meter{width:84px;height:6px}}
 @media (prefers-reduced-motion:reduce){#fisher-bubble .fb-portrait{animation:none!important}}
+
+/* Level 4: Nebel-Overlay (Hindernisse in der Ferne verschwinden im Nebel) */
+#fog-layer{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .4s;background:linear-gradient(to bottom,#d7e0e2f2 0%,#d3dde0f5 38%,#cfd9dccc 52%,#cfd9dc55 66%,transparent 82%)}
+/* Bubble zeigt im Wald das Wildschwein statt des Fischers */
+#fisher-bubble .boar-face{display:none}
+#fisher-bubble[data-who="boar"] .boar-face{display:block}
+#fisher-bubble[data-who="boar"] .fisher-face{display:none}
+#fisher-bubble .boar-dust{animation:fb-steam .5s ease-in-out infinite}
