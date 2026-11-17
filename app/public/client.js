@@ -1,12 +1,13 @@
 import {INTRO_DURATION,COUNTDOWN_DURATION} from './intro.js?v=17';
 import {stages,getStage,DURATION,fogAt,bridgeAt,forestSection,meadowSection,meadowWindows,lakeSection,stoneAt} from "./journey.js?v=25";
-import {createScene} from "./scene3d.js?v=56";
+import {createScene} from "./scene3d.js?v=57";
 import {setup,validateAction,applyAction} from "./rules.js?v=39";
 import {installControls} from "./controls.js?v=17";
 import {createAudio} from "./audio.js?v=22";
-import {getZone} from "./scene3d.js?v=56";
-import {copy} from "./copy.js?v=36";
+import {getZone} from "./scene3d.js?v=57";
+import {copy} from "./copy.js?v=38";
 import {turnDirection} from "./route.js?v=21";
+import {createLeaderboard} from "./leaderboard.js?v=1";
 const $=id=>document.getElementById(id),q=new URLSearchParams(location.search),app=$("app"),canvas=$("world"),player="guest";
 const read=k=>{try{return localStorage.getItem(k);}catch{return null;}},save=(k,v)=>{try{localStorage.setItem(k,String(v));}catch{}};
 const today=Number(new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Zurich",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date()).replaceAll("-",""));
@@ -101,7 +102,7 @@ function skipToLevel(){
  renderDistance=distance;introElapsed=INTRO_DURATION;
 }
 function start(){
- if(!loaded)return;hideLevelBanner();crowsSeen=new Set();forestSec=0;forestSounds.clear();meadowSec=0;meadowSounds.clear();lakeSec=0;lakeSounds.clear();fisherMood=1;fisherEscaped=false;$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;state=setup([player]);dispatch({type:"start",seed,mode,route});setScreen("play");acc=0;renderDistance=0;countdown=0;introElapsed=0;lastCount=-1;resultSaved=false;tiltBase=null;$("countdown").hidden=true;$("countdown").textContent="";
+ if(!loaded)return;watchBoard(false);hideLevelBanner();crowsSeen=new Set();forestSec=0;forestSounds.clear();meadowSec=0;meadowSounds.clear();lakeSec=0;lakeSounds.clear();fisherMood=1;fisherEscaped=false;$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;state=setup([player]);dispatch({type:"start",seed,mode,route});setScreen("play");acc=0;renderDistance=0;countdown=0;introElapsed=0;lastCount=-1;resultSaved=false;tiltBase=null;$("countdown").hidden=true;$("countdown").textContent="";
  audio.unlock().catch(()=>{});audio.setActive(true);controls.reset();scene?.resetEffects();$("feedback-label").textContent="";skipToLevel();hud();
 }
 function home(){introElapsed=-1;hideLevelBanner();audio.setChase(false);$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;audio.setActive(true);scene?.resetEffects();$("feedback-label").textContent="";state=setup([player]);setScreen("home");selectMenu("run");countdown=0;renderDistance=0;$("countdown").hidden=true;$("turn-cue").hidden=true;$("tutorial").hidden=true;$("powerup").hidden=true;$("resort-arrival").hidden=true;updateCopy();}
@@ -128,7 +129,41 @@ function renderRanking(){const list=ranking(),ol=$("ranking-list"),locale=({en:"
   const tags=document.createElement("span");tags.className="tags";const tag=(txt,cls)=>{const x=document.createElement("em");x.textContent=txt;if(cls)x.className=cls;tags.append(x);};
   if(e.won)tag("🏔️ "+t("rankSummit"),"won");if(e.mode==="relaxed")tag(t("relaxedMode"));if(e.test)tag(t("rankTest",{n:e.test}),"test");
   li.append(n,main,tags);return li;}));}
-function finish(){if(resultSaved)return;resultSaved=true;audio.setChase(false);audio.setActive(false);addRanking();if(testLevel<=1&&state.score>best(state.route,state.mode))save(bestKey(state.route,state.mode),state.score);setScreen("result");$("turn-cue").hidden=true;$("tutorial").hidden=true;$("resort-arrival").hidden=true;resultCopy();$("again").focus();}
+// ---------- Globale Rangliste (für alle Spieler gleich, online gespeichert) ----------
+const board=createLeaderboard();
+const playerId=(()=>{let id=read("hornox.player.id");if(!id){id=(crypto.randomUUID?crypto.randomUUID():"10000000-1000-4000-8000-100000000000".replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16)));save("hornox.player.id",id);}return id;})();
+let playerName=read("hornox.player.name")||"",boardTimer=0,lastGlobal=null;
+const medal=r=>r===1?"🥇":r===2?"🥈":r===3?"🥉":"";
+function askName(then){const d=$("name-dialog");$("name-input").value=playerName;d.showModal();$("name-input").focus();$("name-form").onsubmit=e=>{e.preventDefault();const v=$("name-input").value.trim().slice(0,20);if(!v)return;const renamed=playerName&&playerName!==v;playerName=v;save("hornox.player.name",v);d.close();updateNameButton();if(renamed)board.rename(playerId,v).catch(()=>{});then?.();};}
+function updateNameButton(){$("global-name").textContent=playerName?t("nameChange",{name:playerName}):t("nameSet");}
+function boardRow(e,rank,isMe){const li=document.createElement("li"),n=document.createElement("b"),main=document.createElement("div"),who=document.createElement("strong"),info=document.createElement("small"),tag=document.createElement("span");
+ if(isMe)li.className="me";n.innerHTML="";n.textContent=medal(rank)?medal(rank)+" "+rank+".":rank+".";who.textContent=e.name+(isMe?" · "+t("you"):"");info.textContent=t("rankLevel",{n:e.best_level})+" · "+fmt(e.best_score)+" "+t("points");main.append(who,info);tag.className="tags";li.append(n,main,tag);return li;}
+async function refreshBoard(){
+ updateNameButton();
+ if(!board.configured){$("global-status").textContent=t("globalOffline");$("global-list").replaceChildren();$("global-me").hidden=true;return;}
+ try{const [top,me]=await Promise.all([board.top(10),board.standing(playerId)]);lastGlobal=me;
+  $("global-status").textContent=me?.total?t("globalCount",{n:fmt(me.total)}):"";
+  $("global-list").replaceChildren(...(top.length?top.map((e,i)=>boardRow(e,i+1,e.player_id===playerId)):[Object.assign(document.createElement("li"),{className:"empty",textContent:t("globalEmpty")})]));
+  const box=$("global-me");if(me?.me&&me.rank>10){const ol=document.createElement("ol");if(me.above)ol.append(boardRow(me.above,me.rank-1,false));ol.append(boardRow(me.me,me.rank,true));if(me.below)ol.append(boardRow(me.below,me.rank+1,false));const sep=Object.assign(document.createElement("p"),{className:"sep",textContent:"⋯"});box.replaceChildren(sep,ol);box.hidden=false;}else box.hidden=true;
+ }catch(err){$("global-status").textContent=t("globalError");}
+}
+// Live-Aktualisierung: solange der Rekorde-Tab offen ist, alle 8 Sekunden neu laden.
+function watchBoard(on){clearInterval(boardTimer);boardTimer=0;if(on){refreshBoard();boardTimer=setInterval(()=>{if(!document.hidden)refreshBoard();},8000);}}
+async function reportGlobal(){
+ const box=$("result-global");box.hidden=true;
+ if(!board.configured)return;
+ if(testLevel>1){box.hidden=false;$("global-place").textContent=t("globalTestRun");$("global-change").textContent="";$("global-around").replaceChildren();return;}
+ const level=Math.min(10,getStage(state.elapsed)+1),score=Math.floor(state.score),coins=state.coins||0;
+ const send=async()=>{box.hidden=false;$("global-place").textContent=t("globalSending");$("global-change").textContent="";$("global-around").replaceChildren();
+  try{const before=Number(read("hornox.player.rank"))||0;await board.submit(playerId,playerName,score,level,coins);const st=await board.standing(playerId);if(!st?.rank)throw Error("rank");
+   save("hornox.player.rank",st.rank);$("result-title").textContent=state.phase==="won"?t("won"):t("gameOverName",{name:playerName});
+   $("global-place").textContent=(st.rank===1?"👑 ":"🏆 ")+t("globalPlace",{n:st.rank,total:fmt(st.total||st.rank)});
+   $("global-change").textContent=!before?t("globalNew"):st.rank<before?t(before-st.rank===1?"globalUp1":"globalUp",{n:before-st.rank}):st.rank>before?t(st.rank-before===1?"globalDown1":"globalDown",{n:st.rank-before}):t("globalSame");
+   const ol=$("global-around");ol.replaceChildren(...[st.above&&boardRow(st.above,st.rank-1,false),boardRow(st.me,st.rank,true),st.below&&boardRow(st.below,st.rank+1,false)].filter(Boolean));
+  }catch(err){$("global-place").textContent=t("globalError");}};
+ if(!playerName)askName(send);else send();
+}
+function finish(){if(resultSaved)return;resultSaved=true;audio.setChase(false);audio.setActive(false);addRanking();setTimeout(reportGlobal,0);if(testLevel<=1&&state.score>best(state.route,state.mode))save(bestKey(state.route,state.mode),state.score);setScreen("result");$("turn-cue").hidden=true;$("tutorial").hidden=true;$("resort-arrival").hidden=true;resultCopy();$("again").focus();}
 function heartFeedback(gained){const node=$('heart-feedback');node.querySelector('span').textContent=t(gained?'heartGain':'heartFull');node.hidden=false;node.getAnimations().forEach(a=>a.cancel());const target=$('lives').getBoundingClientRect(),x=target.left+target.width/2-innerWidth/2,y=target.top+target.height/2-innerHeight*.40;node.animate(reduced?[{opacity:1},{opacity:1,offset:.75},{opacity:0}]:[{opacity:0,transform:'translate(-50%,-50%) scale(.6)'},{opacity:1,transform:'translate(-50%,-50%) scale(1.15)',offset:.18},{opacity:1,transform:'translate(-50%,-50%) scale(1)',offset:.60},{opacity:0,transform:`translate(calc(-50% + ${x}px),calc(-50% + ${y}px)) scale(.22)`}],{duration:reduced?1000:1350,fill:'forwards'});audio.play('pickup',1.6,.85);}
 function processEvents(){
  for(const e of state.events){scene?.emit(e,state);if(["jump","duck","land","pickup","bump"].includes(e.kind))audio.play(e.kind,e.kind==="pickup"?1+(state.chain%8)*.035:1);
@@ -244,7 +279,7 @@ function loop(ms){
 }
 
 let menuTab="run";
-function selectMenu(tab){menuTab=tab;for(const name of ["run","route","records"]){$("menu-"+name).hidden=name!==tab;const button=document.querySelector('[data-menu="'+name+'"]');if(name===tab)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');}app.dataset.menuTab=tab;updateMenu();}
+function selectMenu(tab){menuTab=tab;watchBoard(tab==="records");for(const name of ["run","route","records"]){$("menu-"+name).hidden=name!==tab;const button=document.querySelector('[data-menu="'+name+'"]');if(name===tab)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');}app.dataset.menuTab=tab;updateMenu();}
 function updateMenu(){
  document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode)));
  renderRanking();$('record-classic').textContent=best('summit','classic')?fmt(best('summit','classic')):'—';$('record-relaxed').textContent=best('summit','relaxed')?fmt(best('summit','relaxed')):'—';
@@ -255,7 +290,8 @@ $('enter-game').onclick=enterMenu;document.querySelectorAll('[data-menu]').forEa
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;save('spa.runner.assist',mode==='relaxed'?1:0);updateCopy();});
 
 $("rush-button").onpointerdown=e=>{e.preventDefault();input("power");};$("rush-button").onclick=e=>{if(e.detail===0)input("power");};
-$("start").onclick=()=>{testLevel=urlLevel;start();};$("again").onclick=start;$("restart").onclick=start;$("resume").onclick=()=>pause(false);$("pause-button").onclick=()=>pause(true);document.querySelectorAll(".go-home").forEach(b=>b.onclick=home);
+$("start").onclick=()=>{testLevel=urlLevel;start();};
+$("global-name").onclick=()=>askName(()=>refreshBoard());$("again").onclick=start;$("restart").onclick=start;$("resume").onclick=()=>pause(false);$("pause-button").onclick=()=>pause(true);document.querySelectorAll(".go-home").forEach(b=>b.onclick=home);
 $("settings").onclick=()=>openDialog("settings-dialog");$("pause-settings").onclick=()=>openDialog("settings-dialog");$("how").onclick=()=>openDialog("help-dialog");document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>b.closest("dialog").close());
 $("language").onchange=e=>{lang=e.target.value;save("hornox.language.v5",lang);updateCopy();};
 document.querySelectorAll("[data-route]").forEach(b=>b.onclick=()=>{route=b.dataset.route;updateCopy();});

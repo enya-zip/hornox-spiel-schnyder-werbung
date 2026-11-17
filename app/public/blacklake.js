@@ -35,7 +35,7 @@ export function createBlackLake(r){
  // Ufer-Schilf.
  function reeds(k){for(let j=0;j<5;j++){const h=.9+((k+j)%3)*.3;a('cylinder',(j-2)*.14,h/2,(j%2)*.15,.02,h,.02,[.35,.55,.24]);if(j%2===0)a('cylinder',(j-2)*.14,h,(j%2)*.15,.05,.22,.05,[.45,.28,.14]);}}
  // Laufstrecke auf dem Wasser: Floss aus Brettern mit Seilbindung (quer über alle drei Spuren).
- function raft(time,k){const bob=Math.sin(time*1.8+k)*.04;push(0,bob,0,Math.sin(time*1.3+k)*.015,0,0);for(let j=0;j<3;j++)a('box',0,.1,(j-1)*.74,8.4,.16,.68,[[.62,.44,.26],[.55,.38,.22],[.66,.48,.3]][(k+j)%3]);for(const x of[-3.6,0,3.6])a('box',x,.2,0,.12,.04,2.3,[.85,.78,.6]);pop();}
+ function raft(time,k){const bob=Math.sin(time*1.8+k)*.04;push(0,bob,0,Math.sin(time*1.3+k)*.015,0,0);for(let j=0;j<3;j++)a('box',0,.1,(j-1)*.74,8.4,.16,.68,[[.62,.44,.26],[.55,.38,.22],[.66,.48,.3]][(((k+j)%3)+3)%3]);for(const x of[-3.6,0,3.6])a('box',x,.2,0,.12,.04,2.3,[.85,.78,.6]);pop();}
  // Bündel aus Baumstämmen (längs zur Laufrichtung), auf dem man läuft.
  function logRaft(time,k){const bob=Math.sin(time*1.6+k)*.05;push(0,bob,0);for(const x of[-3.4,-2.2,-1,.2,1.4,2.6,3.6])a('cylinder',x,.14,0,.34,2.35,.34,[[.5,.34,.2],[.45,.3,.18]][(Math.round(x*5)+k)&1],PI/2);for(const z of[-.8,.8])a('box',0,.42,z,8.2,.05,.1,[.85,.78,.6]);pop();}
  // Runde Holzplattform auf Schwimmern.

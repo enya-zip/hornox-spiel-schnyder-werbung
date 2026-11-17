@@ -52,3 +52,22 @@
 #route-stages li{grid-template-columns:27px 1fr auto 34px}
 #route-stages .stage-go{width:30px;height:30px;border-radius:50%;border:1px solid #e8c46a88;background:#e8c46a22;color:#ffe2a7;font-size:11px;cursor:pointer;display:grid;place-items:center;padding:0}
 #route-stages .stage-go:hover,#route-stages .stage-go:focus-visible{background:#e8c46a55;outline:none}
+
+/* Globale Rangliste (Rekorde-Tab) */
+.global-board{margin-bottom:18px}
+.global-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.global-head h3{margin:0;font-size:13px;letter-spacing:.14em;color:#f2c46d}
+.global-head .text-button{font-size:11px;opacity:.85}
+.global-list li .medal{font-size:15px}
+.global-list li.me,.global-me li.me,.global-around li.me{border-color:#e8c46a;background:#e8c46a26;box-shadow:0 0 0 1px #e8c46a66 inset}
+.global-me{margin-top:8px}
+.global-me .sep{text-align:center;opacity:.5;font-size:12px;margin:2px 0}
+.global-me ol{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.result-global{margin:10px 0 4px;padding:10px 12px;border-radius:14px;background:#071f286b;border:1px solid #e8c46a55}
+.result-global #global-place{margin:0;font-size:18px;font-weight:800;color:#ffe2a7}
+.result-global #global-change{margin:4px 0 6px;font-size:13px;opacity:.9}
+.global-around{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:12px;text-align:left}
+.global-around li{display:grid;grid-template-columns:42px 1fr auto;gap:8px;padding:5px 9px;border-radius:9px;background:#ffffff0d;border:1px solid transparent}
+#name-dialog form{display:grid;gap:12px;margin-top:10px}
+#name-input{font:inherit;font-size:18px;padding:12px 14px;border-radius:12px;border:1px solid #e8c46a88;background:#071f28;color:#fff8ec}
+.global-around li strong{margin-right:8px}.global-around li small{opacity:.75}

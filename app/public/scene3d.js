@@ -11,7 +11,7 @@ import {createActor} from './actor.js?v=22';
 import {createEffects} from './effects.js?v=17';
 import {createPath} from './route.js?v=21';
 import {getZone,bridgeAt,fogAt,forestSection,meadowSection,lakeSection,stoneAt} from './journey.js?v=25';
-import {createBlackLake} from './blacklake.js?v=3';
+import {createBlackLake} from './blacklake.js?v=4';
 import {createMeadow} from './meadow.js?v=3';
 import {createForest} from './forest.js?v=4';
 export {getZone};
