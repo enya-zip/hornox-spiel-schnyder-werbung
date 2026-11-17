@@ -71,7 +71,36 @@ export function createLake(r){
   pop();
  }
 
+ // Gefährlicher Springfisch (eigene Figur): grün, Glubschaugen, offenes Maul mit Zähnen, rote Flossen.
+ // Kopf zeigt in +z.
+ function biter(time,id=0,size=1){
+  const green=[.38,.78,.22],dark=[.2,.5,.12],red=[.92,.2,.12],white=[.98,.98,.96],chomp=.5+.5*Math.sin(time*14+id);
+  push(0,0,0,0,0,0,size);
+  a('sphere',0,.05,0,.42,.44,.62,green);
+  a('sphere',0,.32,-.05,.3,.18,.5,dark);
+  for(const [x,y,z] of[[.25,.25,.1],[-.22,.3,-.15],[.18,.4,-.3],[-.28,.12,.2],[.3,-.05,-.2]])a('sphere',x,y,z,.05,.05,.03,[.95,.85,.2]);
+  // Maul: dunkler Schlund mit oberer und unterer Zahnreihe
+  a('sphere',0,-.08,.48,.3,.16+chomp*.08,.16,[.35,.04,.05]);
+  for(let i=-3;i<=3;i++){const x=i*.075;a('cone',x,.06,.58,.035,.12,.035,white,PI);a('cone',x,-.24-chomp*.08,.56,.035,.11,.035,white);}
+  a('box',0,-.32-chomp*.08,.42,.5,.06,.24,red);
+  // Grosse Glubschaugen
+  for(const side of[-1,1]){a('sphere',side*.24,.4,.36,.2,.22,.18,white);a('sphere',side*.27,.4,.5,.09,.11,.06,[.04,.04,.05]);a('box',side*.22,.6,.36,.24,.05,.08,dark,0,0,side*.35);}
+  // Rote Flossen und Schwanz
+  a('box',0,.55,-.1,.04,.3,.45,red,.3);
+  for(const side of[-1,1])a('box',side*.42,-.05,.05,.25,.04,.2,red,0,side*.5,side*.5);
+  push(0,0,-.6,0,Math.sin(time*16+id)*.5);a('box',0,0,-.2,.04,.6,.38,red);pop();
+  pop();
+ }
+
+ // Wasserfontäne: Säule aus Wassertropfen und Gischt, h = Höhe (0 = keine).
+ function fountain(time,h,id=0){
+  if(h<=.05)return;const water=[.78,.92,1,49],foam=[.95,.98,1,49];
+  a('ring',0,.03,0,.9+h*.2,.9+h*.2,.06,foam,PI/2,0,time);
+  for(let k=0;k<9;k++){const t=k/8,w=.62*(1-t*.5)+Math.sin(time*20+k+id)*.06;a('sphere',Math.sin(time*13+k)*.08,t*h,Math.cos(time*11+k)*.08,w,.5,w,k%2?water:foam);}
+  for(let k=0;k<12;k++){const a0=k*PI/6+id,phase=(time*1.6+k*.37)%1,r=.35+phase*1.6,y=h*(1-phase*phase)+.1;a('sphere',Math.cos(a0)*r,y,Math.sin(a0)*r,.11,.14,.11,water);}
+ }
+
  // «!» über dem Kopf des Fischers (gelb = aufmerksam, rot = wütend).
  function alert(colour){a('box',0,.32,0,.13,.48,.13,[...colour,49]);a('sphere',0,-.06,0,.09,.09,.09,[...colour,49]);}
- return{fish,pickup,hook,rod,hat,line,beaver,gull,alert};
+ return{fish,pickup,hook,rod,hat,line,beaver,gull,alert,biter,fountain};
 }

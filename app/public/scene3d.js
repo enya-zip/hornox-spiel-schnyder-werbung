@@ -1,7 +1,7 @@
 import {createAlpine} from './alpine.js?v=17';
 import {createPowerups} from './powerups.js?v=17';
 import {createSummit} from './summit.js?v=3';
-import {createLake} from './lake.js?v=3';
+import {createLake} from './lake.js?v=5';
 import {createEncounters} from './encounters.js?v=20';
 import {createSpecials} from './specials.js?v=17';
 import {introFrame} from './intro.js?v=17';
@@ -134,11 +134,15 @@ export function createScene(canvas){
    if(gapT>2.7&&!toss)for(let k=0;k<5;k++)a('sphere',q.x+Math.sin(k*2.1)*1.2,q.y+y+.4+Math.cos(k*1.7)*.4,q.z,1.1-k*.12,.55,1.1-k*.12,[.97,.98,1,49]);
    push(q.x,q.y+y+(toss?toss.y||0:0),q.z,0,-q.h);if(toss)push(0,0,0,0,toss.spin,toss.lean);push(0,0,0,gapT>.7?.55:0,0);summit.crow(time,o.id);pop();if(toss)pop();pop();return;}
   if(o.kind==='fish'&&!toss){
-   // Fisch springt im Bogen aus dem See auf seine Spur und zappelt danach auf dem Weg.
-   const span=(o.target??1)+2.4,u=Math.max(0,Math.min(1,(o.lane+2.4)/span)),q=point(od,(o.lane-1)*2.5);
-   if(u<=0){if(od-d<120)a('ring',q.x,q.y+.03,q.z,.5+Math.abs(Math.sin(time*3+o.id))*.5,.5+Math.abs(Math.sin(time*3+o.id))*.5,.04,[.85,.95,1,49],PI/2);return;}
-   if(u<1){push(q.x,q.y+.45+Math.sin(u*PI)*2.6,q.z,0,-q.h);push(0,0,0,0,PI/2,0);push(0,0,0,(u-.5)*1.4,0,0);lake.fish(time,o.id,1.3);pop();pop();pop();if(u<.25)a('ring',q.x,q.y+.03,q.z,1.1,1.1,.05,[.85,.95,1,49],PI/2);return;}
-   push(q.x,q.y+.22+Math.abs(Math.sin(time*9+o.id))*.25,q.z,0,-q.h+o.id);push(0,0,0,0,0,PI/2);lake.fish(time,o.id,1.3);pop();pop();return;}
+   // Gefährlicher Springfisch: Erst schiesst eine Wasserfontäne aus dem See (Vorwarnung),
+   // dann springt der grüne Zähnefisch im Bogen auf seine Spur und zieht eine Wasserspur nach.
+   const target=o.target??1,span=target+2.4,u=Math.max(0,Math.min(1,(o.lane+2.4)/span)),q=point(od,(o.lane-1)*2.5),src=point(od,-3.4*2.5+2.5);
+   const gapT=(od-d)/Math.max(1,speedNow),leapT=span/3.2,pre=Math.max(0,Math.min(1,(leapT+.8-gapT)/.8));
+   if(u<=0){if(od-d<160){push(src.x,src.y-.05,src.z);lake.fountain(time,pre*4,o.id);pop();}return;}
+   if(u<.75){push(src.x,src.y-.05,src.z);lake.fountain(time,4*(1-u/.75),o.id);pop();}
+   if(u<1){const y=.55+Math.sin(u*PI)*2.6;for(let k=1;k<6;k++){const uu=Math.max(0,u-k*.05),tq=point(od,(-2.4+uu*span-1)*2.5);a('sphere',tq.x,tq.y+.55+Math.sin(uu*PI)*2.6,tq.z,.12-k*.015,.12-k*.015,.12-k*.015,[.8,.93,1,49]);}
+    push(q.x,q.y+y,q.z,0,-q.h);push(0,0,0,0,PI/2,0);push(0,0,0,(u-.5)*1.2,0,0);lake.biter(time,o.id,1.6);pop();pop();pop();return;}
+   push(q.x,q.y+.4+Math.abs(Math.sin(time*9+o.id))*.25,q.z,0,-q.h+o.id);push(0,0,0,0,0,PI/2);lake.biter(time,o.id,1.35);pop();pop();return;}
   if(o.kind==='beaverLog'&&!toss){
    // Biber rollt einen Baumstamm vom Seeufer quer über den ganzen Weg (drüberspringen!).
    const gapT=(od-d)/Math.max(1,speedNow),u=Math.max(0,Math.min(1,(2.6-gapT)/1.1)),e=u*u*(3-2*u),lat=-9.5*(1-e),q=point(od,lat);
