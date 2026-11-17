@@ -2,7 +2,7 @@ export const meta={game:"Hornox Run · Zermatt",minPlayers:1,maxPlayers:1};
 export function setup(players){
  return{version:17,player:players[0]||"guest",phase:"ready",mode:"classic",route:"summit",
  tick:0,elapsed:0,distance:0,speed:18,x:1,target:1,lives:3,maxLives:3,jump:0,jumpCount:0,jumpBase:0,jumpY:0,fallTicks:0,duck:0,queued:"",buffer:0,
- flamingoSpawned:false,coins:0,powerCharge:0,powerTicks:0,powerUses:0,hearts:0,nextHeartAt:40,score:0,chain:0,bestChain:0,multiplier:1,shield:0,magnet:0,coinBoost:0,climb:0,climbReady:0,shoes:0,checkpoints:0,arrivals:0,
+ flamingoSpawned:false,coins:0,powerCharge:0,powerTicks:0,powerUses:0,hearts:0,nextHeartAt:40,score:0,chain:0,bestChain:0,multiplier:1,shield:0,magnet:0,coinBoost:0,climb:0,climbReady:0,shoes:0,nextCrowAt:0,checkpoints:0,arrivals:0,
  turnIndex:0,nextTurn:260,turnChoice:0,summitTurn:0,heading:0,turns:0,failReason:"",
  seed:20261029,rng:20261029,nextId:1,nextRow:30,row:0,invulnerable:0,slow:0,objects:[],events:[]};
 }
@@ -59,7 +59,7 @@ export function applyAction(s,p,a){
  let flamingoSpawned=s.flamingoSpawned||false;
  let hearts=s.hearts||0,nextHeartAt=s.nextHeartAt??40;
  let lives=s.lives,score=s.score+Math.floor(distance)-Math.floor(s.distance),coins=s.coins,chain=s.chain,bestChain=s.bestChain,multiplier=s.multiplier;
- let shield=s.shield,magnet=Math.max(0,s.magnet-1),coinBoost=Math.max(0,(s.coinBoost||0)-1),climb=Math.max(0,(s.climb||0)-1),climbReady=s.climbReady||0,shoes=Math.max(0,(s.shoes||0)-1),invulnerable=Math.max(0,s.invulnerable-1),slow=Math.max(0,s.slow-1);
+ let shield=s.shield,magnet=Math.max(0,s.magnet-1),coinBoost=Math.max(0,(s.coinBoost||0)-1),climb=Math.max(0,(s.climb||0)-1),climbReady=s.climbReady||0,nextCrowAt=s.nextCrowAt||0,shoes=Math.max(0,(s.shoes||0)-1),invulnerable=Math.max(0,s.invulnerable-1),slow=Math.max(0,s.slow-1);
  let rng=s.rng,nextId=s.nextId,nextRow=s.nextRow,row=s.row,checkpoints=s.checkpoints,arrivals=s.arrivals;
  let summitTurn=s.summitTurn||0,turnIndex=s.turnIndex,nextTurn=s.nextTurn,turnChoice=s.turnChoice,heading=s.heading,turns=s.turns,failReason=s.failReason;
  if(s.powerTicks===1){invulnerable=Math.max(invulnerable,20);events.push({kind:"powerEnd"});}
@@ -135,13 +135,20 @@ export function applyAction(s,p,a){
    else if(pattern===1)add("crevasse",-1);
    // Krähen-Angriffe: Sturzflug (Spur wechseln), Münzenklau (springen),
    // Scheinangriff (nicht zu früh reagieren) und Doppelangriff (zwei Krähen).
-   // Krähen kommen seltener: nur in Muster 5 und in jedem zweiten Muster 7 (rund jede 6. Reihe).
+   // Krähen: zwischen zwei Angriffen liegen mindestens 8 Sekunden (plus 0–4 s Zufall).
    else if(pattern===2)add("iceArch",-1);
    else if(pattern===3){add("ibex",one);if(busy)add("iceBlock",two);}
    else if(pattern===4){add("crevasse",one);if(busy)add("iceArch",two);}
-   else if(pattern===5){const kind=row%3;if(kind===0)add("crow",one,0,{attack:"snatch"});else if(kind===1||!busy)add("crow",one,0,{attack:"dive"});else{add("crow",one,0,{attack:"dive",double:true});add("crow",two,0,{attack:"dive",double:true});}}
+   else if((pattern===5||pattern===7)&&arrivalTime>=nextCrowAt){
+    nextCrowAt=arrivalTime+8+((rng>>>20)%5);const kind=(rng>>>8)%4;
+    if(kind===0)add("crow",one,0,{attack:"snatch"});
+    else if(kind===1)add("crow",safe,0,{attack:"feint",real:one});
+    else if(kind===2&&busy){add("crow",one,0,{attack:"dive",double:true});add("crow",two,0,{attack:"dive",double:true});}
+    else add("crow",one,0,{attack:"dive"});
+   }
+   else if(pattern===5){add("iceBlock",one);if(busy)add("ibex",two);}
    else if(pattern===6){add("iceArch",two);if(busy)add("crevasse",one);}
-   else if(pattern===7){if(row%2)add("crow",safe,0,{attack:"feint",real:one});else add("ibex",one);if(busy)add("ibex",two);}
+   else if(pattern===7){add("ibex",one);if(busy)add("crevasse",two);}
   }else if(z===0){
    if(pattern===0){add("iceBlock",one);if(busy)add("crevasse",two);}
    else if(pattern===1)add("crevasse",-1);
@@ -206,7 +213,7 @@ export function applyAction(s,p,a){
  }
  const phase=lives<=0?"lost":elapsed>=900?"won":"playing";
  if(phase==="won"){score+=2000;events.push({kind:"summit",points:2000});}
- return{...s,phase,tick,elapsed,distance,speed,x,lives,jump,jumpCount,jumpBase,jumpY:height,fallTicks,duck,queued,buffer,coins,flamingoSpawned,powerCharge,powerTicks,hearts,nextHeartAt,score,chain,bestChain,multiplier,shield,magnet,coinBoost,climb,climbReady,shoes,checkpoints,arrivals,turnIndex,nextTurn,turnChoice,summitTurn,heading,turns,failReason,invulnerable,slow,rng,nextId,nextRow,row,objects,events};
+ return{...s,phase,tick,elapsed,distance,speed,x,lives,jump,jumpCount,jumpBase,jumpY:height,fallTicks,duck,queued,buffer,coins,flamingoSpawned,powerCharge,powerTicks,hearts,nextHeartAt,score,chain,bestChain,multiplier,shield,magnet,coinBoost,climb,climbReady,shoes,nextCrowAt,checkpoints,arrivals,turnIndex,nextTurn,turnChoice,summitTurn,heading,turns,failReason,invulnerable,slow,rng,nextId,nextRow,row,objects,events};
 }
 export function isGameOver(s){return ["lost","won"].includes(s.phase)?{over:true,winner:s.phase==="won"?s.player:null,score:s.score,coins:s.coins,distance:Math.floor(s.distance),arrivals:s.arrivals}:{over:false};}
 export function viewFor(s,p){return{...s,objects:s.objects.map(o=>({...o})),events:s.events.map(e=>({...e})),spectator:p!==s.player};}

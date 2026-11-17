@@ -149,4 +149,6 @@ check('level 10: climbing gear is packed and put on with E, snowshoes speed up, 
  let r={...start(),distance:100,nextRow:10000,nextTurn:99999,x:0,target:0,objects:[{id:1,kind:'ibex',target:0,dir:-1,lane:4.6,d:200,approach:0}]};const back=[];for(let k=0;k<200&&r.objects.length;k++){r=action(r,{type:'step'});if(r.objects[0])back.push({lane:r.objects[0].lane,gap:(r.objects[0].d-r.distance)/r.speed});}
  assert(back[0].lane>2);for(let k=1;k<back.length;k++)assert(back[k].lane<=back[k-1].lane);assert(back.filter(b=>b.gap<1.2).every(b=>b.lane===0));
 });
+check('level 10: at least 8 seconds between crow attacks',()=>{for(let seed=1;seed<=12;seed++){let s={...start(seed),tick:16200,elapsed:810,distance:20000,nextRow:20030,nextTurn:999999,row:900};const seen=new Set();let last=-1e9,count=0;
+ while(s.phase==='playing'&&s.elapsed<899){s=action({...s,lives:999,invulnerable:1},{type:'step'});for(const o of s.objects){if(o.kind!=='crow'||seen.has(o.id))continue;seen.add(o.id);const t=s.elapsed+(o.d-s.distance)/(s.speed+o.approach);if(o.double&&t-last<.5)continue;assert(t-last>=8,'gap '+(t-last));last=t;count++;}}assert(count>=3&&count<=11);}});
 console.log(`${checks} rule checks passed`);
