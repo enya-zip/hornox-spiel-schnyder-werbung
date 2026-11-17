@@ -74,5 +74,12 @@ export function createSummit(r){
   if(s.climb>0){const blink=s.climb<40&&Math.sin(time*18)>0;if(!blink)for(const y of[.35,1.0,1.65])a('ring',0,y,0,.95,.95,.025,[1,.55,.15,49],PI/2,0,time*.8+y);}
   if(s.shoes>0){for(let i=0;i<4;i++){const t=time*3+i*PI/2;a('sphere',Math.cos(t)*.55,.08,Math.sin(t)*.55,.12,.06,.12,[.9,.96,1,49]);}}
  }
- return{ibex,crow,pickup,aura};
+ // Schneeschuh unter einem Fuss: Holzrahmen, Bespannung und Riemen.
+ function snowshoe(){
+  a('ring',0,0,0,.3,.6,.07,[.30,.22,.14],PI/2);
+  a('box',0,-.01,0,.46,.03,.98,[.86,.92,.97]);
+  for(const z of[-.28,0,.28])a('box',0,.01,z,.54,.035,.045,[.30,.22,.14]);
+  a('box',0,.09,.03,.3,.08,.2,[.15,.35,.6]);
+ }
+ return{ibex,crow,pickup,aura,snowshoe};
 }

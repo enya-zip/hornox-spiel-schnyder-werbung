@@ -1,11 +1,11 @@
 import {INTRO_DURATION,COUNTDOWN_DURATION} from './intro.js?v=17';
 import {stages,getStage,DURATION} from "./journey.js?v=17";
-import {createScene} from "./scene3d.js?v=23";
-import {setup,validateAction,applyAction} from "./rules.js?v=22";
+import {createScene} from "./scene3d.js?v=25";
+import {setup,validateAction,applyAction} from "./rules.js?v=23";
 import {installControls} from "./controls.js?v=17";
 import {createAudio} from "./audio.js?v=18";
-import {getZone} from "./scene3d.js?v=23";
-import {copy} from "./copy.js?v=20";
+import {getZone} from "./scene3d.js?v=25";
+import {copy} from "./copy.js?v=21";
 import {turnDirection} from "./route.js?v=21";
 const $=id=>document.getElementById(id),q=new URLSearchParams(location.search),app=$("app"),canvas=$("world"),player="guest";
 const read=k=>{try{return localStorage.getItem(k);}catch{return null;}},save=(k,v)=>{try{localStorage.setItem(k,String(v));}catch{}};
@@ -24,6 +24,9 @@ const audio=createAudio();audio.setEnabled(sound);
 // Level-Meldung: "Level X geschafft!" + Name und Nummer des nächsten Levels.
 let bannerTimer=0;
 function levelBanner(stage){const b=$("level-banner");$("level-done").textContent=t("levelDone",{done:stage});$("level-name").textContent=t(stages[stage].key);$("level-next").textContent=t("levelNext",{next:stage+1});b.hidden=false;b.classList.add("visible");clearTimeout(bannerTimer);bannerTimer=setTimeout(()=>{b.classList.remove("visible");bannerTimer=setTimeout(()=>{b.hidden=true;},400);},3200);}
+// Warnt einmal pro Krähe, sobald sie aus den Wolken auftaucht (etwa 2,6 s vor Hornox).
+let crowsSeen=new Set();
+function crowWarnings(){for(const o of state.objects){if(o.kind!=="crow"||o.resolved||crowsSeen.has(o.id))continue;const gap=(o.d-state.distance)/Math.max(1,state.speed+(o.approach||0));if(gap>2.6)continue;crowsSeen.add(o.id);if(o.double&&o.lane!==Math.min(...state.objects.filter(q=>q.kind==="crow"&&q.double&&!q.resolved).map(q=>q.lane)))continue;toast(t(o.double?"crowDouble":o.attack==="snatch"?"crowSnatch":o.attack==="feint"?"crowFeint":"crowDive"),1.8);}}
 function hideLevelBanner(){clearTimeout(bannerTimer);$("level-banner").classList.remove("visible");$("level-banner").hidden=true;}
 function toast(value,seconds=1.8){$("toast").textContent=value;$("toast").classList.add("visible");toastUntil=time+seconds;}
 function updateCopy(){
@@ -49,7 +52,8 @@ function input(kind){
   const need=turnDirection(state.seed,state.summitTurn,state.turnIndex);
   if(inTurn()&&state.turnChoice!==need&&dir===need)dispatch({type:"turn",direction:dir});
   else if(!tilt)dispatch({type:"steer",lane:Math.max(0,Math.min(2,Math.round(state.target)+dir))});
- }else dispatch({type:kind});
+ }else if(kind==="power"&&state.climbReady>0&&!(state.climb>0))dispatch({type:"climb"});
+ else dispatch({type:kind});
 }
 // TEST-CHEAT: ?level=N in der Adresse startet direkt im Level N (1–10).
 // Beispiel: https://…/?level=7 – Bestwerte werden dabei nicht gespeichert.
@@ -66,7 +70,7 @@ function skipToLevel(){
  renderDistance=distance;introElapsed=INTRO_DURATION;
 }
 function start(){
- if(!loaded)return;hideLevelBanner();$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;state=setup([player]);dispatch({type:"start",seed,mode,route});setScreen("play");acc=0;renderDistance=0;countdown=0;introElapsed=0;lastCount=-1;resultSaved=false;tiltBase=null;$("countdown").hidden=true;$("countdown").textContent="";
+ if(!loaded)return;hideLevelBanner();crowsSeen=new Set();$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;state=setup([player]);dispatch({type:"start",seed,mode,route});setScreen("play");acc=0;renderDistance=0;countdown=0;introElapsed=0;lastCount=-1;resultSaved=false;tiltBase=null;$("countdown").hidden=true;$("countdown").textContent="";
  audio.unlock().catch(()=>{});audio.setActive(true);controls.reset();scene?.resetEffects();$("feedback-label").textContent="";skipToLevel();hud();
 }
 function home(){introElapsed=-1;hideLevelBanner();$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;audio.setActive(true);scene?.resetEffects();$("feedback-label").textContent="";state=setup([player]);setScreen("home");selectMenu("run");countdown=0;renderDistance=0;$("countdown").hidden=true;$("turn-cue").hidden=true;$("tutorial").hidden=true;$("powerup").hidden=true;$("resort-arrival").hidden=true;updateCopy();}
@@ -86,13 +90,14 @@ function processEvents(){
  if(e.kind==="doubleJump"){audio.play("jump",1.3,.8);toast(t("doubleJump"),.8);}
  if(e.kind==="powerReady"){toast(t("powerReady"),2.8);audio.play("pickup",1.8,.7);}
  if(e.kind==="powerStart"){const n=$("power-callout");n.textContent=t("powerName");n.getAnimations().forEach(a=>a.cancel());n.animate([{opacity:0,transform:"translate(-50%,12px) scale(.8)"},{opacity:1,transform:"translate(-50%,0) scale(1.05)",offset:.18},{opacity:1,offset:.72},{opacity:0,transform:"translate(-50%,-14px) scale(1)"}],{duration:1500,fill:"forwards"});audio.play("jump",.72,.8);audio.play("pickup",1.5,.7);}
+ if(e.kind==="climbStart"){const n=$("power-callout");n.textContent=t("climbName");n.getAnimations().forEach(a=>a.cancel());n.animate([{opacity:0,transform:"translate(-50%,12px) scale(.8)"},{opacity:1,transform:"translate(-50%,0) scale(1.05)",offset:.18},{opacity:1,transform:"translate(-50%,0) scale(1)",offset:.75},{opacity:0,transform:"translate(-50%,-8px) scale(1)"}],{duration:1400,easing:"ease-out"});toast(t("climbOn"),2.4);audio.play("pickup",1.2,.8);}
  if(e.kind==="powerClear")audio.play("pickup",1.3,.55);
  if(e.kind==="powerPickup"){toast(t(e.power),2.5);audio.play("pickup",1.6,.8);}
  if(e.kind==="heart")heartFeedback(e.gained);if(e.kind==="world"&&e.gained)heartFeedback(true);
  if(e.kind==="world")levelBanner(e.stage);
- if(e.kind==="bump")toast(t(e.object==="sheep"?"sheepBump":"bump"));else if(e.kind==="checkpoint")toast(t("checkpoint"),2.5);else if(e.kind==="arrival"){$("toast").classList.remove("visible");toastUntil=0;}else if(e.kind==="magnet")toast(t("magnet"),2.3);else if(e.kind==="crow"){toast(e.lost>0?t("crowSteal",{n:e.lost}):t("crowEmpty"),2.2);audio.play("bump",1.4,.6);}else if(e.kind==="shieldHit")toast(t("shieldHit"));else if(e.kind==="missedTurn")toast(t("turnMiss"));}
+ if(e.kind==="bump")toast(t(e.object==="sheep"?"sheepBump":"bump"));else if(e.kind==="checkpoint")toast(t("checkpoint"),2.5);else if(e.kind==="arrival"){$("toast").classList.remove("visible");toastUntil=0;}else if(e.kind==="magnet")toast(t("magnet"),2.3);else if(e.kind==="crow"){toast(t(e.lost>0?"crowHit":"crowHitEmpty",{n:e.lost}),2.4);audio.play("bump",1.4,.8);}else if(e.kind==="shieldHit")toast(t("shieldHit"));else if(e.kind==="missedTurn")toast(t("turnMiss"));}
 }
-function hud(){
+function hud(){if(screen==="play"&&state.phase==="playing")crowWarnings();
  $("score").textContent=fmt(state.score);$("coins").textContent=state.coins;$("combo").textContent=state.multiplier>1?"×"+state.multiplier:"";
  $("distance").textContent=Math.floor(state.elapsed/60)+":"+String(Math.floor(state.elapsed%60)).padStart(2,"0")+" / 15:00 · "+(getStage(state.elapsed)+1)+"/10";
  $("stage").textContent=t(stages[getStage(state.elapsed)].key).toUpperCase();
@@ -103,12 +108,12 @@ function hud(){
  const rem=state.nextTurn-state.distance,show=active&&state.nextTurn>0&&rem<state.speed*2.8&&state.elapsed<892;
  $("turn-cue").hidden=!show;
  if(show){const direction=turnDirection(state.seed,state.summitTurn,state.turnIndex),ready=state.turnChoice===direction;$("turn-arrow").textContent=direction<0?"↰":"↱";$("turn-label").textContent=t(direction<0?"turnLeft":"turnRight");$("turn-distance").textContent=ready?t("turnReady"):inTurn()?t("turnNow"):Math.ceil(rem)+" m";$("turn-cue").classList.toggle("now",inTurn()&&!ready);$("turn-cue").classList.toggle("accepted",ready);}
- const power=[state.magnet>0?t("magnetShort",{n:Math.ceil(state.magnet/20)}):"",state.shield?t("shieldShort"):"",state.coinBoost>0?t("boostShort",{n:Math.ceil(state.coinBoost/20)}):"",state.climb>0?t("climbShort",{n:Math.ceil(state.climb/20)}):"",state.shoes>0?t("shoesShort",{n:Math.ceil(state.shoes/20)}):""].filter(Boolean).join(" · ");
+ const power=[state.magnet>0?t("magnetShort",{n:Math.ceil(state.magnet/20)}):"",state.shield?t("shieldShort"):"",state.coinBoost>0?t("boostShort",{n:Math.ceil(state.coinBoost/20)}):"",state.shoes>0?t("shoesShort",{n:Math.ceil(state.shoes/20)}):""].filter(Boolean).join(" · ");
  $("powerup").hidden=!active||!power;$("powerup").textContent=power;
 
  $("resort-arrival").hidden=true;
  $("touch-controls").hidden=!active||!buttons||intro||countdown>0;
- const charged=state.powerCharge>=30,on=state.powerTicks>0,pb=$("rush-button");pb.hidden=!active||intro||countdown>0;pb.disabled=paused||!charged||on;pb.classList.toggle('ready',charged&&!on);pb.classList.toggle('running',on);pb.style.setProperty('--charge',(on?state.powerTicks/120:state.powerCharge/30)*100+'%');$('rush-value').textContent=on?Math.ceil(state.powerTicks/20)+'s':charged?t('powerTap'):state.powerCharge+'/30';$('rush-name').textContent=t('powerName');pb.setAttribute('aria-label',on?t('powerActive',{n:Math.ceil(state.powerTicks/20)}):charged?t('powerReady'):t('powerCharge',{n:state.powerCharge}));$('rush-key').textContent=matchMedia('(pointer:coarse)').matches?'':powerKey().replace('Key','');
+ const gear=state.climbReady>0||state.climb>0,charged=gear?state.climbReady>0:state.powerCharge>=30,on=gear?state.climb>0:state.powerTicks>0,pb=$("rush-button");pb.classList.toggle('climb',gear);pb.hidden=!active||intro||countdown>0;pb.disabled=paused||!charged||on;pb.classList.toggle('ready',charged&&!on);pb.classList.toggle('running',on);pb.style.setProperty('--charge',(gear?(on?state.climb/200:1):on?state.powerTicks/120:state.powerCharge/30)*100+'%');$('rush-value').textContent=on?Math.ceil((gear?state.climb:state.powerTicks)/20)+'s':charged?t('powerTap'):state.powerCharge+'/30';$('rush-name').textContent=t(gear?'climbName':'powerName');pb.setAttribute('aria-label',on?t('powerActive',{n:Math.ceil(state.powerTicks/20)}):charged?t('powerReady'):t('powerCharge',{n:state.powerCharge}));$('rush-key').textContent=matchMedia('(pointer:coarse)').matches?'':powerKey().replace('Key','');
 }
 function powerKey(){return ["KeyE","KeyQ","KeyF","KeyX","KeyC"].find(k=>!Object.values(bindings).includes(k));}
 let renderScale=1.35,qualityLowTime=0,qualityHighTime=0,qualityCooldown=0;

@@ -2,7 +2,7 @@ export const meta={game:"Hornox Run · Zermatt",minPlayers:1,maxPlayers:1};
 export function setup(players){
  return{version:17,player:players[0]||"guest",phase:"ready",mode:"classic",route:"summit",
  tick:0,elapsed:0,distance:0,speed:18,x:1,target:1,lives:3,maxLives:3,jump:0,jumpCount:0,jumpBase:0,jumpY:0,fallTicks:0,duck:0,queued:"",buffer:0,
- flamingoSpawned:false,coins:0,powerCharge:0,powerTicks:0,powerUses:0,hearts:0,nextHeartAt:40,score:0,chain:0,bestChain:0,multiplier:1,shield:0,magnet:0,coinBoost:0,climb:0,shoes:0,checkpoints:0,arrivals:0,
+ flamingoSpawned:false,coins:0,powerCharge:0,powerTicks:0,powerUses:0,hearts:0,nextHeartAt:40,score:0,chain:0,bestChain:0,multiplier:1,shield:0,magnet:0,coinBoost:0,climb:0,climbReady:0,shoes:0,checkpoints:0,arrivals:0,
  turnIndex:0,nextTurn:260,turnChoice:0,summitTurn:0,heading:0,turns:0,failReason:"",
  seed:20261029,rng:20261029,nextId:1,nextRow:30,row:0,invulnerable:0,slow:0,objects:[],events:[]};
 }
@@ -17,6 +17,7 @@ export function validateAction(s,p,a){
   return{ok:true};
  }
  if(s.phase!=="playing")return{ok:false,error:"finished"};
+ if(a.type==="climb")return s.climbReady>0&&!(s.climb>0)?{ok:true}:{ok:false,error:"climb-not-ready"};
  if(a.type==="power")return s.powerCharge>=30&&s.powerTicks===0?{ok:true}:{ok:false,error:"power-not-ready"};
  if(a.type==="steer")return Number.isFinite(a.lane)&&a.lane>=0&&a.lane<=2?{ok:true}:{ok:false,error:"lane"};
  if(a.type==="turn")return(a.direction===-1||a.direction===1)&&s.nextTurn-s.distance<=s.speed*1.6&&s.nextTurn>s.distance?{ok:true}:{ok:false,error:"turn-window"};
@@ -34,6 +35,8 @@ function turnDir(seed,summitTurn,i){const base=k=>((seed+k*13)%5)<2?-1:1;return 
 export function applyAction(s,p,a){
  if(!validateAction(s,p,a).ok)return s;
  if(a.type==="start"){const maxLives=3;return{...setup([p]),phase:"playing",mode:a.mode,maxLives,lives:maxLives,seed:a.seed,rng:a.seed,speed:a.mode==="relaxed"?14:19};}
+ // Kletterausrüstung wird mit E / Power-Button angezogen.
+ if(a.type==="climb")return{...s,climbReady:0,climb:200,events:[{kind:"climbStart"}]};
  if(a.type==="power")return{...s,powerCharge:0,powerTicks:120,powerUses:s.powerUses+1,slow:0,events:[{kind:"powerStart"}]};
  if(a.type==="steer")return{...s,target:a.lane,events:[]};
  if(a.type==="turn")return{...s,turnChoice:a.direction,events:[{kind:"turnReady",direction:a.direction}]};
@@ -56,13 +59,17 @@ export function applyAction(s,p,a){
  let flamingoSpawned=s.flamingoSpawned||false;
  let hearts=s.hearts||0,nextHeartAt=s.nextHeartAt??40;
  let lives=s.lives,score=s.score+Math.floor(distance)-Math.floor(s.distance),coins=s.coins,chain=s.chain,bestChain=s.bestChain,multiplier=s.multiplier;
- let shield=s.shield,magnet=Math.max(0,s.magnet-1),coinBoost=Math.max(0,(s.coinBoost||0)-1),climb=Math.max(0,(s.climb||0)-1),shoes=Math.max(0,(s.shoes||0)-1),invulnerable=Math.max(0,s.invulnerable-1),slow=Math.max(0,s.slow-1);
+ let shield=s.shield,magnet=Math.max(0,s.magnet-1),coinBoost=Math.max(0,(s.coinBoost||0)-1),climb=Math.max(0,(s.climb||0)-1),climbReady=s.climbReady||0,shoes=Math.max(0,(s.shoes||0)-1),invulnerable=Math.max(0,s.invulnerable-1),slow=Math.max(0,s.slow-1);
  let rng=s.rng,nextId=s.nextId,nextRow=s.nextRow,row=s.row,checkpoints=s.checkpoints,arrivals=s.arrivals;
  let summitTurn=s.summitTurn||0,turnIndex=s.turnIndex,nextTurn=s.nextTurn,turnChoice=s.turnChoice,heading=s.heading,turns=s.turns,failReason=s.failReason;
  if(s.powerTicks===1){invulnerable=Math.max(invulnerable,20);events.push({kind:"powerEnd"});}
  const objects=[];
  for(const old of s.objects){
   const item={...old};item.d-=(item.approach||0)*.05;
+  // Steinbock läuft von links nach rechts über die Spuren und erreicht Hornox auf seiner Ziel-Spur.
+  if(item.kind==='ibex'&&!item.resolved)item.lane=Math.max(-2.6,item.target-1.4*(item.d-distance)/speed);
+  // Scheinangriff: Die Krähe zielt erst auf eine Spur und wechselt kurz vor Hornox auf die andere.
+  if(item.kind==='crow'&&item.attack==='feint'&&!item.swerved&&(item.d-distance)/speed<.8){item.fake=item.lane;item.lane=item.real;item.swerved=true;}
   // The active shockwave clears all three lanes just ahead of Hornox, once per object.
   if(powering&&!item.resolved&&!pickups.includes(item.kind)&&item.d>distance-2&&item.d<=distance+11){
    item.resolved=true;item.powerCleared=true;score+=25;
@@ -83,8 +90,8 @@ export function applyAction(s,p,a){
    }else if(item.kind==='coinBoost'){
     if(aligned){coinBoost=200;events.push({kind:'powerPickup',power:'pickupBoost'});}
    }else if(item.kind==='climbGear'){
-    // Level 10: Kletterausrüstung schützt 10 Sekunden vor allen Hindernissen.
-    if(aligned){climb=200;events.push({kind:'powerPickup',power:'pickupClimb'});}
+    // Level 10: Kletterausrüstung wird eingepackt und später mit E / Button angezogen.
+    if(aligned){climbReady=1;events.push({kind:'powerPickup',power:'pickupClimb'});}
    }else if(item.kind==='snowshoes'){
     // Level 10: Schneeschuhe – 10 Sekunden schneller und kein Abbremsen nach Treffern.
     if(aligned){shoes=200;slow=0;events.push({kind:'powerPickup',power:'pickupShoes'});}
@@ -92,11 +99,11 @@ export function applyAction(s,p,a){
     if(aligned){const before=powerCharge;powerCharge=Math.min(30,powerCharge+15);if(before===30)score+=100;events.push({kind:'powerPickup',power:'pickupCharge'});if(before<30&&powerCharge===30)events.push({kind:'powerReady'});}
    }else if(aligned&&powering){score+=25;events.push({kind:"powerClear",object:item.kind,lane:item.lane,d:item.d,id:item.id,points:25});item.powerCleared=true;
    }else if(aligned){
-    const safe=["iceArch","branch","awning","rope","crow"].includes(item.kind)?duck>0:["crevasse","ridgeGap","manhole"].includes(item.kind)?height>.5:height>.4;
+    const safe=item.kind==="crow"?(item.attack==="snatch"&&height>.4):["iceArch","branch","awning","rope"].includes(item.kind)?duck>0:["crevasse","ridgeGap","manhole"].includes(item.kind)?height>.5:height>.4;
     if(!safe&&!invulnerable&&!climb){
      // Krähe: kostet kein Leben, klaut aber bis zu 10 Münzen.
-     if(item.kind==='crow'){const lost=Math.min(coins,10);coins-=lost;chain=0;multiplier=1;invulnerable=10;events.push({kind:'crow',lost});}
-     else if(shield){shield=0;invulnerable=25;events.push({kind:"shieldHit"});}
+     if(shield){shield=0;invulnerable=25;events.push({kind:"shieldHit"});}
+     else if(item.kind==='crow'){const lost=Math.min(coins,10);coins-=lost;lives--;chain=0;multiplier=1;invulnerable=30;slow=12;failReason='crow';events.push({kind:'crow',lost,attack:item.attack});}
      else{lives--;chain=0;multiplier=1;score=Math.max(0,score-40);invulnerable=30;slow=12;failReason=item.kind;events.push({kind:"bump",object:item.kind});if(item.kind==='manhole'){fallTicks=20;jump=0;jumpCount=0;jumpBase=0;height=0;events.push({kind:'fall'});}}
     }else if(safe||climb){score+=10;events.push({kind:"clear",object:item.kind,points:10});}
    }else if(item.lane>=0&&Math.abs(x-item.lane)<.95&&!invulnerable){score+=10;events.push({kind:"nearMiss",object:item.kind,points:10});}
@@ -106,14 +113,14 @@ export function applyAction(s,p,a){
  while(nextRow<distance+165){
   const d=nextRow;rng=random(rng);let safe=(rng>>>16)%3;rng=random(rng);
   const arrivalTime=elapsed+(d-distance)/speed,z=zone(arrivalTime),variant=(rng>>>16)%8;
-  const add=(kind,lane,offset=0)=>{
+  const add=(kind,lane,offset=0,extra=null)=>{
    const pace=s.mode==="relaxed"?.75:1;
-   const approach=(["pedestrian","photographers","hiker","influencer","lostTourists","skiers","snowboarders"].includes(kind)?2.4:kind==="carriage"?4.2:kind==="scooter"?6.5:kind==="electric"?7:kind==="rockfall"?3.5:kind==="bike"?8+Math.min(2,elapsed/120):kind==="marmot"?3.8:kind==="sheep"?2.8:kind==="trolley"?4.5:kind==="luggage"?2:kind==="crow"?5:0)*pace;
+   const approach=(["pedestrian","photographers","hiker","influencer","lostTourists","skiers","snowboarders"].includes(kind)?2.4:kind==="carriage"?4.2:kind==="scooter"?6.5:kind==="electric"?7:kind==="rockfall"?3.5:kind==="bike"?8+Math.min(2,elapsed/120):kind==="marmot"?3.8:kind==="sheep"?2.8:kind==="trolley"?4.5:kind==="luggage"?2:kind==="crow"?6:0)*pace;
    // Give incoming actors a lead so the entire row reaches the runner together.
    // This preserves the open lane and prevents faster NPCs overtaking jump/slide rows.
    const lead=Math.max(0,(d+offset-distance)/speed)*approach;
    const front=kind==='carriage'?5:0;
-   objects.push({id:nextId++,kind,lane,d:d+offset+lead+front,front,hitWidth:kind==='carriage'?.91:.38,formation:row%2,bornTick:tick,resolved:false,biome:z,approach,rowId:row,encounter:d+offset});
+   objects.push({id:nextId++,kind,lane,d:d+offset+lead+front,front,hitWidth:kind==='carriage'?.91:.38,formation:row%2,bornTick:tick,resolved:false,biome:z,approach,rowId:row,encounter:d+offset,...(kind==='ibex'?{target:lane,lane:-2.6}:{}),...extra});
   };
   let pattern=row<2?8:row===2?0:row===3?1:row===4?2:variant;
   const nearest=260+Math.max(0,Math.round((d-260)/680))*680;
@@ -126,12 +133,14 @@ export function applyAction(s,p,a){
    // Level 10 (Matterhorn): Steinböcke springen auf die Piste, Krähen klauen Münzen.
    if(pattern===0){add("iceBlock",one);if(busy)add("crevasse",two);}
    else if(pattern===1)add("crevasse",-1);
-   else if(pattern===2){add("crow",one);if(busy)add("iceBlock",two);}
+   // Krähen-Angriffe: Sturzflug (Spur wechseln), Münzenklau (springen),
+   // Scheinangriff (nicht zu früh reagieren) und Doppelangriff (zwei Krähen).
+   else if(pattern===2){add("crow",one,0,{attack:"dive"});if(busy)add("iceBlock",two);}
    else if(pattern===3){add("ibex",one);if(busy)add("iceBlock",two);}
-   else if(pattern===4){add("crevasse",one);if(busy)add("iceArch",two);}
-   else if(pattern===5){add("crow",one);if(busy)add("ibex",two);}
+   else if(pattern===4){add("crow",one,0,{attack:"snatch"});if(busy)add("crevasse",two);}
+   else if(pattern===5){add("crow",one,0,{attack:"dive",double:busy});if(busy)add("crow",two,0,{attack:"dive",double:true});}
    else if(pattern===6){add("iceArch",two);if(busy)add("crevasse",one);}
-   else if(pattern===7){add("ibex",one);if(busy)add("crow",two);}
+   else if(pattern===7){add("crow",safe,0,{attack:"feint",real:one});if(busy)add("ibex",two);}
   }else if(z===0){
    if(pattern===0){add("iceBlock",one);if(busy)add("crevasse",two);}
    else if(pattern===1)add("crevasse",-1);
@@ -196,7 +205,7 @@ export function applyAction(s,p,a){
  }
  const phase=lives<=0?"lost":elapsed>=900?"won":"playing";
  if(phase==="won"){score+=2000;events.push({kind:"summit",points:2000});}
- return{...s,phase,tick,elapsed,distance,speed,x,lives,jump,jumpCount,jumpBase,jumpY:height,fallTicks,duck,queued,buffer,coins,flamingoSpawned,powerCharge,powerTicks,hearts,nextHeartAt,score,chain,bestChain,multiplier,shield,magnet,coinBoost,climb,shoes,checkpoints,arrivals,turnIndex,nextTurn,turnChoice,summitTurn,heading,turns,failReason,invulnerable,slow,rng,nextId,nextRow,row,objects,events};
+ return{...s,phase,tick,elapsed,distance,speed,x,lives,jump,jumpCount,jumpBase,jumpY:height,fallTicks,duck,queued,buffer,coins,flamingoSpawned,powerCharge,powerTicks,hearts,nextHeartAt,score,chain,bestChain,multiplier,shield,magnet,coinBoost,climb,climbReady,shoes,checkpoints,arrivals,turnIndex,nextTurn,turnChoice,summitTurn,heading,turns,failReason,invulnerable,slow,rng,nextId,nextRow,row,objects,events};
 }
 export function isGameOver(s){return ["lost","won"].includes(s.phase)?{over:true,winner:s.phase==="won"?s.player:null,score:s.score,coins:s.coins,distance:Math.floor(s.distance),arrivals:s.arrivals}:{over:false};}
 export function viewFor(s,p){return{...s,objects:s.objects.map(o=>({...o})),events:s.events.map(e=>({...e})),spectator:p!==s.player};}

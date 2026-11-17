@@ -151,6 +151,8 @@ export async function createActor(gl,url,jumpUrl=null,options={}){
   }
  }
  update({});
- return{update,draw,metrics:()=>({heroTriangles:triangleCount,dynamicSkeleton,joints:skins.reduce((n,s)=>n+s.joints.length,0),clips:Object.keys(clips).filter(k=>clips[k]),animation:animationName,poseJump,poseDuck,primitives:primitives.length,gearParts:gear.length,brandLabel:!!brandLabel,gearSwing}),bounds,names:nodes.map(n=>n.name)};
+ // Weltposition eines Knochens (z. B. für Schneeschuhe an den Füssen).
+  const jointTemp=new Float32Array(16);function joint(name){const n=nodes.find(q=>q.name===name);if(!n)return null;multiply(jointTemp,placement,n.world);return[jointTemp[12],jointTemp[13],jointTemp[14]];}
+  return{update,draw,joint,metrics:()=>({heroTriangles:triangleCount,dynamicSkeleton,joints:skins.reduce((n,s)=>n+s.joints.length,0),clips:Object.keys(clips).filter(k=>clips[k]),animation:animationName,poseJump,poseDuck,primitives:primitives.length,gearParts:gear.length,brandLabel:!!brandLabel,gearSwing}),bounds,names:nodes.map(n=>n.name)};
 }
 

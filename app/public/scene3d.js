@@ -1,12 +1,12 @@
 import {createAlpine} from './alpine.js?v=17';
 import {createPowerups} from './powerups.js?v=17';
-import {createSummit} from './summit.js?v=1';
+import {createSummit} from './summit.js?v=3';
 import {createEncounters} from './encounters.js?v=20';
 import {createSpecials} from './specials.js?v=17';
 import {introFrame} from './intro.js?v=17';
 import {createArchitecture} from './world3d.js?v=17';
 import {createRenderer} from './engine3d.js?v=21';
-import {createActor} from './actor.js?v=21';
+import {createActor} from './actor.js?v=22';
 import {createEffects} from './effects.js?v=17';
 import {createPath} from './route.js?v=21';
 import {getZone} from './journey.js?v=17';
@@ -106,15 +106,20 @@ export function createScene(canvas){
    push(x,y,z,0,-h,(toss?.lean||0)+sway,style===4?.83:scale);encounters.accessory(poseStyle,variant,pace);pop();
   }
  }
+ let speedNow=16;
  function obstacle(o,d,time,toss=null){const od=o.d-(toss?0:(o.approach||0)*visualSubtick);if(!toss&&(od<d-8||od>d+180||(o.resolved&&['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes'].includes(o.kind))))return;const off=(o.lane<0?0:(o.lane-1)*2.5)+(toss?.side||0),p=point(od,off),rise=toss?.y||0;
   if(['pedestrian','hiker','photographers','influencer','lostTourists','scooter','skiers','snowboarders'].includes(o.kind)){visitors(o,p,time,toss);if(o.kind!=='scooter')return;}
   if(o.kind==='ibex'&&!toss){
-   // Steinbock wartet neben der Piste auf einem Felsen und springt kurz vor Hornox auf seine Spur.
-   const side=o.id%2?1:-1,gap=od-d,u=Math.max(0,Math.min(1,(52-gap)/18)),ease=u*u*(3-2*u),lat=side*7.5*(1-ease),q=point(od,off+lat);
-   push(q.x,q.y,q.z,0,-q.h+(u>0&&u<1?-side*PI/2:u>=1?PI:-side*PI/2));
-   if(u<1)a('rock',0,-.1+(1-ease)*.25,0,1.4*(1-ease)+.01,.7*(1-ease)+.01,1.4*(1-ease)+.01,C.rock,0,o.id);
-   push(0,(1-ease)*.55+Math.sin(u*PI)*2.4,0);summit.ibex(time,u>0&&u<1?u:0,o.id);pop();pop();return;}
-  if(o.kind==='crow'){at(od,off,rise+1.75);if(toss)push(0,0,0,0,toss.spin,toss.lean);push(0,0,0,0,PI);summit.crow(time,o.id);pop();if(toss)pop();pop();return;}
+   // Steinbock galoppiert von links nach rechts quer über die Piste (Spur kommt aus den Regeln).
+   const q=point(od,(o.lane-1)*2.5),moving=o.lane>-2.59,hop=moving?Math.abs(Math.sin(time*7+o.id))*.45:0;
+   push(q.x,q.y+hop,q.z,0,-q.h);push(0,0,0,0,PI/2);summit.ibex(time,moving?.35+.3*Math.sin(time*14):0,o.id);pop();pop();return;}
+  if(o.kind==='crow'){
+   // Krähe taucht oben aus den Wolken auf und stösst auf Hornox herab.
+   const gapT=Math.max(0,(od-d)/Math.max(1,speedNow+(o.approach||0)));if(!toss&&gapT>3.2)return;
+   let lane=o.lane;if(o.attack==='feint'){const fake=o.swerved?o.fake:o.lane,real=o.real,u=Math.max(0,Math.min(1,(.8-gapT)/.3));lane=fake+(real-fake)*u*u*(3-2*u);}
+   const low=o.attack==='snatch'?.55:1.35,y=low+Math.max(0,gapT-.7)*7.5,q=point(od,(lane-1)*2.5);
+   if(gapT>2.7&&!toss)for(let k=0;k<5;k++)a('sphere',q.x+Math.sin(k*2.1)*1.2,q.y+y+.4+Math.cos(k*1.7)*.4,q.z,1.1-k*.12,.55,1.1-k*.12,[.97,.98,1,49]);
+   push(q.x,q.y+y+(toss?toss.y||0:0),q.z,0,-q.h);if(toss)push(0,0,0,0,toss.spin,toss.lean);push(0,0,0,gapT>.7?.55:0,0);summit.crow(time,o.id);pop();if(toss)pop();pop();return;}
   if(o.kind==='flamingo')flamingoInstances++;
   const model=o.kind==='scooter'?null:o.kind;
   if(npc[model]){const animal=['marmot','sheep'].includes(o.kind),idle=model==='hiker';instances.push({actor:npc[model],pose:{x:p.x,z:p.z,y:p.y+rise+(animal?Math.abs(Math.sin(time*(model==='marmot'?10:6)+o.id))*(model==='marmot'?.14:.05):0),heading:(toss?.spin||0)-PI/2-p.h+(idle?Math.sin(time*.7+o.id)*.035:0),distance:idle?0:time*3,home:idle,lean:toss?toss.lean:animal?Math.sin(time*7+o.id)*.025:0}});return;}
@@ -152,7 +157,7 @@ export function createScene(canvas){
  },resetEffects(){fx.reset();tossed=[];rushFov=0;},
  render(s,{distance,time,delta,active,paused,reduced,screen,introTime=null,waiting=false}){if(!actor)return;const d=active?distance:0,newKey=s.seed+':summit';if(key!==newKey){key=newKey;placementCache.clear();clearCache.clear();path=createPath(s.seed,'summit');cam=0;}
   const mobile=canvas.width/canvas.height<.9;cinematic=introTime===null?null:introFrame(introTime,mobile,reduced);cinematicMetrics=cinematic?{time:introTime,heroZ:cinematic.z,doorOpen:cinematic.doorOpen,orbitDegrees:cinematic.orbitDegrees,eye:cinematic.eye,target:cinematic.target}:null;
-  trackD=d;const stage=getZone(active?s.elapsed:0);const phase=active?s.elapsed:0,ease=(a,b)=>{const t=Math.max(0,Math.min(1,(phase-a)/(b-a)));return t*t*(3-2*t);};grade=.025*ease(90,110)+.015*ease(180,200)+.015*ease(360,380)+.035*ease(540,560)-.015*ease(630,650)+.035*ease(720,740)-.11*ease(785,812);visualSubtick=active&&!paused?Math.max(0,Math.min(.05,(d-s.distance)/Math.max(1,s.speed))):0;
+  trackD=d;speedNow=s.speed||16;const stage=getZone(active?s.elapsed:0);const phase=active?s.elapsed:0,ease=(a,b)=>{const t=Math.max(0,Math.min(1,(phase-a)/(b-a)));return t*t*(3-2*t);};grade=.025*ease(90,110)+.015*ease(180,200)+.015*ease(360,380)+.035*ease(540,560)-.015*ease(630,650)+.035*ease(720,740)-.11*ease(785,812);visualSubtick=active&&!paused?Math.max(0,Math.min(.05,(d-s.distance)/Math.max(1,s.speed))):0;
   if(path.setSummit(active?s.summitTurn:0)){placementCache.clear();clearCache.clear();}
   if(!active||!s.summitTurn)mtn=null;else if(!mtn){const relaxed=s.mode==='relaxed',base=(relaxed?14:19)+(relaxed?6:8),dEnd=s.distance+Math.max(0,900-s.elapsed)*base,dStart=s.distance+(810-s.elapsed)*base,top=path.frame(dEnd);mtn={x:top.x,z:top.z,k:.22,p:40,R:Math.max(200,(dEnd-dStart)*.5)};}
   mtnFade=ease(785,812);
@@ -163,6 +168,7 @@ export function createScene(canvas){
   const offset=active?(lane-1)*2.5:0,ax=Math.cos(p.h)*offset,az=cinematic?cinematic.z:Math.sin(p.h)*offset,powered=s.powerTicks>0,lift=(powered?.28:0)-(s.fallTicks?Math.sin((20-s.fallTicks)/20*PI)*2.7:0);
   a('billboard',ax,groundY(ax,az)+.025,az,2.2,1.5,1,[.1,.16,.17,8],-PI/2);
   visibleActor=active?actor:showcase;visibleActor.update({distance:cinematic?cinematic.runDistance:active?d:0,time:anim,jump:active?s.jump:0,duck:active?s.duck:0,home:!active||waiting||!!cinematic&&!cinematic.walking,x:ax,y:active?groundY(ax,az)+jump*2.2+lift:0,z:az,heading:active?PI-cam:PI,impact:fx.impact(),lean:reduced?0:(s.target-lane)*-.1+fx.wobble()});
+  if(active&&s.shoes>0&&visibleActor===actor&&actor.joint){for(const side of['Left','Right']){const f=actor.joint(side+'Foot'),t=actor.joint(side+'ToeBase');if(!f||!t)continue;const cx=(f[0]+t[0])/2,cz=(f[2]+t[2])/2,cy=Math.min(f[1],t[1]),yaw=Math.atan2(t[0]-f[0],t[2]-f[2]);push(cx,cy-.06,cz,0,yaw);summit.snowshoe();pop();}}
   if(active&&(s.shield||s.coinBoost>0||s.magnet>0||s.climb>0||s.shoes>0)){push(ax,groundY(ax,az)+jump*2.2+lift,az,0,-cam);powerups.aura(s,anim);summit.aura(s,anim);pop();}
   rushFov+=((powered?1:0)-rushFov)*Math.min(1,delta*5);if(powered){push(ax,groundY(ax,az)+jump*2.2+lift,az,0,-cam);special.rush(anim,reduced,rushFov);pop();}
   const follow=active?offset*.35:0,dist=mobile?10.3:9.5,ex=-Math.sin(cam)*dist+Math.cos(cam)*follow,ez=Math.cos(cam)*dist+Math.sin(cam)*follow;
