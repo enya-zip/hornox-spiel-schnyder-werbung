@@ -10,13 +10,14 @@ import {createRenderer} from './engine3d.js?v=21';
 import {createActor} from './actor.js?v=22';
 import {createEffects} from './effects.js?v=17';
 import {createPath} from './route.js?v=21';
-import {getZone,bridgeAt,fogAt,forestSection,meadowSection} from './journey.js?v=23';
+import {getZone,bridgeAt,fogAt,forestSection,meadowSection,lakeSection,stoneAt} from './journey.js?v=24';
+import {createBlackLake} from './blacklake.js?v=1';
 import {createMeadow} from './meadow.js?v=3';
 import {createForest} from './forest.js?v=4';
 export {getZone};
 const PI=Math.PI,C={ice:[.74,.87,.9,10],grass:[.44,.58,.30,11],gravel:[.7,.63,.48,12],cobble:[.65,.66,.61,13],snow:[.86,.92,.94,2],rock:[.48,.52,.53,1],wood:[.32,.22,.15,4],gold:[1,.74,.24,9],dark:[.12,.2,.23],fir:[1,1,1,7],red:[.85,.16,.19],flower:[.97,.85,.40]};
 export function createScene(canvas){
- const r=createRenderer(canvas),a=r.add,push=r.push,pop=r.pop,fx=createEffects(r),arch=createArchitecture(r),special=createSpecials(r),encounters=createEncounters(r),alpine=createAlpine(r),powerups=createPowerups(r),summit=createSummit(r),lake=createLake(r),forest=createForest(r),meadow=createMeadow(r);let actor,showcase,npc={},path,key='',origin={x:0,z:0,h:0},lane=1,cam=0,jump=0,lastD=0,anim=0,visibleActor,instances=[],zone=3,trackD=0,grade=0,streetBuildings=[],cinematic=null,cinematicMetrics=null,rushFov=0,tossed=[],touristGroups=[],flamingoInstances=0;const placementCache=new Map(),clearCache=new Map();let visualSubtick=0,mtn=null,mtnFade=0;
+ const r=createRenderer(canvas),a=r.add,push=r.push,pop=r.pop,fx=createEffects(r),arch=createArchitecture(r),special=createSpecials(r),encounters=createEncounters(r),alpine=createAlpine(r),powerups=createPowerups(r),summit=createSummit(r),lake=createLake(r),forest=createForest(r),meadow=createMeadow(r),blacklake=createBlackLake(r);let actor,showcase,npc={},path,key='',origin={x:0,z:0,h:0},lane=1,cam=0,jump=0,lastD=0,anim=0,visibleActor,instances=[],zone=3,trackD=0,grade=0,streetBuildings=[],cinematic=null,cinematicMetrics=null,rushFov=0,tossed=[],touristGroups=[],flamingoInstances=0;const placementCache=new Map(),clearCache=new Map();let visualSubtick=0,mtn=null,mtnFade=0;
  const ready=Promise.all([r.ready,createActor(r.gl,'assets/hornox-run.glb','assets/hornox-jump.glb',{brand:true}),createActor(r.gl,'assets/hornox-showcase.glb',null,{brand:true}),...['sheep','marmot','hiker','bike'].map((name,i)=>createActor(r.gl,'assets/'+(name==='hiker'?'hiker-standing':name)+'.glb',null,{height:[1.5,.85,2.35,2.4][i],walk:name==='hiker'}))]).then(([,run,still,...models])=>{actor=run;showcase=still;['sheep','marmot','hiker','bike'].forEach((n,i)=>npc[n]=models[i]);visibleActor=still;r.setExtra((pass,ctx)=>{for(const ins of instances){ins.actor.update(ins.pose);ins.actor.draw(pass,ctx);}visibleActor.draw(pass,ctx);});});
  // Level 10: pyramidenförmiger Gipfel (wie das Matterhorn). Der Zickzack-Weg verläuft nur in zwei
  // Richtungen auf den Gipfel zu, daher steigt er mit der L1-Distanz gleichmässig bis zur Spitze an.
@@ -54,6 +55,8 @@ export function createScene(canvas){
   const shiftX=origin.x*.023,shiftZ=origin.z*.023;
   for(let k=0;k<12;k++){const ang=k*PI/6+.13,rad=2100+(k%3)*150;a('mountain',Math.sin(ang)*rad-shiftX,-55,Math.cos(ang)*rad-shiftZ,950+(k%3)*110,480+(k%4)*65,950,[1,1,1,29],0,ang*.3);}
   a('matterhorn',-220-shiftX,-45,-3200-shiftZ,510,850,580,[1,1,1,29],0,.18);
+  // Schwarzsee: das Matterhorn steht immer gut sichtbar im Hintergrund, egal wohin der Weg abbiegt.
+  if(zone===9)a('matterhorn',Math.sin(cam)*2700+Math.cos(cam)*380,-45,-Math.cos(cam)*2700+Math.sin(cam)*380,560,980,620,[1,1,1,29],0,.18-cam);
   // Opaque ground meets the mountain feet; there is no horizon alpha mask.
 
  }
@@ -134,10 +137,29 @@ export function createScene(canvas){
    }
   }
  }
- function environment(d,elapsed,speed){zone=getZone(elapsed);landscape(d,elapsed);road(d,elapsed,speed);street(d,elapsed,speed);lakeside(d,elapsed,speed);bridge(d,elapsed,speed);forestScenery(d,elapsed,speed);meadowScenery(d,elapsed,speed);
+ // Level 6: Schwarzsee – Wasser überall, Uferweg, Holzsteg und Steinpfad über den See, Seerosen, Schilf,
+ // Fliegenschwärme, Frösche auf Seerosenblättern und die Kapelle am Ufer.
+ function lakeScenery9(d,elapsed,speed){
+  const gaps=curObjects.filter(o=>o.kind==='waterGap').map(o=>o.d);
+  for(let w=Math.floor((d-30)/6)*6;w<d+430;w+=6){const t=Math.max(0,elapsed+(w-d)/speed);if(getZone(t)!==9)continue;const k=Math.round(w/6),sec=lakeSection(t),stones=stoneAt(t),steg=sec>=2&&!stones;
+   for(const side of[-1,1]){
+    const wet=side<0||sec>=2;
+    if(wet){const h=path.frame(w).h,sx=grade*(.55*Math.cos(h)-.83*Math.sin(h)),sz=grade*(-.55*Math.sin(h)-.83*Math.cos(h)),tilt=()=>push(0,0,0,Math.atan(-sz),0,Math.atan(sx));const c=point(w,side*15);if(clear(c.x,c.z,9,w)){at(w,side*15);tilt();a('box',0,-.13,0,22,.12,6.02,[.08,.3,.42,26]);pop();pop();}const f=point(w,side*40);if(clear(f.x,f.z,12,w)){at(w,side*40);tilt();a('box',0,-.14,0,28,.12,6.02,[.08,.3,.42,26]);pop();pop();}}
+    else if(k%2===0){at(w,side*(8+(k%3)*2));a('rock',0,.1,0,1.4,.6,1.1,C.rock,0,k);pop();if(k%3===0){at(w,side*5.4);blacklake.reeds(k);pop();}}
+    if(wet&&w<d+260){if(k%2===0){at(w+1,side*(7+(k%3)*1.5));blacklake.lily(anim,k);pop();}if(!steg&&!stones&&k%3===1){at(w,side*5.2);blacklake.reeds(k);pop();}}
+    if(wet&&k%4===side+2&&w<d+220){at(w,side*7.5);blacklake.swarm(anim,k,5,1.4);pop();}
+    if(wet&&k%13===(side>0?5:11)&&w<d+240){at(w,side*9);a('cylinder',0,.03,0,1.1,.03,1.1,[.25,.6,.25]);push(0,.04,0,0,-side*PI/2,0,1.2);const ph=(anim*.7+k*.37)%1;blacklake.frog(anim,k,0,0,ph>.85?Math.sin((ph-.85)/.15*PI)*1.6:0,ph>.92);pop();pop();}
+    if(side>0&&sec===1&&k%45===7){const cp=point(w,side*17);if(clear(cp.x,cp.z,6,w)){at(w,side*17);push(0,0,0,0,-PI/2);alpine.chapel();pop();pop();}}
+   }
+   if(steg||stones){at(w,0);a('box',0,.012,0,8.8,.02,6.02,[.1,.38,.52,26]);pop();}
+   if(steg)for(let j=0;j<6;j+=1.5){const pk=Math.round((w+j)/1.5);at(w+j,0);forest.plank(pk);if(pk%4===0)forest.rail();pop();}
+   if(stones)for(let j=0;j<6;j+=2.4){const sw=w+j;if(gaps.some(g=>Math.abs(g-sw)<2.6))continue;for(const off of[-2.5,0,2.5]){at(sw,off);blacklake.stone(Math.abs(Math.round(k+off)));pop();}}
+  }
+ }
+ function environment(d,elapsed,speed){zone=getZone(elapsed);landscape(d,elapsed);road(d,elapsed,speed);street(d,elapsed,speed);lakeside(d,elapsed,speed);bridge(d,elapsed,speed);forestScenery(d,elapsed,speed);meadowScenery(d,elapsed,speed);lakeScenery9(d,elapsed,speed);
   const start=Math.floor((d-22)/14)*14;
   for(let w=start;w<d+430;w+=14){const z=getZone(Math.max(0,elapsed+(w-d)/speed)),index=Math.floor(w/14),side=index%2?1:-1,off=side*(7.7+(Math.abs(index)%3)*1.4),p=point(w,off);
-   if([1,2,3,8].includes(z)||z===7&&side<0||!clear(p.x,p.z,1.8,w))continue;
+   if([1,2,3,8,9].includes(z)||z===7&&side<0||!clear(p.x,p.z,1.8,w))continue;
    if(z===0||z===5){at(w,off);a('rock',0,-.16,0,2.2,.45,3.5,C.snow,0,w*.2);if(index%3===0){a('box',0,1,0,.06,2,.06,C.wood);a('box',0,1.8,0,.09,.22,.09,C.red);}pop();}
    else if([1,6,7,8].includes(z)){if(index%3===0||z===8)tree(p.x,p.z,.65+(Math.abs(index)%4)*.12,p.y);if([6,7].includes(z)&&index%3===0){at(w,side*(z===6?10:13));push(0,0,0,0,side<0?PI/2:-PI/2,0,z===7?.83:1);alpine.chalet(Math.abs(index)%3);pop();pop();}if(z===6&&index%23===0){at(w,side*19);alpine.chapel();pop();}if(z===8&&index%29===0){at(w,side*14);alpine.bridge();pop();}if(w<d+150){flowers(p.x,p.z,w,p.y);const f=point(w,side*4.65);flowers(f.x,f.z,w+2,f.y);}at(w,side*4.9);a('box',0,.65,0,.1,1.3,.1,C.wood);a('box',0,1.03,0,.07,.07,5,C.wood);a('box',0,.60,0,.07,.07,5,C.wood);pop();if(index%7===0&&w<d+150){const q=point(w,side*7);instances.push({actor:npc.sheep,pose:{x:q.x,y:q.y,z:q.z,heading:side*PI/2,home:true}});}}
    else if([4,9,10].includes(z)){at(w,off);a('rock',0,-.25,0,1.8,.8,2.5,C.rock,0,w*.3);if(index%3===0){a('box',0,.65,0,.10,1.6,.1,C.wood);a('box',0,1.35,0,.16,.23,.16,C.red);}pop();if(z!==10&&index%5===0)tree(p.x,p.z,.38,p.y);if(z===9&&index%31===0){const lp=point(w,side*42);if(clear(lp.x,lp.z,23,w)){at(w,side*42);const h=path.frame(w).h,sx=grade*(.55*Math.cos(h)-.83*Math.sin(h)),sz=grade*(-.55*Math.sin(h)-.83*Math.cos(h));push(0,0,0,Math.atan(-sz),0,Math.atan(sx));alpine.lake(anim);pop();pop();}}if(z===10&&index%3===0){at(w,off);a('rock',0,.24,0,1.9,.33,2.6,C.snow);pop();}}
@@ -163,7 +185,7 @@ export function createScene(canvas){
    push(x,y,z,0,-h,(toss?.lean||0)+sway,style===4?.83:scale);encounters.accessory(poseStyle,variant,pace);pop();
   }
  }
- let dogVis=40,dogLane=1,speedNow=16,flyingFish=[],tickNow=0,chaser=null,chaseVis=40,chaseLane=1,reelT=-9,fogNow=0,boarVis=40,boarLane=1,rammed=new Set();
+ let curObjects=[],tongueDrawn=new Set(),dogVis=40,dogLane=1,speedNow=16,flyingFish=[],tickNow=0,chaser=null,chaseVis=40,chaseLane=1,reelT=-9,fogNow=0,boarVis=40,boarLane=1,rammed=new Set();
  function obstacle(o,d,time,toss=null){if(!toss&&(rammed.has(o.id)||fogNow>0&&o.d-d>180-140*fogNow))return;const od=o.d-(toss?0:(o.approach||0)*visualSubtick);if(!toss&&(od<d-8||od>d+180||(o.resolved&&['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom','herb','cheese','goldBell','edelweiss'].includes(o.kind))))return;const off=(o.lane<0?0:(o.lane-1)*2.5)+(toss?.side||0),p=point(od,off),rise=toss?.y||0;
   if(['pedestrian','hiker','photographers','influencer','lostTourists','scooter','skiers','snowboarders'].includes(o.kind)){visitors(o,p,time,toss);if(o.kind!=='scooter')return;}
   if(o.kind==='ibex'&&!toss){
@@ -200,6 +222,17 @@ export function createScene(canvas){
   if(o.kind==='plankGap'&&!toss){
    // Morsches Brett: hat zuerst Risse, bricht etwa 1 s vor Hornox weg und hinterlässt ein Loch.
    const gapT=(od-d)/Math.max(1,speedNow),brk=Math.max(0,Math.min(1,(1.05-gapT)/.45));at(od,(o.lane-1)*2.5);forest.brokenPlank(brk,time,o.id);pop();return;}
+  if(o.kind==='floatLog'){at(od,0,rise);if(toss)push(0,0,0,0,toss.spin,toss.lean);blacklake.floatLog(time,o.id);if(toss)pop();pop();return;}
+  if(o.kind==='waterGap'&&!toss){at(od,0);for(const x of[-2.5,0,2.5])a('ring',x,.04,0,.6+Math.abs(Math.sin(time*2+x+o.id))*.4,.6+Math.abs(Math.sin(time*2+x+o.id))*.4,.03,[.85,.95,1,49],PI/2);pop();return;}
+  if(o.kind==='tongue'&&!toss){
+   // Frosch sitzt neben der Strecke: Kehlsack bläht sich (Warnung), dann schiesst die Zunge über 1–2 Spuren und zieht sich zurück.
+   if(tongueDrawn.has(o.attackId))return;tongueDrawn.add(o.attackId);
+   const side=o.side||-1,lanes=curObjects.filter(q=>q.kind==='tongue'&&q.attackId===o.attackId).map(q=>q.lane),far=side<0?Math.max(...lanes):Math.min(...lanes),frogOff=side*5.2,tipOff=(far-1)*2.5-side*1.1,len=Math.abs(tipOff-frogOff)-1;
+   const gapT=(od-d)/Math.max(1,speedNow),warn=Math.max(0,Math.min(1,(1.5-gapT)/1.1)),shoot=gapT<.35&&gapT>-.65?(gapT>.05?1-(gapT-.05)/.3:gapT>-.3?1:Math.max(0,1-(-.3-gapT)/.35)):0;
+   const fp=point(od,frogOff);push(fp.x,fp.y,fp.z,0,-fp.h);a('cylinder',0,.06,0,1.1,.12,1,[.55,.58,.6]);push(0,.12,0,0,-side*PI/2,0,1.6);/* Maul und Zunge zeigen zur Strecke */
+   blacklake.frog(time,o.id,warn*(gapT>.35?1:.3),warn*(.5+.5*Math.sin(time*14)),len/1.6*shoot,gapT<-.3);pop();pop();
+   if(shoot<.95){const tp=point(od,(far-1)*2.5);push(tp.x,tp.y,tp.z);blacklake.swarm(time,o.id,3,.6);pop();}
+   return;}
   if(['fence','gate','haystack','trough','ditch','woodstack','hayBale'].includes(o.kind)){
    // Level 5: Weide-Hindernisse.
    at(od,o.lane<0?0:(o.lane-1)*2.5,rise);if(toss)push(0,0,0,0,toss.spin,toss.lean);meadow[o.kind](time);if(toss)pop();pop();return;}
@@ -276,7 +309,7 @@ export function createScene(canvas){
   if(!active||!s.summitTurn)mtn=null;else if(!mtn){const relaxed=s.mode==='relaxed',base=(relaxed?14:19)+(relaxed?6:8),dEnd=s.distance+Math.max(0,900-s.elapsed)*base,dStart=s.distance+(810-s.elapsed)*base,top=path.frame(dEnd);mtn={x:top.x,z:top.z,k:.22,p:40,R:Math.max(200,(dEnd-dStart)*.5)};}
   mtnFade=ease(785,812);
   const p=path.frame(d);origin=p;if(Math.abs(d-lastD)>50)cam=p.h;lastD=d;cam+=(p.h-cam)*Math.min(1,delta*(reduced?40:7));lane+=(s.x-lane)*Math.min(1,delta*28);if(!paused&&screen!=='result')anim+=delta;
-  jump+=((s.jumpY||0)-jump)*Math.min(1,delta*28);instances=[];touristGroups=[];flamingoInstances=0;r.begin();r.setOrigin(p.x,p.z);r.setHoles(active?s.objects.filter(o=>o.kind==='manhole'&&o.d>d-10&&o.d<d+180).map(o=>{const q=point(o.d,(o.lane-1)*2.5);return[q.x,q.z,.81];}):[]);r.setEnvironment(active?s.elapsed:0,s.speed||16,p.h);environment(d,active?s.elapsed:0,s.speed||16);special.snow(anim,reduced,1-Math.max(0,Math.min(1,((active?s.elapsed:0)-84)/6)),cam);tickNow=(s.tick||0)+visualSubtick*20;chaser=null;fogNow=active?fogAt(s.elapsed):0;
+  jump+=((s.jumpY||0)-jump)*Math.min(1,delta*28);instances=[];touristGroups=[];flamingoInstances=0;r.begin();r.setOrigin(p.x,p.z);r.setHoles(active?s.objects.filter(o=>o.kind==='manhole'&&o.d>d-10&&o.d<d+180).map(o=>{const q=point(o.d,(o.lane-1)*2.5);return[q.x,q.z,.81];}):[]);curObjects=active?s.objects:[];r.setEnvironment(active?s.elapsed:0,s.speed||16,p.h);environment(d,active?s.elapsed:0,s.speed||16);special.snow(anim,reduced,1-Math.max(0,Math.min(1,((active?s.elapsed:0)-84)/6)),cam);tickNow=(s.tick||0)+visualSubtick*20;chaser=null;tongueDrawn=new Set();fogNow=active?fogAt(s.elapsed):0;
   if(active&&(s.boar>0||boarVis<30)){
    // Wildschwein rennt hinter Hornox her, rammt dabei die passierten Hindernisse aus dem Weg und kommt näher.
    const goal=s.boar>0?(s.boarGap||14):40;boarVis+=(goal-boarVis)*Math.min(1,delta*(goal>boarVis?.8:2.5));boarLane+=(lane-boarLane)*Math.min(1,delta*3);

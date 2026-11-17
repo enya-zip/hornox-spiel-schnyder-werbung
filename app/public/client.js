@@ -1,11 +1,11 @@
 import {INTRO_DURATION,COUNTDOWN_DURATION} from './intro.js?v=17';
-import {stages,getStage,DURATION,fogAt,bridgeAt,forestSection,meadowSection,meadowWindows} from "./journey.js?v=23";
-import {createScene} from "./scene3d.js?v=48";
-import {setup,validateAction,applyAction} from "./rules.js?v=36";
+import {stages,getStage,DURATION,fogAt,bridgeAt,forestSection,meadowSection,meadowWindows,lakeSection,stoneAt} from "./journey.js?v=24";
+import {createScene} from "./scene3d.js?v=52";
+import {setup,validateAction,applyAction} from "./rules.js?v=37";
 import {installControls} from "./controls.js?v=17";
-import {createAudio} from "./audio.js?v=21";
-import {getZone} from "./scene3d.js?v=48";
-import {copy} from "./copy.js?v=34";
+import {createAudio} from "./audio.js?v=22";
+import {getZone} from "./scene3d.js?v=52";
+import {copy} from "./copy.js?v=35";
 import {turnDirection} from "./route.js?v=21";
 const $=id=>document.getElementById(id),q=new URLSearchParams(location.search),app=$("app"),canvas=$("world"),player="guest";
 const read=k=>{try{return localStorage.getItem(k);}catch{return null;}},save=(k,v)=>{try{localStorage.setItem(k,String(v));}catch{}};
@@ -101,7 +101,7 @@ function skipToLevel(){
  renderDistance=distance;introElapsed=INTRO_DURATION;
 }
 function start(){
- if(!loaded)return;hideLevelBanner();crowsSeen=new Set();forestSec=0;forestSounds.clear();meadowSec=0;meadowSounds.clear();fisherMood=1;fisherEscaped=false;$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;state=setup([player]);dispatch({type:"start",seed,mode,route});setScreen("play");acc=0;renderDistance=0;countdown=0;introElapsed=0;lastCount=-1;resultSaved=false;tiltBase=null;$("countdown").hidden=true;$("countdown").textContent="";
+ if(!loaded)return;hideLevelBanner();crowsSeen=new Set();forestSec=0;forestSounds.clear();meadowSec=0;meadowSounds.clear();lakeSec=0;lakeSounds.clear();fisherMood=1;fisherEscaped=false;$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;state=setup([player]);dispatch({type:"start",seed,mode,route});setScreen("play");acc=0;renderDistance=0;countdown=0;introElapsed=0;lastCount=-1;resultSaved=false;tiltBase=null;$("countdown").hidden=true;$("countdown").textContent="";
  audio.unlock().catch(()=>{});audio.setActive(true);controls.reset();scene?.resetEffects();$("feedback-label").textContent="";skipToLevel();hud();
 }
 function home(){introElapsed=-1;hideLevelBanner();audio.setChase(false);$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;audio.setActive(true);scene?.resetEffects();$("feedback-label").textContent="";state=setup([player]);setScreen("home");selectMenu("run");countdown=0;renderDistance=0;$("countdown").hidden=true;$("turn-cue").hidden=true;$("tutorial").hidden=true;$("powerup").hidden=true;$("resort-arrival").hidden=true;updateCopy();}
@@ -142,7 +142,7 @@ function processEvents(){
  if(e.kind==="powerPickup"){toast(t(e.power),2.5);audio.play("pickup",1.6,.8);}
  if(e.kind==="heart")heartFeedback(e.gained);if(e.kind==="world"&&e.gained)heartFeedback(true);
  if(e.kind==="world")levelBanner(e.stage);
- if(e.kind==="bump")toast(t(e.object==="sheep"?"sheepBump":e.object==="fish"?"fishBump":e.object==="beaverLog"?"beaverBump":e.object==="hook"?"hookBump":"bump"));else if(e.kind==="checkpoint")toast(t("checkpoint"),2.5);else if(e.kind==="arrival"){$("toast").classList.remove("visible");toastUntil=0;}else if(e.kind==="magnet")toast(t("magnet"),2.3);else if(e.kind==="fishCatch")audio.play("pickup",1.5,.7);else if(e.kind==="fisherNotice"){toast(t("fisherNotice"),3.2);audio.play("pickup",.8,.7);}else if(e.kind==="gull"){toast(t(e.lost>0?"gullSteal":"gullEmpty",{n:e.lost}),2.4);audio.play("bump",1.6,.6);}else if(e.kind==="fisherAngry"){bigAlert(t("fisherAngry"));toast(t("fisherHint"),3);}else if(e.kind==="dogBark"){toast(t("dogBark"),2.6);audio.synth("bark",.6);}else if(e.kind==="dogAppear"){bigAlert(t(e.reason==="hunt"?"dogHuntAlert":"dogAlert"));toast(t(e.reason==="hunt"?"dogHuntHint":"dogHint"),3);audio.synth("bark",1.2);}else if(e.kind==="dogCatch"){const f=$("hit-flash");f.getAnimations().forEach(a=>a.cancel());f.animate([{opacity:.75},{opacity:0}],{duration:650,easing:"ease-out"});toast(t("dogCatch"),2.4);audio.synth("bark",1.2);try{navigator.vibrate?.(160);}catch{}}else if(e.kind==="dogQuit")toast(t("dogQuit"),2.8);else if(e.kind==="meadowPickup"){toast(t("pick_"+e.item,{n:e.points}),1.6);audio.play(e.item==="goldBell"?"pickup":"pickup",e.item==="edelweiss"?2.4:e.item==="goldBell"?1.2:1.7,.9);if(e.item==="goldBell")audio.synth("cowbell",.8);}else if(e.kind==="boarGrunt"){toast(t("boarGrunt"),2.6);audio.synth("grunt",.7);}else if(e.kind==="boarAppear"){bigAlert(t("boarAlert"));toast(t("boarHint"),3);audio.synth("grunt",1.2);}else if(e.kind==="boarRace"){bigAlert(t("boarRaceAlert"));toast(t("boarRaceHint"),3);audio.synth("grunt",1.3);}else if(e.kind==="boarRam"){const f=$("hit-flash");f.getAnimations().forEach(a=>a.cancel());f.animate([{opacity:.75},{opacity:0}],{duration:650,easing:"ease-out"});toast(t("boarRam"),2.4);audio.play("bump",.8,.9);try{navigator.vibrate?.(160);}catch{}}else if(e.kind==="boarQuit")toast(t("boarQuit"),2.6);else if(e.kind==="mushroom"){toast(t("mushroom"),1.6);audio.play("pickup",2,.8);}else if(e.kind==="fisherCast")audio.play("jump",.55,.55);else if(e.kind==="hooked"){const f=$("hit-flash");f.getAnimations().forEach(a=>a.cancel());f.animate([{opacity:.75},{opacity:0}],{duration:650,easing:"ease-out"});try{navigator.vibrate?.(140);}catch{}}else if(e.kind==="fisherQuit"){fisherEscaped=true;toast(t("fisherQuit"),2.6);audio.play("pickup",1.1,.8);}else if(e.kind==="crow"){toast(t(e.lost>0?"crowHit":"crowHitEmpty",{n:e.lost}),2.4);audio.play("bump",1.4,.8);}else if(e.kind==="shieldHit")toast(t("shieldHit"));else if(e.kind==="missedTurn")toast(t("turnMiss"));}
+ if(e.kind==="bump")toast(t(e.object==="sheep"?"sheepBump":e.object==="fish"?"fishBump":e.object==="beaverLog"?"beaverBump":e.object==="tongue"?"tongueBump":e.object==="floatLog"?"floatLogBump":e.object==="hook"?"hookBump":"bump"));else if(e.kind==="checkpoint")toast(t("checkpoint"),2.5);else if(e.kind==="arrival"){$("toast").classList.remove("visible");toastUntil=0;}else if(e.kind==="magnet")toast(t("magnet"),2.3);else if(e.kind==="fishCatch")audio.play("pickup",1.5,.7);else if(e.kind==="fisherNotice"){toast(t("fisherNotice"),3.2);audio.play("pickup",.8,.7);}else if(e.kind==="gull"){toast(t(e.lost>0?"gullSteal":"gullEmpty",{n:e.lost}),2.4);audio.play("bump",1.6,.6);}else if(e.kind==="fisherAngry"){bigAlert(t("fisherAngry"));toast(t("fisherHint"),3);}else if(e.kind==="splash"){toast(t("splash"),2.2);audio.synth("splash",1);}else if(e.kind==="dogBark"){toast(t("dogBark"),2.6);audio.synth("bark",.6);}else if(e.kind==="dogAppear"){bigAlert(t(e.reason==="hunt"?"dogHuntAlert":"dogAlert"));toast(t(e.reason==="hunt"?"dogHuntHint":"dogHint"),3);audio.synth("bark",1.2);}else if(e.kind==="dogCatch"){const f=$("hit-flash");f.getAnimations().forEach(a=>a.cancel());f.animate([{opacity:.75},{opacity:0}],{duration:650,easing:"ease-out"});toast(t("dogCatch"),2.4);audio.synth("bark",1.2);try{navigator.vibrate?.(160);}catch{}}else if(e.kind==="dogQuit")toast(t("dogQuit"),2.8);else if(e.kind==="meadowPickup"){toast(t("pick_"+e.item,{n:e.points}),1.6);audio.play(e.item==="goldBell"?"pickup":"pickup",e.item==="edelweiss"?2.4:e.item==="goldBell"?1.2:1.7,.9);if(e.item==="goldBell")audio.synth("cowbell",.8);}else if(e.kind==="boarGrunt"){toast(t("boarGrunt"),2.6);audio.synth("grunt",.7);}else if(e.kind==="boarAppear"){bigAlert(t("boarAlert"));toast(t("boarHint"),3);audio.synth("grunt",1.2);}else if(e.kind==="boarRace"){bigAlert(t("boarRaceAlert"));toast(t("boarRaceHint"),3);audio.synth("grunt",1.3);}else if(e.kind==="boarRam"){const f=$("hit-flash");f.getAnimations().forEach(a=>a.cancel());f.animate([{opacity:.75},{opacity:0}],{duration:650,easing:"ease-out"});toast(t("boarRam"),2.4);audio.play("bump",.8,.9);try{navigator.vibrate?.(160);}catch{}}else if(e.kind==="boarQuit")toast(t("boarQuit"),2.6);else if(e.kind==="mushroom"){toast(t("mushroom"),1.6);audio.play("pickup",2,.8);}else if(e.kind==="fisherCast")audio.play("jump",.55,.55);else if(e.kind==="hooked"){const f=$("hit-flash");f.getAnimations().forEach(a=>a.cancel());f.animate([{opacity:.75},{opacity:0}],{duration:650,easing:"ease-out"});try{navigator.vibrate?.(140);}catch{}}else if(e.kind==="fisherQuit"){fisherEscaped=true;toast(t("fisherQuit"),2.6);audio.play("pickup",1.1,.8);}else if(e.kind==="crow"){toast(t(e.lost>0?"crowHit":"crowHitEmpty",{n:e.lost}),2.4);audio.play("bump",1.4,.8);}else if(e.kind==="shieldHit")toast(t("shieldHit"));else if(e.kind==="missedTurn")toast(t("turnMiss"));}
 }
 // Level 4 «Furi · Waldpfad»: Abschnitts-Hinweise, heller/dunkler Wald und Waldgeräusche.
 let forestSec=0,nextChirp=0,nextWind=0,nextGrunt=0,nextHoof=0,nextWater=0;const forestSounds=new Set();
@@ -187,7 +187,22 @@ function meadowAmbience(){
   else if(o.kind==="ditch"&&gap<2){meadowSounds.add(o.id);audio.synth("stream",.8);}}
  if(meadowSounds.size>300)meadowSounds.clear();
 }
-function hud(){if(screen==="play"&&state.phase==="playing")crowWarnings();fisherBubble();forestAmbience();meadowAmbience();
+// Level 6 «Schwarzsee»: Abschnitte, Steinpfad- und Froschwarnungen, Seegeräusche.
+let lakeSec=0,nextLakeWater=0,nextBuzz=0,nextLakeBird=0;const lakeSounds=new Set();
+function lakeAmbience(){
+ const sec=screen==="play"&&state.phase==="playing"?lakeSection(state.elapsed):0,now=performance.now()/1000,el=state.elapsed;
+ if(sec!==lakeSec){if(sec>0)toast(t("lakeSec"+sec),3.2);lakeSec=sec;}
+ if(!sec||paused)return;
+ if(stoneAt(el+2)&&!stoneAt(el)&&!lakeSounds.has("stones"+Math.floor(el/20))){lakeSounds.add("stones"+Math.floor(el/20));bigAlert(t("stoneAlert"));toast(t("stoneHint"),3);}
+ if(now>nextLakeWater){nextLakeWater=now+3+Math.random()*2;audio.synth("water",.5);}
+ if(now>nextBuzz){nextBuzz=now+2.5+Math.random()*3;audio.synth("buzz",.6);}
+ if(now>nextLakeBird){nextLakeBird=now+4+Math.random()*4;audio.synth("chirp",.5);}
+ for(const o of state.objects){if(o.kind!=="tongue")continue;const gap=(o.d-state.distance)/Math.max(1,state.speed),key=o.attackId;
+  if(gap<1.6&&!lakeSounds.has("c"+key)){lakeSounds.add("c"+key);audio.synth("croak",.9);if(!lakeSounds.has("firstFrog")){lakeSounds.add("firstFrog");toast(t("frogHint"),3);}}
+  if(gap<.35&&!lakeSounds.has("t"+key)){lakeSounds.add("t"+key);audio.synth("thwip",1);}}
+ if(lakeSounds.size>300)lakeSounds.clear();
+}
+function hud(){if(screen==="play"&&state.phase==="playing")crowWarnings();fisherBubble();forestAmbience();meadowAmbience();lakeAmbience();
  $("score").textContent=fmt(state.score);$("coins").textContent=state.coins;$("combo").textContent=state.multiplier>1?"×"+state.multiplier:"";
  $("distance").textContent=Math.floor(state.elapsed/60)+":"+String(Math.floor(state.elapsed%60)).padStart(2,"0")+" / 15:00 · "+(getStage(state.elapsed)+1)+"/10";
  $("stage").textContent=t(stages[getStage(state.elapsed)].key).toUpperCase();

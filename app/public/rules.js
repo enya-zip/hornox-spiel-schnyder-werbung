@@ -35,6 +35,9 @@ function bridgeAt(t){return t>=317&&t<327;} // gleiche Zeiten wie in journey.js
 // Level 5 «Alpweiden» (6:00–7:30): Abschnitte und Challenge-Fenster (gleich wie in journey.js).
 function meadowSection(t){return t<360||t>=450?0:t<382.5?1:t<405?2:t<427.5?3:4;}
 const HERD=[388,394],COWS=[398,404],HAY=[409,421];
+// Level 6 «Schwarzsee» (7:30–9:00): Abschnitte und Steinpfad-Fenster (gleich wie in journey.js).
+function lakeSection(t){return t<450||t>=540?0:t<472.5?1:t<495?2:t<517.5?3:4;}
+function stoneAt(t){return t>=497&&t<513||t>=528&&t<534;}
 // Level 10: ab summitTurn wechseln die Kurven immer ab (Zickzack zum Gipfel).
 function turnDir(seed,summitTurn,i){const base=k=>((seed+k*13)%5)<2?-1:1;return !summitTurn||i<summitTurn?base(i):base(summitTurn-1)*((i-summitTurn)%2?1:-1);}
 export function applyAction(s,p,a){
@@ -121,13 +124,13 @@ export function applyAction(s,p,a){
     if(aligned){const before=powerCharge;powerCharge=Math.min(30,powerCharge+15);if(before===30)score+=100;events.push({kind:'powerPickup',power:'pickupCharge'});if(before<30&&powerCharge===30)events.push({kind:'powerReady'});}
    }else if(aligned&&powering){score+=25;events.push({kind:"powerClear",object:item.kind,lane:item.lane,d:item.d,id:item.id,points:25});item.powerCleared=true;
    }else if(aligned){
-    const safe=["trunk","fallingBranch","sign","hayBale","haystack","cow","cowWalk","hayRoll"].includes(item.kind)?false:item.kind==="hook"?(item.attack==="high"?duck>0:height>.4):item.kind==="gull"?false:item.kind==="crow"?(item.attack==="snatch"&&height>.4):["iceArch","branch","awning","rope","highLog","gate"].includes(item.kind)?duck>0:["crevasse","ridgeGap","manhole","plankGap","stream","ditch"].includes(item.kind)?height>.5:height>.4;
+    const safe=["trunk","fallingBranch","sign","hayBale","haystack","cow","cowWalk","hayRoll"].includes(item.kind)?false:item.kind==="hook"?(item.attack==="high"?duck>0:height>.4):item.kind==="gull"?false:item.kind==="crow"?(item.attack==="snatch"&&height>.4):["iceArch","branch","awning","rope","highLog","gate"].includes(item.kind)?duck>0:["crevasse","ridgeGap","manhole","plankGap","stream","ditch","waterGap"].includes(item.kind)?height>.5:height>.4;
     if(!safe&&!invulnerable&&!climb){
      // Möwe: kostet kein Leben, stiehlt aber bis zu 3 Fische aus dem Rucksack.
      if(item.kind==='gull'){const lost=Math.min(fish,3);fish-=lost;invulnerable=15;events.push({kind:'gull',lost,fish});}
      else if(shield){shield=0;invulnerable=25;events.push({kind:"shieldHit"});}
      else if(item.kind==='crow'){const lost=Math.min(coins,10);coins-=lost;lives--;chain=0;multiplier=1;invulnerable=30;slow=12;failReason='crow';events.push({kind:'crow',lost,attack:item.attack});}
-     else{lives--;chain=0;multiplier=1;score=Math.max(0,score-40);invulnerable=item.kind==='hook'?50:30;slow=12;failReason=item.kind;events.push({kind:"bump",object:item.kind});if(item.kind==='hook'){hookedAttack=item.attackId;events.push({kind:'hooked',attack:item.attack});}if(item.kind==='manhole'){fallTicks=20;jump=0;jumpCount=0;jumpBase=0;height=0;events.push({kind:'fall'});}}
+     else{lives--;chain=0;multiplier=1;score=Math.max(0,score-40);invulnerable=item.kind==='hook'?50:30;slow=12;failReason=item.kind;events.push({kind:"bump",object:item.kind});if(item.kind==='hook'){hookedAttack=item.attackId;events.push({kind:'hooked',attack:item.attack});}if(item.kind==='waterGap')events.push({kind:'splash'});if(item.kind==='manhole'||item.kind==='waterGap'){fallTicks=20;jump=0;jumpCount=0;jumpBase=0;height=0;events.push({kind:'fall'});}}
     }else if(safe||climb){score+=10;events.push({kind:"clear",object:item.kind,points:10});}
    }else if(item.lane>=0&&Math.abs(x-item.lane)<.95&&!invulnerable){score+=10;events.push({kind:"nearMiss",object:item.kind,points:10});}
   }
@@ -252,7 +255,21 @@ export function applyAction(s,p,a){
    else if(pattern===4){add("manhole",one);if(busy)add("bike",two);}
    else if(pattern===5){add("pedestrian",one);if(busy)add("cafe",two);}
    else if(pattern===6)add("carriage",(one+two)/2);
-  }else if([4,9,10].includes(z)){
+  }else if(z===9){
+   // Level 6 «Schwarzsee»: 1 Uferweg, 2 Holzsteg über dem See (treibende Baumstämme), 3 Steinpfad (von Stein zu Stein
+   // springen, sonst ins Wasser), 4 Finale. Frösche sitzen links/rechts und schiessen ihre Zunge über 1–2 Spuren
+   // (springen oder ausweichen); eine Spur bleibt immer frei.
+   const sec=lakeSection(arrivalTime),covers=(side,reach)=>Array.from({length:reach},(_,k)=>side<0?k:2-k),tongue=(side,reach)=>{
+    // Frösche zielen nie auf die freie Spur (Münzen/Herzen): notfalls andere Seite oder kürzere Zunge.
+    if(covers(side,reach).includes(safe))side=-side;if(covers(side,reach).includes(safe)){reach=1;side=safe===0?1:-1;}
+    if(covers(side,reach).some(l=>objects.some(o=>o.kind==="tongue"&&o.rowId===row&&o.lane===l)))return;
+    const id=row*10+(side>0?2:1);for(const l of covers(side,reach))add("tongue",l,0,{side,reach,attackId:id});};
+   if(pattern===8){}
+   else if(stoneAt(arrivalTime)){if(row%2===0)add("waterGap",-1);else if(sec===4||pattern%3===0)tongue(pattern%2?1:-1,1);}
+   else if(sec===1){[()=>tongue(-1,1),()=>add("boulder",one),()=>add("log",-1),()=>tongue(1,1),()=>{add("boulder",one);tongue(-1,1);},()=>tongue(-1,1),()=>add("log",-1),()=>tongue(1,1)][pattern]();}
+   else if(sec===4){[()=>{add("floatLog",-1);tongue(-1,1);},()=>tongue(-1,2),()=>tongue(1,2),()=>add("floatLog",-1),()=>{tongue(-1,1);tongue(1,1);},()=>add("floatLog",-1),()=>{tongue(-1,1);add("boulder",one);},()=>{add("floatLog",-1);tongue(1,1);}][pattern]();}
+   else{[()=>add("floatLog",-1),()=>tongue(-1,2),()=>tongue(1,1),()=>add("floatLog",-1),()=>{tongue(-1,1);tongue(1,1);},()=>add("floatLog",-1),()=>tongue(1,2),()=>tongue(-1,1)][pattern]();}
+  }else if([4,10].includes(z)){
    if(pattern===0){add("hiker",one);if(busy)add("lowRock",two);}
    else if(pattern===1)add("ridgeGap",-1);
    else if(pattern===2)add("rope",-1);

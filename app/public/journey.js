@@ -23,3 +23,6 @@ export const forestSection=t=>t<270||t>=360?0:t<292.5?1:t<315?2:t<337.5?3:4;
 // Level 5 «Alpweiden» (6:00–7:30): Abschnitte und Challenge-Fenster (müssen mit rules.js übereinstimmen).
 export const meadowSection=t=>t<360||t>=450?0:t<382.5?1:t<405?2:t<427.5?3:4;
 export const meadowWindows={herd:[388,394],cows:[398,404],hay:[409,421]};
+// Level 6 «Schwarzsee» (7:30–9:00): Abschnitte und Steinpfad-Fenster (müssen mit rules.js übereinstimmen).
+export const lakeSection=t=>t<450||t>=540?0:t<472.5?1:t<495?2:t<517.5?3:4;
+export const stoneAt=t=>t>=497&&t<513||t>=528&&t<534;
