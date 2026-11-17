@@ -59,3 +59,37 @@ html,body{position:fixed;inset:0;overscroll-behavior:none;overflow:hidden}#app{p
 
 /* Krähen-Warnung im grossen Callout */
 #power-callout.alert{color:#fff;background:#b3261ee8;padding:10px 22px;border-radius:16px;box-shadow:0 10px 30px #0005;text-shadow:none}
+
+/* Level 3: Fischer-Bubble unten links (Profilbild mit Gesichtsausdruck je nach Zustand) */
+#fisher-bubble{position:absolute;left:max(16px,env(safe-area-inset-left));bottom:max(18px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:10px;padding:6px 14px 6px 6px;border-radius:48px;background:#0f2d30d9;border:1px solid #e8d49e40;box-shadow:0 10px 26px #0005;color:#fff8ec;pointer-events:none;z-index:6;--ring:#4caf50;transition:bottom .25s,opacity .3s;max-width:min(360px,calc(100vw - 140px))}
+#fisher-bubble[hidden]{display:none}
+#fisher-bubble.with-touch{bottom:calc(max(24px,env(safe-area-inset-bottom)) + 64px)}
+#fisher-bubble .fb-portrait{width:66px;height:66px;flex:0 0 66px;border-radius:50%;padding:3px;background:var(--ring);box-shadow:0 0 0 2px #0f2d30,0 0 18px color-mix(in srgb,var(--ring) 55%,transparent);transition:background .4s,box-shadow .4s}
+#fisher-bubble svg{width:100%;height:100%;display:block;border-radius:50%}
+#fisher-bubble .fb-bg{fill:#bfe0e8;transition:fill .4s}
+#fisher-bubble .fb-skin{fill:var(--skin,#f2c49b);transition:fill .4s}
+#fisher-bubble .fb-nose{fill:color-mix(in srgb,var(--skin,#f2c49b) 70%,#b5523a)}
+#fisher-bubble .mood{display:none}
+#fisher-bubble[data-mood="1"] .m1,#fisher-bubble[data-mood="2"] .m2,#fisher-bubble[data-mood="3"] .m3,#fisher-bubble[data-mood="4"] .m4{display:inline}
+#fisher-bubble .fb-mark{font:900 26px/1 sans-serif;fill:#f5c242;stroke:#5a3a10;stroke-width:1.2}
+#fisher-bubble .fb-steam{fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;opacity:.85;animation:fb-steam .9s ease-in-out infinite}
+#fisher-bubble .fb-info{display:flex;flex-direction:column;gap:3px;min-width:0}
+#fisher-bubble #fb-state{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ring);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#fisher-bubble #fb-note{font-size:11px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#fisher-bubble .fb-meter{display:block;width:120px;max-width:100%;height:5px;border-radius:3px;background:#ffffff26;overflow:hidden}
+#fisher-bubble .fb-meter i{display:block;height:100%;width:0;background:var(--ring);transition:width .3s,background .4s}
+#fisher-bubble[data-mood="1"]{--ring:#4caf50;--skin:#f2c49b}
+#fisher-bubble[data-mood="2"]{--ring:#f5c242;--skin:#f2c49b}
+#fisher-bubble[data-mood="2"] .fb-portrait{animation:fb-bounce .6s ease-out}
+#fisher-bubble[data-mood="3"]{--ring:#ff8c2a;--skin:#efa889}
+#fisher-bubble[data-mood="3"] .fb-portrait{animation:fb-pulse 1.1s ease-in-out infinite}
+#fisher-bubble[data-mood="4"]{--ring:#e53935;--skin:#e98670}
+#fisher-bubble[data-mood="4"] .fb-portrait{animation:fb-shake .35s linear infinite,fb-pulse .7s ease-in-out infinite}
+#fisher-bubble[data-mood="4"] .fb-bg{fill:#f3c4bd}
+#fisher-bubble.near .fb-portrait{width:76px;height:76px;flex-basis:76px}
+@keyframes fb-pulse{50%{box-shadow:0 0 0 2px #0f2d30,0 0 28px var(--ring)}}
+@keyframes fb-shake{25%{transform:rotate(-4deg)}75%{transform:rotate(4deg)}}
+@keyframes fb-bounce{40%{transform:scale(1.15)}}
+@keyframes fb-steam{50%{transform:translateY(-3px);opacity:.4}}
+@media (prefers-reduced-motion:reduce){#fisher-bubble .fb-portrait,#fisher-bubble .fb-steam{animation:none!important}}
+@media (max-width:700px){#fisher-bubble .fb-portrait{width:54px;height:54px;flex-basis:54px}#fisher-bubble.near .fb-portrait{width:62px;height:62px;flex-basis:62px}#fisher-bubble #fb-note{display:none}#fisher-bubble .fb-meter{width:84px}}

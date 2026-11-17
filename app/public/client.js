@@ -1,11 +1,11 @@
 import {INTRO_DURATION,COUNTDOWN_DURATION} from './intro.js?v=17';
 import {stages,getStage,DURATION} from "./journey.js?v=17";
-import {createScene} from "./scene3d.js?v=34";
+import {createScene} from "./scene3d.js?v=35";
 import {setup,validateAction,applyAction} from "./rules.js?v=31";
 import {installControls} from "./controls.js?v=17";
 import {createAudio} from "./audio.js?v=18";
-import {getZone} from "./scene3d.js?v=34";
-import {copy} from "./copy.js?v=24";
+import {getZone} from "./scene3d.js?v=35";
+import {copy} from "./copy.js?v=25";
 import {turnDirection} from "./route.js?v=21";
 const $=id=>document.getElementById(id),q=new URLSearchParams(location.search),app=$("app"),canvas=$("world"),player="guest";
 const read=k=>{try{return localStorage.getItem(k);}catch{return null;}},save=(k,v)=>{try{localStorage.setItem(k,String(v));}catch{}};
@@ -30,6 +30,27 @@ function crowWarnings(){for(const o of state.objects){if((o.kind==="beaverLog"||
 // Grosse Warnung: «Achtung Angriff!» (1 Krähe) oder «Achtung Doppelangriff!» (2 Krähen).
 function crowAlert(double){bigAlert(t(double?"crowDouble":"crowAttack"));}
 function bigAlert(text){const n=$("power-callout");n.textContent=text;n.classList.add("alert");n.getAnimations().forEach(a=>a.cancel());const anim=n.animate([{opacity:0,transform:"translate(-50%,12px) scale(.8)"},{opacity:1,transform:"translate(-50%,0) scale(1.08)",offset:.15},{opacity:1,transform:"translate(-50%,0) scale(1)",offset:.8},{opacity:0,transform:"translate(-50%,-8px) scale(1)"}],{duration:1700,easing:"ease-out"});anim.onfinish=()=>n.classList.remove("alert");audio.play("bump",.7,.35);}
+// Fischer-Bubble (Level 3): Profilbild unten links zeigt den Zustand des Fischers.
+// 1 entspannt · 2 hat dich entdeckt (ab 10 Fischen) · 3 wütend, verfolgt dich · 4 sehr wütend, kommt näher.
+// Steigt sofort an, beruhigt sich nach der Flucht langsam wieder (ca. 0,35 Stufen pro Sekunde).
+let fisherMood=1,fisherEscaped=false,fisherLast=0;
+function fisherBubble(){
+ const b=$("fisher-bubble"),now=performance.now()/1000,dt=Math.min(.25,Math.max(0,now-(fisherLast||now)));fisherLast=now;
+ const angry=state.angry||0,fish=state.fish||0;if(angry>0)fisherEscaped=false;
+ const target=angry>0?(angry>200?3:4):fisherEscaped?1:fish>=10?2:1;
+ if(!paused)fisherMood=target>=fisherMood?target:Math.max(target,fisherMood-.35*dt);
+ const cooling=!angry&&fisherMood>target+.02,show=screen==="play"&&state.phase==="playing"&&(getStage(state.elapsed)===2||angry>0||cooling);
+ b.hidden=!show;if(!show)return;
+ const mood=Math.max(1,Math.min(4,Math.round(fisherMood)));b.dataset.mood=mood;b.classList.toggle("near",mood===4);b.classList.toggle("with-touch",!$("touch-controls").hidden);
+ $("fb-state").textContent=t(["fbCalm","fbNoticed","fbAngry","fbFurious"][mood-1]);
+ let note,meter;
+ if(angry>0){note=t("fbNoteChase",{s:Math.ceil(angry/20)});meter=1-angry/400;}
+ else if(cooling){note=t("fbNoteCooling");meter=(fisherMood-1)/3;}
+ else if(fish<10&&!fisherEscaped){note=t("fbNoteCalm",{n:fish});meter=fish/10;}
+ else if(fish<20&&!fisherEscaped){note=t("fbNoteNoticed",{n:fish});meter=(fish-10)/10;}
+ else{note=t("fbNoteRelaxed",{n:fish});meter=0;}
+ $("fb-note").textContent=note;$("fb-meter").style.width=Math.round(Math.max(0,Math.min(1,meter))*100)+"%";
+}
 function hideLevelBanner(){clearTimeout(bannerTimer);$("level-banner").classList.remove("visible");$("level-banner").hidden=true;}
 function toast(value,seconds=1.8){$("toast").textContent=value;$("toast").classList.add("visible");toastUntil=time+seconds;}
 function updateCopy(){
@@ -73,7 +94,7 @@ function skipToLevel(){
  renderDistance=distance;introElapsed=INTRO_DURATION;
 }
 function start(){
- if(!loaded)return;hideLevelBanner();crowsSeen=new Set();$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;state=setup([player]);dispatch({type:"start",seed,mode,route});setScreen("play");acc=0;renderDistance=0;countdown=0;introElapsed=0;lastCount=-1;resultSaved=false;tiltBase=null;$("countdown").hidden=true;$("countdown").textContent="";
+ if(!loaded)return;hideLevelBanner();crowsSeen=new Set();fisherMood=1;fisherEscaped=false;$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;state=setup([player]);dispatch({type:"start",seed,mode,route});setScreen("play");acc=0;renderDistance=0;countdown=0;introElapsed=0;lastCount=-1;resultSaved=false;tiltBase=null;$("countdown").hidden=true;$("countdown").textContent="";
  audio.unlock().catch(()=>{});audio.setActive(true);controls.reset();scene?.resetEffects();$("feedback-label").textContent="";skipToLevel();hud();
 }
 function home(){introElapsed=-1;hideLevelBanner();$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;audio.setActive(true);scene?.resetEffects();$("feedback-label").textContent="";state=setup([player]);setScreen("home");selectMenu("run");countdown=0;renderDistance=0;$("countdown").hidden=true;$("turn-cue").hidden=true;$("tutorial").hidden=true;$("powerup").hidden=true;$("resort-arrival").hidden=true;updateCopy();}
@@ -98,9 +119,9 @@ function processEvents(){
  if(e.kind==="powerPickup"){toast(t(e.power),2.5);audio.play("pickup",1.6,.8);}
  if(e.kind==="heart")heartFeedback(e.gained);if(e.kind==="world"&&e.gained)heartFeedback(true);
  if(e.kind==="world")levelBanner(e.stage);
- if(e.kind==="bump")toast(t(e.object==="sheep"?"sheepBump":e.object==="fish"?"fishBump":e.object==="beaverLog"?"beaverBump":e.object==="hook"?"hookBump":"bump"));else if(e.kind==="checkpoint")toast(t("checkpoint"),2.5);else if(e.kind==="arrival"){$("toast").classList.remove("visible");toastUntil=0;}else if(e.kind==="magnet")toast(t("magnet"),2.3);else if(e.kind==="fishCatch")audio.play("pickup",1.5,.7);else if(e.kind==="fisherNotice"){toast(t("fisherNotice"),3.2);audio.play("pickup",.8,.7);}else if(e.kind==="gull"){toast(t(e.lost>0?"gullSteal":"gullEmpty",{n:e.lost}),2.4);audio.play("bump",1.6,.6);}else if(e.kind==="fisherAngry"){bigAlert(t("fisherAngry"));toast(t("fisherHint"),3);}else if(e.kind==="fisherQuit"){toast(t("fisherQuit"),2.6);audio.play("pickup",1.1,.8);}else if(e.kind==="crow"){toast(t(e.lost>0?"crowHit":"crowHitEmpty",{n:e.lost}),2.4);audio.play("bump",1.4,.8);}else if(e.kind==="shieldHit")toast(t("shieldHit"));else if(e.kind==="missedTurn")toast(t("turnMiss"));}
+ if(e.kind==="bump")toast(t(e.object==="sheep"?"sheepBump":e.object==="fish"?"fishBump":e.object==="beaverLog"?"beaverBump":e.object==="hook"?"hookBump":"bump"));else if(e.kind==="checkpoint")toast(t("checkpoint"),2.5);else if(e.kind==="arrival"){$("toast").classList.remove("visible");toastUntil=0;}else if(e.kind==="magnet")toast(t("magnet"),2.3);else if(e.kind==="fishCatch")audio.play("pickup",1.5,.7);else if(e.kind==="fisherNotice"){toast(t("fisherNotice"),3.2);audio.play("pickup",.8,.7);}else if(e.kind==="gull"){toast(t(e.lost>0?"gullSteal":"gullEmpty",{n:e.lost}),2.4);audio.play("bump",1.6,.6);}else if(e.kind==="fisherAngry"){bigAlert(t("fisherAngry"));toast(t("fisherHint"),3);}else if(e.kind==="fisherQuit"){fisherEscaped=true;toast(t("fisherQuit"),2.6);audio.play("pickup",1.1,.8);}else if(e.kind==="crow"){toast(t(e.lost>0?"crowHit":"crowHitEmpty",{n:e.lost}),2.4);audio.play("bump",1.4,.8);}else if(e.kind==="shieldHit")toast(t("shieldHit"));else if(e.kind==="missedTurn")toast(t("turnMiss"));}
 }
-function hud(){if(screen==="play"&&state.phase==="playing")crowWarnings();
+function hud(){if(screen==="play"&&state.phase==="playing")crowWarnings();fisherBubble();
  $("score").textContent=fmt(state.score);$("coins").textContent=state.coins;$("combo").textContent=state.multiplier>1?"×"+state.multiplier:"";
  $("distance").textContent=Math.floor(state.elapsed/60)+":"+String(Math.floor(state.elapsed%60)).padStart(2,"0")+" / 15:00 · "+(getStage(state.elapsed)+1)+"/10";
  $("stage").textContent=t(stages[getStage(state.elapsed)].key).toUpperCase();
@@ -111,7 +132,7 @@ function hud(){if(screen==="play"&&state.phase==="playing")crowWarnings();
  const rem=state.nextTurn-state.distance,show=active&&state.nextTurn>0&&rem<state.speed*2.8&&state.elapsed<892;
  $("turn-cue").hidden=!show;
  if(show){const direction=turnDirection(state.seed,state.summitTurn,state.turnIndex),ready=state.turnChoice===direction;$("turn-arrow").textContent=direction<0?"↰":"↱";$("turn-label").textContent=t(direction<0?"turnLeft":"turnRight");$("turn-distance").textContent=ready?t("turnReady"):inTurn()?t("turnNow"):Math.ceil(rem)+" m";$("turn-cue").classList.toggle("now",inTurn()&&!ready);$("turn-cue").classList.toggle("accepted",ready);}
- const power=[state.magnet>0?t("magnetShort",{n:Math.ceil(state.magnet/20)}):"",state.shield?t("shieldShort"):"",state.coinBoost>0?t("boostShort",{n:Math.ceil(state.coinBoost/20)}):"",state.shoes>0?t("shoesShort",{n:Math.ceil(state.shoes/20)}):"",state.angry>0?t("fisherShort",{n:Math.ceil(state.angry/20)}):"",!state.angry&&(state.fish>0||getStage(state.elapsed)===2)?t("fishShort",{n:state.fish||0}):""].filter(Boolean).join(" · ");
+ const power=[state.magnet>0?t("magnetShort",{n:Math.ceil(state.magnet/20)}):"",state.shield?t("shieldShort"):"",state.coinBoost>0?t("boostShort",{n:Math.ceil(state.coinBoost/20)}):"",state.shoes>0?t("shoesShort",{n:Math.ceil(state.shoes/20)}):"",!state.angry&&(state.fish>0||getStage(state.elapsed)===2)?t("fishShort",{n:state.fish||0}):""].filter(Boolean).join(" · ");
  $("powerup").hidden=!active||!power;$("powerup").textContent=power;
 
  $("resort-arrival").hidden=true;

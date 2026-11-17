@@ -199,19 +199,7 @@ export function createScene(canvas){
   const p=path.frame(d);origin=p;if(Math.abs(d-lastD)>50)cam=p.h;lastD=d;cam+=(p.h-cam)*Math.min(1,delta*(reduced?40:7));lane+=(s.x-lane)*Math.min(1,delta*28);if(!paused&&screen!=='result')anim+=delta;
   jump+=((s.jumpY||0)-jump)*Math.min(1,delta*28);instances=[];touristGroups=[];flamingoInstances=0;r.begin();r.setOrigin(p.x,p.z);r.setHoles(active?s.objects.filter(o=>o.kind==='manhole'&&o.d>d-10&&o.d<d+180).map(o=>{const q=point(o.d,(o.lane-1)*2.5);return[q.x,q.z,.81];}):[]);r.setEnvironment(active?s.elapsed:0,s.speed||16,p.h);environment(d,active?s.elapsed:0,s.speed||16);special.snow(anim,reduced,1-Math.max(0,Math.min(1,((active?s.elapsed:0)-84)/6)),cam);if(active)for(const o of s.objects)obstacle(o,d,anim);
   tossed=tossed.filter(t=>anim-t.time<1.1);if(active)for(const t of tossed){const age=Math.max(0,anim-t.time),u=age/1.1;obstacle(t.o,d,anim,{side:t.side*(u*7),y:Math.sin(u*PI)*2.6,spin:reduced?0:t.side*u*2.4,lean:reduced?0:t.side*u*.65});}
-  if(active&&!s.angry&&(s.fish||0)>=10&&getZone(s.elapsed)===7&&npc.hiker){
-   // Ab 10 Fischen: Der Fischer steht am Ufer, schaut Hornox nach und hat ein gelbes «!» über dem Kopf.
-   const q=point(d+15,-4.3);instances.push({actor:npc.hiker,pose:{x:q.x,y:q.y,z:q.z,heading:-PI/2-q.h,time:anim*.6,variant:7,heightScale:1.05,style:0,home:true}});
-   push(q.x,q.y,q.z,0,-q.h);lake.rod(.2+Math.sin(anim*1.3)*.1);push(0,2.38*1.05,0);lake.hat();pop();push(0,3.05+Math.abs(Math.sin(anim*4))*.12,0,0,anim*2);lake.alert([1,.8,.1]);pop();pop();
-  }
-  if(active&&s.angry>0&&npc.hiker){
-   // Wütender Fischer rennt hinter Hornox her und wirft die Angel; am Ende läuft er seitlich davon.
-   const leaving=s.angry<40,u=leaving?(40-s.angry)/40:0,fd=d-4.4-u*3,fo=(lane-1)*2.5+1.9+u*16,q=point(fd,fo),swing=Math.max(0,Math.sin(anim*2.1))*.8;
-   instances.push({actor:npc.hiker,pose:{x:q.x,y:q.y,z:q.z,heading:PI/2-q.h,time:anim*1.7,variant:7,heightScale:1.05,style:0}});
-   push(q.x,q.y,q.z,0,PI-q.h);lake.rod(swing);push(0,2.38*1.05,0);lake.hat();pop();if(!leaving){push(0,3.05,0,0,anim*2);lake.alert([.9,.12,.1]);pop();}pop();
-   const hk=s.objects.filter(o=>o.kind==='hook'&&!o.resolved).sort((x,y)=>y.bornTick-x.bornTick)[0];
-   if(hk&&!leaving){const tip=point(fd+1.9,fo+.3),hp=point(hk.d,(hk.lane-1)*2.5);lake.line(tip.x,tip.y+3.05-swing*.6,tip.z,hp.x,hp.y+1.25,hp.z,1.4);}
-  }
+  // Der Fischer erscheint nicht mehr in der Szene, sondern als Profilbild-Bubble unten links (client.js).
   if(active&&s.elapsed<892&&s.nextTurn-d<100&&s.nextTurn>d){at(s.nextTurn,-path.direction(s.turnIndex)*5);a('box',0,1.4,0,.13,2.8,.13,C.wood);a('box',0,2.5,0,1.5,.7,.16,C.gold);pop();}
   const offset=active?(lane-1)*2.5:0,ax=Math.cos(p.h)*offset,az=cinematic?cinematic.z:Math.sin(p.h)*offset,powered=s.powerTicks>0,lift=(powered?.28:0)-(s.fallTicks?Math.sin((20-s.fallTicks)/20*PI)*2.7:0);
   a('billboard',ax,groundY(ax,az)+.025,az,2.2,1.5,1,[.1,.16,.17,8],-PI/2);
