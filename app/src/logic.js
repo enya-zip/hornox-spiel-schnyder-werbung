@@ -163,17 +163,10 @@ export function applyAction(s,p,a){
    else if(pattern===5||pattern===7){add("iceBlock",one);if(busy)add("iceBlock",two);}
    else if(pattern===6){add("iceArch",two);if(busy)add("crevasse",one);}
   }else if(z===7){
-   // Level 3 (Zum See): schmaler Wanderweg am See, springende Fische.
-   // Springende Fische: zwischen zwei Fisch-Sprüngen liegen mindestens 6 Sekunden (plus 0–3 s Zufall).
-   const fishOk=arrivalTime>=nextFishAt,leap=lane=>{add("fish",lane);nextFishAt=arrivalTime+6+((rng>>>20)%4);};
-   if(pattern===0){add("hiker",one);if(busy)add("marmot",two);}
-   else if(pattern===1)add("log",-1);
-   else if(pattern===2)add("branch",-1);
-   else if(pattern===3){if(fishOk)leap(one);else add("marmot",one);if(busy)add("hiker",two);}
-   else if(pattern===4){add("bike",one);if(busy)add("hiker",two);}
-   else if(pattern===5){if(fishOk)leap(one);else add("hiker",one);if(busy)add("marmot",two);}
-   else if(pattern===6){add("marmot",two);if(busy)add("hiker",one);}
-   else if(pattern===7){if(fishOk)leap(one);else add("bike",one);if(busy)add("bike",two,2);}
+   // Level 3 (Zum See): schmaler Wanderweg am See.
+   // Nur springende Fische auf dem Weg: genau alle 10 Sekunden einer. Keine Velofahrer, Wanderer,
+   // Murmeltiere, Baumstämme oder Äste – Münzen, Fische zum Sammeln und Power-ups bleiben.
+   if(pattern!==8&&arrivalTime>=nextFishAt){add("fish",one);nextFishAt=arrivalTime+10;}
   }else if([1,6,8].includes(z)){
    if(pattern===0){add("hiker",one);if(busy)add("sheep",two);}
    else if(pattern===1)add("log",-1);

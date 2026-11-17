@@ -16,7 +16,7 @@ check('full 15-minute journey reaches the summit with bounded state',()=>{const 
 check('environment-specific hazards remain appropriate and every variant is reachable',()=>{
  const profiles={
   3:['snowman','luggage','trolley','planter','electric','photographers','manhole','carriage','scooter','skiers','snowboarders','influencer','lostTourists','pedestrian','bike'],
-  6:['hiker','marmot','sheep','log','branch','bike'],7:['hiker','marmot','fish','log','branch','bike'],8:['hiker','marmot','sheep','log','branch','bike'],1:['hiker','marmot','sheep','log','branch','bike'],
+  6:['hiker','marmot','sheep','log','branch','bike'],7:['fish'],8:['hiker','marmot','sheep','log','branch','bike'],1:['hiker','marmot','sheep','log','branch','bike'],
   9:['hiker','lowRock','ridgeGap','rope','rockfall','boulder'],4:['hiker','lowRock','ridgeGap','rope','rockfall','boulder'],10:['hiker','lowRock','ridgeGap','rope','rockfall','boulder'],0:['iceBlock','crevasse','iceArch'],5:['iceBlock','crevasse','iceArch','crow','ibex']};
  for(const [elapsed,z]of [[30,3],[110,6],[200,7],[290,8],[390,1],[480,9],[570,4],[660,0],[750,10],[840,5]]){const found=new Set();for(let seed=1;seed<90;seed++){
   const state={...start(seed),flamingoSpawned:true,tick:elapsed*20,elapsed,distance:1000,nextRow:1030,nextTurn:99999,row:20};
@@ -162,6 +162,6 @@ check('level 3: fish leap from the lake, five caught fish make the fisherman ang
  const dodge=action({...start(),distance:100,nextRow:10000,x:1,objects:[{id:1,kind:'hook',lane:0,d:100.9}]},{type:'step'});assert.equal(dodge.lives,3);
  assert.equal(collision('hook',{jump:9}).lives,2);
 });
-check('level 3: at least 6 seconds between jumping fish',()=>{for(let seed=1;seed<=12;seed++){let s={...start(seed),tick:3600,elapsed:180,distance:3800,nextRow:3830,nextTurn:999999,row:200};const seen=new Set();let last=-1e9,count=0;
- while(s.phase==='playing'&&s.elapsed<269){s=action({...s,lives:999,invulnerable:1},{type:'step'});for(const o of s.objects){if(o.kind!=='fish'||seen.has(o.id))continue;seen.add(o.id);const t=s.elapsed+(o.d-s.distance)/s.speed;assert(t-last>=6,'gap '+(t-last));last=t;count++;}}assert(count>=4&&count<=15);}});
+check('level 3: a jumping fish exactly every 10 seconds and nothing else on the trail',()=>{for(let seed=1;seed<=12;seed++){let s={...start(seed),tick:3600,elapsed:180,distance:3800,nextRow:3830,nextTurn:999999,row:200};const seen=new Set();let last=-1e9,count=0;
+ while(s.phase==='playing'&&s.elapsed<269){s=action({...s,lives:999,invulnerable:1},{type:'step'});for(const o of s.objects){if(o.kind!=='fish'||seen.has(o.id))continue;seen.add(o.id);const t=s.elapsed+(o.d-s.distance)/s.speed;assert(t-last>=9.9,'gap '+(t-last));last=t;count++;}for(const o of s.objects)if(o.biome===7)assert(['fish','coin','fishCatch','heart','magnet','shieldOrb','coinBoost','rushCharge','hook'].includes(o.kind),o.kind);}assert(count>=7&&count<=9,'count '+count);}});
 console.log(`${checks} rule checks passed`);
