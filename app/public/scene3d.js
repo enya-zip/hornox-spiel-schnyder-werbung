@@ -82,8 +82,10 @@ export function createScene(canvas){
  function lakeside(d,elapsed,speed){
   for(let w=Math.floor((d-40)/10)*10;w<d+440;w+=10){
    if(getZone(Math.max(0,elapsed+(w-d)/speed))!==7)continue;const k=Math.floor(w/10);
-   const c=point(w,-17.5);if(clear(c.x,c.z,9.5,w)){at(w,-17.5);a('box',0,-.14,0,25,.12,10.6,[.08,.27,.34,26]);pop();}
-   const f=point(w,-43);if(clear(f.x,f.z,13,w)){at(w,-43);a('box',0,-.15,0,27,.12,10.6,[.08,.27,.34,26]);pop();}
+   // Wasserplatten folgen der Geländeneigung, damit keine Stufen/Streifen entstehen.
+   const h=path.frame(w).h,sx=grade*(.55*Math.cos(h)-.83*Math.sin(h)),sz=grade*(-.55*Math.sin(h)-.83*Math.cos(h)),tilt=()=>push(0,0,0,Math.atan(-sz),0,Math.atan(sx));
+   const c=point(w,-17.5);if(clear(c.x,c.z,9.5,w)){at(w,-17.5);tilt();a('box',0,-.14,0,25,.12,10.02,[.08,.27,.34,26]);pop();pop();}
+   const f=point(w,-43);if(clear(f.x,f.z,13,w)){at(w,-43);tilt();a('box',0,-.15,0,27,.12,10.02,[.08,.27,.34,26]);pop();pop();}
    if(k%2===0){at(w,-5.1);a('rock',0,-.12,0,.9,.36,1.3,C.rock,0,w);pop();}
    if(k%3===1&&w<d+220){at(w,-4.3);for(let j=0;j<5;j++){const h=.8+((k+j)%3)*.25;a('cylinder',(j-2)*.13,h/2,(j%2)*.15,.02,h,.02,[.36,.5,.24]);if(j%2===0)a('cylinder',(j-2)*.13,h,(j%2)*.15,.05,.2,.05,[.42,.27,.14]);}pop();}
   }
