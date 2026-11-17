@@ -1,7 +1,7 @@
 import {createAlpine} from './alpine.js?v=17';
 import {createPowerups} from './powerups.js?v=17';
 import {createSummit} from './summit.js?v=3';
-import {createLake} from './lake.js?v=2';
+import {createLake} from './lake.js?v=3';
 import {createEncounters} from './encounters.js?v=20';
 import {createSpecials} from './specials.js?v=17';
 import {introFrame} from './intro.js?v=17';
@@ -119,7 +119,7 @@ export function createScene(canvas){
    push(x,y,z,0,-h,(toss?.lean||0)+sway,style===4?.83:scale);encounters.accessory(poseStyle,variant,pace);pop();
   }
  }
- let speedNow=16;
+ let speedNow=16,flyingFish=[];
  function obstacle(o,d,time,toss=null){const od=o.d-(toss?0:(o.approach||0)*visualSubtick);if(!toss&&(od<d-8||od>d+180||(o.resolved&&['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch'].includes(o.kind))))return;const off=(o.lane<0?0:(o.lane-1)*2.5)+(toss?.side||0),p=point(od,off),rise=toss?.y||0;
   if(['pedestrian','hiker','photographers','influencer','lostTourists','scooter','skiers','snowboarders'].includes(o.kind)){visitors(o,p,time,toss);if(o.kind!=='scooter')return;}
   if(o.kind==='ibex'&&!toss){
@@ -139,6 +139,16 @@ export function createScene(canvas){
    if(u<=0){if(od-d<120)a('ring',q.x,q.y+.03,q.z,.5+Math.abs(Math.sin(time*3+o.id))*.5,.5+Math.abs(Math.sin(time*3+o.id))*.5,.04,[.85,.95,1,49],PI/2);return;}
    if(u<1){push(q.x,q.y+.45+Math.sin(u*PI)*2.6,q.z,0,-q.h);push(0,0,0,0,PI/2,0);push(0,0,0,(u-.5)*1.4,0,0);lake.fish(time,o.id,1.3);pop();pop();pop();if(u<.25)a('ring',q.x,q.y+.03,q.z,1.1,1.1,.05,[.85,.95,1,49],PI/2);return;}
    push(q.x,q.y+.22+Math.abs(Math.sin(time*9+o.id))*.25,q.z,0,-q.h+o.id);push(0,0,0,0,0,PI/2);lake.fish(time,o.id,1.3);pop();pop();return;}
+  if(o.kind==='beaverLog'&&!toss){
+   // Biber rollt einen Baumstamm vom Seeufer quer über den ganzen Weg (drüberspringen!).
+   const gapT=(od-d)/Math.max(1,speedNow),u=Math.max(0,Math.min(1,(2.6-gapT)/1.1)),e=u*u*(3-2*u),lat=-9.5*(1-e),q=point(od,lat);
+   push(q.x,q.y,q.z,0,-q.h);a('cylinder',0,.42,0,.36,8.2,.36,C.wood,0,0,PI/2);for(const x of[-4.1,4.1])a('cylinder',x,.42,0,.37,.06,.37,[.62,.47,.3],0,0,PI/2);pop();
+   const b=point(od,-6.4-(1-e)*1.5);push(b.x,b.y,b.z,0,-q.h-PI/2);lake.beaver(time,u>0&&u<1?1:0);pop();return;}
+  if(o.kind==='gull'){
+   // Möwe stösst über dem See herab und will Fische aus dem Rucksack stehlen.
+   const gapT=Math.max(0,(od-d)/Math.max(1,speedNow+(o.approach||0)));if(!toss&&gapT>3.2)return;
+   const y=1.45+Math.max(0,gapT-.7)*6.5,lat=(o.lane-1)*2.5-Math.max(0,gapT-1.2)*4,q=point(od,lat);
+   push(q.x,q.y+y+(toss?toss.y||0:0),q.z,0,-q.h);if(toss)push(0,0,0,0,toss.spin,toss.lean);push(0,0,0,gapT>.7?.5:0,0);lake.gull(time,o.id);pop();if(toss)pop();pop();return;}
   if(o.kind==='flamingo')flamingoInstances++;
   const model=o.kind==='scooter'?null:o.kind;
   if(npc[model]){const animal=['marmot','sheep'].includes(o.kind),idle=model==='hiker';instances.push({actor:npc[model],pose:{x:p.x,z:p.z,y:p.y+rise+(animal?Math.abs(Math.sin(time*(model==='marmot'?10:6)+o.id))*(model==='marmot'?.14:.05):0),heading:(toss?.spin||0)-PI/2-p.h+(idle?Math.sin(time*.7+o.id)*.035:0),distance:idle?0:time*3,home:idle,lean:toss?toss.lean:animal?Math.sin(time*7+o.id)*.025:0}});return;}
@@ -171,11 +181,11 @@ export function createScene(canvas){
   else if(o.kind==='planter'){a('cylinder',0,.46,0,.67,.9,.67,[.55,.36,.24]);a('sphere',0,1.02,0,.65,.4,.65,[.22,.38,.18]);for(let i=0;i<7;i++)a('sphere',Math.sin(i*7)*.5,1.2,Math.cos(i*7)*.5,.13,.11,.13,C.red);}
   if(toss)pop();pop();
  }
- return{ready,resize:r.resize,emit(e,s){if(!path)path=createPath(s.seed);fx.emit(e,s,path);
+ return{ready,resize:r.resize,emit(e,s){if(!path)path=createPath(s.seed);fx.emit(e,s,path);if(e.kind==='fishCatch')flyingFish.push(anim);
   if(e.kind==='powerClear'&&!['crevasse','ridgeGap','manhole','rope','branch','iceArch'].includes(e.object)){
    if(tossed.length>=12)tossed.shift();tossed.push({o:{id:e.id||0,kind:e.object,lane:e.lane,d:e.d??s.distance},time:anim,side:e.lane===0?-1:e.lane===2?1:(e.id%2?-1:1)});
   }
- },resetEffects(){fx.reset();tossed=[];rushFov=0;},
+ },resetEffects(){fx.reset();tossed=[];rushFov=0;flyingFish=[];},
  render(s,{distance,time,delta,active,paused,reduced,screen,introTime=null,waiting=false}){if(!actor)return;const d=active?distance:0,newKey=s.seed+':summit';if(key!==newKey){key=newKey;placementCache.clear();clearCache.clear();path=createPath(s.seed,'summit');cam=0;}
   const mobile=canvas.width/canvas.height<.9;cinematic=introTime===null?null:introFrame(introTime,mobile,reduced);cinematicMetrics=cinematic?{time:introTime,heroZ:cinematic.z,doorOpen:cinematic.doorOpen,orbitDegrees:cinematic.orbitDegrees,eye:cinematic.eye,target:cinematic.target}:null;
   trackD=d;speedNow=s.speed||16;const stage=getZone(active?s.elapsed:0);const phase=active?s.elapsed:0,ease=(a,b)=>{const t=Math.max(0,Math.min(1,(phase-a)/(b-a)));return t*t*(3-2*t);};grade=.025*ease(90,110)+.015*ease(180,200)+.015*ease(360,380)+.035*ease(540,560)-.015*ease(630,650)+.035*ease(720,740)-.11*ease(785,812);visualSubtick=active&&!paused?Math.max(0,Math.min(.05,(d-s.distance)/Math.max(1,s.speed))):0;
@@ -185,11 +195,16 @@ export function createScene(canvas){
   const p=path.frame(d);origin=p;if(Math.abs(d-lastD)>50)cam=p.h;lastD=d;cam+=(p.h-cam)*Math.min(1,delta*(reduced?40:7));lane+=(s.x-lane)*Math.min(1,delta*28);if(!paused&&screen!=='result')anim+=delta;
   jump+=((s.jumpY||0)-jump)*Math.min(1,delta*28);instances=[];touristGroups=[];flamingoInstances=0;r.begin();r.setOrigin(p.x,p.z);r.setHoles(active?s.objects.filter(o=>o.kind==='manhole'&&o.d>d-10&&o.d<d+180).map(o=>{const q=point(o.d,(o.lane-1)*2.5);return[q.x,q.z,.81];}):[]);r.setEnvironment(active?s.elapsed:0,s.speed||16,p.h);environment(d,active?s.elapsed:0,s.speed||16);special.snow(anim,reduced,1-Math.max(0,Math.min(1,((active?s.elapsed:0)-84)/6)),cam);if(active)for(const o of s.objects)obstacle(o,d,anim);
   tossed=tossed.filter(t=>anim-t.time<1.1);if(active)for(const t of tossed){const age=Math.max(0,anim-t.time),u=age/1.1;obstacle(t.o,d,anim,{side:t.side*(u*7),y:Math.sin(u*PI)*2.6,spin:reduced?0:t.side*u*2.4,lean:reduced?0:t.side*u*.65});}
+  if(active&&!s.angry&&(s.fish||0)>=10&&getZone(s.elapsed)===7&&npc.hiker){
+   // Ab 10 Fischen: Der Fischer steht am Ufer, schaut Hornox nach und hat ein gelbes «!» über dem Kopf.
+   const q=point(d+15,-4.3);instances.push({actor:npc.hiker,pose:{x:q.x,y:q.y,z:q.z,heading:-PI/2-q.h,time:anim*.6,variant:7,heightScale:1.05,style:0,home:true}});
+   push(q.x,q.y,q.z,0,-q.h);lake.rod(.2+Math.sin(anim*1.3)*.1);push(0,2.38*1.05,0);lake.hat();pop();push(0,3.05+Math.abs(Math.sin(anim*4))*.12,0,0,anim*2);lake.alert([1,.8,.1]);pop();pop();
+  }
   if(active&&s.angry>0&&npc.hiker){
    // Wütender Fischer rennt hinter Hornox her und wirft die Angel; am Ende läuft er seitlich davon.
    const leaving=s.angry<40,u=leaving?(40-s.angry)/40:0,fd=d-4.4-u*3,fo=(lane-1)*2.5+1.9+u*16,q=point(fd,fo),swing=Math.max(0,Math.sin(anim*2.1))*.8;
    instances.push({actor:npc.hiker,pose:{x:q.x,y:q.y,z:q.z,heading:PI/2-q.h,time:anim*1.7,variant:7,heightScale:1.05,style:0}});
-   push(q.x,q.y,q.z,0,PI-q.h);lake.rod(swing);push(0,2.38*1.05,0);lake.hat();pop();pop();
+   push(q.x,q.y,q.z,0,PI-q.h);lake.rod(swing);push(0,2.38*1.05,0);lake.hat();pop();if(!leaving){push(0,3.05,0,0,anim*2);lake.alert([.9,.12,.1]);pop();}pop();
    const hk=s.objects.filter(o=>o.kind==='hook'&&!o.resolved).sort((x,y)=>y.bornTick-x.bornTick)[0];
    if(hk&&!leaving){const tip=point(fd+1.9,fo+.3),hp=point(hk.d,(hk.lane-1)*2.5);lake.line(tip.x,tip.y+3.05-swing*.6,tip.z,hp.x,hp.y+1.25,hp.z,1.4);}
   }
@@ -197,6 +212,13 @@ export function createScene(canvas){
   const offset=active?(lane-1)*2.5:0,ax=Math.cos(p.h)*offset,az=cinematic?cinematic.z:Math.sin(p.h)*offset,powered=s.powerTicks>0,lift=(powered?.28:0)-(s.fallTicks?Math.sin((20-s.fallTicks)/20*PI)*2.7:0);
   a('billboard',ax,groundY(ax,az)+.025,az,2.2,1.5,1,[.1,.16,.17,8],-PI/2);
   visibleActor=active?actor:showcase;visibleActor.update({distance:cinematic?cinematic.runDistance:active?d:0,time:anim,jump:active?s.jump:0,duck:active?s.duck:0,home:!active||waiting||!!cinematic&&!cinematic.walking,x:ax,y:active?groundY(ax,az)+jump*2.2+lift:0,z:az,heading:active?PI-cam:PI,impact:fx.impact(),lean:reduced?0:(s.target-lane)*-.1+fx.wobble()});
+  if(active&&(s.fish||0)>0&&visibleActor===actor&&actor.joint){
+   // Gesammelte Fische stecken sichtbar im Wanderrucksack (je 4 Fische ein Fisch mehr, max. 6).
+   const sp=actor.joint('Spine02');if(sp){const bx=-Math.sin(cam),bz=Math.cos(cam),n=Math.min(6,Math.ceil(s.fish/4));
+    for(let k=0;k<n;k++){const side=(k-(n-1)/2)*.2;push(sp[0]+bx*.42+Math.cos(cam)*side,sp[1]+.42+(k%2)*.06,sp[2]+bz*.42+Math.sin(cam)*side,0,-cam+PI/2);push(0,0,0,PI/2-.25+Math.sin(anim*6+k)*.08,0,0);lake.fish(anim,k,.85);pop();pop();}
+    // Frisch gefangene Fische fliegen im Bogen in den Rucksack.
+    flyingFish=flyingFish.filter(t=>anim-t<.5);for(const t of flyingFish){const u=(anim-t)/.5,x0=ax+Math.sin(cam)*3,z0=az-Math.cos(cam)*3,x1=sp[0]+bx*.42,y1=sp[1]+.4,z1=sp[2]+bz*.42;push(x0+(x1-x0)*u,1.4+(y1-1.4)*u+Math.sin(u*PI)*1.4,z0+(z1-z0)*u,0,anim*9);lake.fish(anim,9,.7);pop();}
+   }}
   if(active&&s.shoes>0&&visibleActor===actor&&actor.joint){for(const side of['Left','Right']){const f=actor.joint(side+'Foot'),t=actor.joint(side+'ToeBase');if(!f||!t)continue;const cx=(f[0]+t[0])/2,cz=(f[2]+t[2])/2,cy=Math.min(f[1],t[1]),yaw=Math.atan2(t[0]-f[0],t[2]-f[2]);push(cx,cy-.06,cz,0,yaw);summit.snowshoe();pop();}}
   if(active&&(s.shield||s.coinBoost>0||s.magnet>0||s.climb>0||s.shoes>0)){push(ax,groundY(ax,az)+jump*2.2+lift,az,0,-cam);powerups.aura(s,anim);summit.aura(s,anim);pop();}
   rushFov+=((powered?1:0)-rushFov)*Math.min(1,delta*5);if(powered){push(ax,groundY(ax,az)+jump*2.2+lift,az,0,-cam);special.rush(anim,reduced,rushFov);pop();}

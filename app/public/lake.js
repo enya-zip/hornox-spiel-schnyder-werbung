@@ -49,5 +49,29 @@ export function createLake(r){
  function line(x0,y0,z0,x1,y1,z1,sag=1.2){
   for(let i=1;i<18;i++){const t=i/18,y=y0+(y1-y0)*t-Math.sin(t*PI)*sag;a('sphere',x0+(x1-x0)*t,y,z0+(z1-z0)*t,.025,.025,.025,[.92,.92,.88,49]);}
  }
- return{fish,pickup,hook,rod,hat,line};
+ // Biber am Ufer (schaut in +z), push: 0..1 Schiebebewegung.
+ function beaver(time,pushing=0){
+  const brown=[.42,.28,.17],dark=[.25,.16,.1],nod=Math.sin(time*8)*.05*pushing;
+  a('sphere',0,.38,0,.42,.36,.55,brown);
+  a('sphere',0,.5+nod,.5,.26,.24,.28,brown);
+  a('sphere',0,.44+nod,.74,.12,.1,.08,dark);
+  for(const side of[-1,1]){a('sphere',side*.12,.6+nod,.66,.035,.035,.03,[.03,.03,.03]);a('sphere',side*.17,.7+nod,.5,.06,.06,.04,dark);a('sphere',side*.22,.12,.3,.09,.07,.14,dark);}
+  a('box',0,.36+nod,.8,.1,.09,.03,[.97,.92,.75]);
+  a('box',0,.12,-.75,.34,.06,.55,[.2,.14,.1],-.25);
+ }
+
+ // Möwe: weiss mit grauen Flügeln und gelbem Schnabel (schaut in +z).
+ function gull(time,id=0){
+  const flap=Math.sin(time*12+id)*.7,white=[.96,.96,.95],grey=[.62,.66,.7];
+  push(0,Math.sin(time*6+id)*.08,0);
+  a('sphere',0,0,0,.22,.2,.45,white);a('sphere',0,.1,.38,.16,.16,.17,white);
+  a('cone',0,.06,.6,.05,.2,.05,[.95,.75,.15],PI/2);
+  for(const side of[-1,1]){a('sphere',side*.09,.15,.48,.025,.025,.025,[.05,.05,.05]);push(side*.17,.05,0,0,0,side*flap);a('box',side*.5,0,0,.95,.03,.36,grey);a('box',side*.9,-.01,-.04,.26,.025,.28,[.15,.15,.17]);pop();}
+  a('box',0,-.02,-.5,.24,.03,.3,white,-.15);
+  pop();
+ }
+
+ // «!» über dem Kopf des Fischers (gelb = aufmerksam, rot = wütend).
+ function alert(colour){a('box',0,.32,0,.13,.48,.13,[...colour,49]);a('sphere',0,-.06,0,.09,.09,.09,[...colour,49]);}
+ return{fish,pickup,hook,rod,hat,line,beaver,gull,alert};
 }
