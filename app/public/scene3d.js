@@ -11,7 +11,7 @@ import {createActor} from './actor.js?v=22';
 import {createEffects} from './effects.js?v=17';
 import {createPath} from './route.js?v=21';
 import {getZone,bridgeAt,fogAt,forestSection,meadowSection} from './journey.js?v=23';
-import {createMeadow} from './meadow.js?v=2';
+import {createMeadow} from './meadow.js?v=3';
 import {createForest} from './forest.js?v=4';
 export {getZone};
 const PI=Math.PI,C={ice:[.74,.87,.9,10],grass:[.44,.58,.30,11],gravel:[.7,.63,.48,12],cobble:[.65,.66,.61,13],snow:[.86,.92,.94,2],rock:[.48,.52,.53,1],wood:[.32,.22,.15,4],gold:[1,.74,.24,9],dark:[.12,.2,.23],fir:[1,1,1,7],red:[.85,.16,.19],flower:[.97,.85,.40]};
@@ -127,7 +127,7 @@ export function createScene(canvas){
     if(w<d+80&&sec<=2&&k%2===0){const dw=point(w+2,side*5);push(dw.x,dw.y,dw.z);meadow.dew(anim,k);pop();}
     const fp=point(w,side*6.4);if(clear(fp.x,fp.z,.6,w)){at(w,side*6.4);meadow.sideFence();pop();}
     if(w<d+260&&k%9===(side>0?2:6)&&npc.sheep){for(let j=0;j<3&&sheepCount<14;j++){const sp=point(w+j*2.2,side*(12+j*1.6+(k%3)*2));if(!clear(sp.x,sp.z,1.2,w))continue;sheepCount++;instances.push({actor:npc.sheep,pose:{x:sp.x,y:sp.y,z:sp.z,heading:side*PI/2+k+j,home:true,distance:0}});}}
-    if(k%11===(side>0?3:8)&&w<d+380){const cp=point(w,side*(26+(k%4)*4));if(clear(cp.x,cp.z,2.5,w)){at(w,side*(26+(k%4)*4));push(0,0,0,0,k);meadow.cow(anim*.25,k);pop();pop();}}
+    if(k%11===(side>0?3:8)&&w<d+380){const cp=point(w,side*(26+(k%4)*4));if(clear(cp.x,cp.z,2.5,w)){at(w,side*(26+(k%4)*4));push(0,0,0,0,k);meadow.cow(anim,k,false);pop();pop();}}
     if(k%23===(side>0?7:18)){const hp=point(w,side*19);if(clear(hp.x,hp.z,6,w)){at(w,side*19);push(0,0,0,0,side<0?PI/2:-PI/2,0,.85);alpine.chalet(k%3);pop();pop();}}
     if(k%17===(side>0?11:3)){const tp=point(w,side*34);if(clear(tp.x,tp.z,3,w))tree(tp.x,tp.z,1.1,tp.y);}
     if(k%31<5&&side>0){const bp=point(w,side*22);if(clear(bp.x,bp.z,2,w)){at(w,side*22);meadow.brook(anim);pop();}}
@@ -169,7 +169,7 @@ export function createScene(canvas){
   if(o.kind==='ibex'&&!toss){
    // Steinbock galoppiert von links oder rechts auf die Piste und bleibt dann stehen (Spur kommt aus den Regeln).
    const dir=o.dir||1,waiting=dir>0?o.lane<=-2.59:o.lane>=4.59,moving=!waiting&&Math.abs(o.lane-o.target)>.01,hop=moving?Math.abs(Math.sin(time*7+o.id))*.45:0,q=point(od,(o.lane-1)*2.5);
-   push(q.x,q.y+hop,q.z,0,-q.h);push(0,0,0,0,moving||waiting?dir*PI/2:0);summit.ibex(time,moving?.35+.3*Math.sin(time*14):0,o.id);pop();pop();return;}
+   push(q.x,q.y+hop,q.z,0,-q.h);push(0,0,0,0,moving||waiting?-dir*PI/2:0);/* Kopf in Laufrichtung */summit.ibex(time,moving?.35+.3*Math.sin(time*14):0,o.id);pop();pop();return;}
   if(o.kind==='crow'){
    // Krähe taucht oben aus den Wolken auf und stösst auf Hornox herab.
    const gapT=Math.max(0,(od-d)/Math.max(1,speedNow+(o.approach||0)));if(!toss&&gapT>3.2)return;
@@ -185,7 +185,7 @@ export function createScene(canvas){
    if(u<=0){if(od-d<160){push(src.x,src.y-.05,src.z);lake.fountain(time,pre*4,o.id);pop();}return;}
    if(u<.75){push(src.x,src.y-.05,src.z);lake.fountain(time,4*(1-u/.75),o.id);pop();}
    if(u<1){const y=.55+Math.sin(u*PI)*2.6;for(let k=1;k<6;k++){const uu=Math.max(0,u-k*.05),tq=point(od,(-2.4+uu*span-1)*2.5);a('sphere',tq.x,tq.y+.55+Math.sin(uu*PI)*2.6,tq.z,.12-k*.015,.12-k*.015,.12-k*.015,[.8,.93,1,49]);}
-    push(q.x,q.y+y,q.z,0,-q.h);push(0,0,0,0,PI/2,0);push(0,0,0,(u-.5)*1.2,0,0);lake.biter(time,o.id,1.1);pop();pop();pop();return;}
+    push(q.x,q.y+y,q.z,0,-q.h);push(0,0,0,0,-PI/2,0);/* Kopf in Sprungrichtung (nach rechts) */push(0,0,0,(u-.5)*1.2,0,0);lake.biter(time,o.id,1.1);pop();pop();pop();return;}
    push(q.x,q.y+.4+Math.abs(Math.sin(time*9+o.id))*.25,q.z,0,-q.h+o.id);push(0,0,0,0,0,PI/2);lake.biter(time,o.id,.95);pop();pop();return;}
   if(o.kind==='beaverLog'&&!toss){
    // Biber rollt einen Baumstamm vom Seeufer quer über den ganzen Weg (drüberspringen!).
@@ -205,11 +205,11 @@ export function createScene(canvas){
    at(od,o.lane<0?0:(o.lane-1)*2.5,rise);if(toss)push(0,0,0,0,toss.spin,toss.lean);meadow[o.kind](time);if(toss)pop();pop();return;}
   if(['sheepCross','sheepStop','goat','cow','cowWalk','chicken','hayRoll'].includes(o.kind)){
    // Level 5: Schafe, Ziegen, Kühe, Hühner und rollende Heuballen bewegen sich quer zur Strecke (Spur aus den Regeln).
-   const dir=o.dir||1,moving=o.v&&Math.abs(o.lane-(o.target??o.lane))>.01,q=point(od,(o.lane-1)*2.5),face=o.kind==='cow'?PI/2:dir*PI/2;
-   if(o.kind==='sheepCross'||o.kind==='sheepStop'){if(npc.sheep){instances.push({actor:npc.sheep,pose:{x:q.x,y:q.y+rise+(moving?Math.abs(Math.sin(time*9+o.id))*.08:0),z:q.z,heading:-PI/2-q.h-face+(toss?.spin||0),distance:moving?time*4:0,home:!moving,lean:toss?toss.lean:0}});}return;}
+   const dir=o.dir||1,moving=o.v&&Math.abs(o.lane-(o.target??o.lane))>.01,q=point(od,(o.lane-1)*2.5),face=o.kind==='cow'?-PI/2:-dir*PI/2;/* Kopf (+z) zeigt in Laufrichtung: nach rechts = -PI/2 */
+   if(o.kind==='sheepCross'||o.kind==='sheepStop'){if(npc.sheep){instances.push({actor:npc.sheep,pose:{x:q.x,y:q.y+rise+(moving?Math.abs(Math.sin(time*9+o.id))*.08:0),z:q.z,heading:-PI/2-q.h+face+(toss?.spin||0),distance:moving?time*4:0,home:!moving,lean:toss?toss.lean:0}});}return;}
    push(q.x,q.y+rise,q.z,0,-q.h);if(toss)push(0,0,0,0,toss.spin,toss.lean);push(0,0,0,0,face);
    if(o.kind==='goat'){const span=Math.abs((o.target??1)-(dir>0?-2.6:4.6))||1,u=moving?1-Math.abs(o.lane-(o.target??1))/span:0;meadow.goat(time,o.id,moving?u:0);}
-   else if(o.kind==='cow'||o.kind==='cowWalk')meadow.cow(o.kind==='cowWalk'?time:time*.25,o.id);
+   else if(o.kind==='cow'||o.kind==='cowWalk')meadow.cow(time,o.id,o.kind==='cowWalk'&&moving);
    else if(o.kind==='chicken'){push(0,0,0,0,0,0,1.5);meadow.chicken(time,o.id);pop();}
    else{pop();push(0,0,0,0,0);meadow.hayBale(-o.lane*3.05);}
    pop();if(toss)pop();pop();return;}
@@ -218,7 +218,7 @@ export function createScene(canvas){
    at(od,o.lane<0?0:(o.lane-1)*2.5,rise);if(toss)push(0,0,0,0,toss.spin,toss.lean);forest[o.kind](time);if(toss)pop();pop();return;}
   if(o.kind==='boarCross'){
    // Wildschweine rennen quer über den Weg (Spur kommt aus den Regeln).
-   const q=point(od,(o.lane-1)*2.5);push(q.x,q.y+rise,q.z,0,-q.h);if(toss)push(0,0,0,0,toss.spin,toss.lean);push(0,0,0,0,(o.dir||1)*PI/2);
+   const q=point(od,(o.lane-1)*2.5);push(q.x,q.y+rise,q.z,0,-q.h);if(toss)push(0,0,0,0,toss.spin,toss.lean);push(0,0,0,0,-(o.dir||1)*PI/2);/* Kopf in Laufrichtung */
    push(0,0,0,0,0,0,.72);forest.boar(time,o.id);pop();
    pop();if(toss)pop();pop();return;}
   if(o.kind==='fallingBranch'&&!toss){

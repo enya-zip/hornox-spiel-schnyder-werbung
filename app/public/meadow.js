@@ -19,36 +19,75 @@ export function createMeadow(r){
  // Holzstapel (drüberspringen).
  function woodstack(){for(let row=0;row<2;row++)for(let k=0;k<4-row;k++)a('cylinder',(k-(3-row)/2)*.46,.24+row*.4,0,.22,1.2,.22,k%2?wood:[.58,.42,.26],PI/2);}
 
- // ---------- Tiere (Kopf in +z) ----------
- // Kuh mit Glocke; walk = Laufzeit für Beine und Kopfnicken.
- function cow(walk=0,id=0){
-  const white=[.95,.94,.9],brown=[.5,.3,.18],nod=Math.sin(walk*3+id)*.06;
-  a('sphere',0,1.35,0,.62,.6,1.15,white);for(const [x,y,z] of[[.4,1.5,.3],[-.35,1.4,-.4],[.2,1.7,-.6],[-.45,1.55,.5]])a('sphere',x,y,z,.32,.3,.36,brown);
-  a('sphere',0,1.5+nod,1.2,.34,.36,.42,brown);a('sphere',0,1.38+nod,1.55,.24,.2,.16,[.92,.75,.68]);
-  for(const s of[-1,1]){a('cone',s*.28,1.85+nod,1.15,.06,.28,.06,[.95,.92,.82],0,0,s*.9);a('sphere',s*.4,1.6+nod,1.05,.16,.08,.1,brown);a('sphere',s*.14,1.62+nod,1.48,.05,.05,.04,[.05,.05,.05]);}
-  a('box',0,1.12+nod,1.05,.1,.08,.12,[.3,.2,.12]);a('cone',0,.96+nod,1.1,.16,.26,.16,[.95,.75,.2],PI);   // Glocke
-  for(const [x,z,ph] of[[-.32,.7,0],[.32,.7,PI],[-.32,-.75,PI],[.32,-.75,0]]){push(x,.9,z,Math.sin(walk*5+ph)*.35,0,0);a('cylinder',0,-.45,0,.11,.9,.11,white);a('box',0,-.9,0,.14,.08,.16,[.2,.18,.15]);pop();}
-  push(0,1.5,-1.12,.5+Math.sin(walk*4+id)*.4,0,Math.sin(walk*2+id)*.3);a('cylinder',0,-.4,0,.03,.8,.03,white);a('sphere',0,-.82,0,.07,.12,.07,brown);pop();
- }
- // Ziege mit Hörnchen und Bart.
- function goat(run=0,id=0,jump=0){
-  const fur=[.92,.9,.84],brown=[.55,.4,.26],hop=jump?Math.sin(Math.min(1,jump)*PI)*.8:0;push(0,hop,0);
-  a('sphere',0,.85,0,.34,.36,.62,fur);a('sphere',0,.92,-.2,.3,.3,.4,brown);a('sphere',0,1.18,.6,.2,.22,.26,fur);
-  a('sphere',0,1.02,.62,.05,.12,.05,brown);for(const s of[-1,1]){a('cone',s*.08,1.42,.52,.04,.24,.04,[.6,.55,.45],-.5);a('sphere',s*.1,1.26,.78,.035,.035,.03,[.05,.05,.05]);a('sphere',s*.2,1.24,.5,.1,.05,.06,fur);}
-  for(const [x,z,ph] of[[-.18,.38,0],[.18,.38,PI],[-.18,-.4,PI],[.18,-.4,0]]){push(x,.55,z,Math.sin(run*10+ph+id)*.5,0,0);a('cylinder',0,-.28,0,.06,.56,.06,fur);pop();}
+ // ---------- Tiere (Kopf zeigt in +z) ----------
+ // Bein mit Ober- und Unterschenkel; swing = Schwung im Hüftgelenk, das Knie knickt beim Vorschwingen ein.
+ function leg(x,y,z,len,th,col,swing,hoofCol,front=true){
+  push(x,y,z,swing,0,0);a('cylinder',0,-len*.25,0,th,len*.5,th*.95,col);
+  push(0,-len*.5,0,(front?1:-1)*Math.max(0,-swing)*1.1+.05,0,0);a('sphere',0,0,0,th*1.05,th*1.05,th*1.05,col);a('cylinder',0,-len*.24,0,th*.8,len*.48,th*.75,col);a('box',0,-len*.5,front?.03:-.01,th*1.7,th*.9,th*2.1,hoofCol);pop();
   pop();
  }
- // Huhn.
- function chicken(run=0,id=0){const bob=Math.abs(Math.sin(run*16+id))*.08;push(0,bob,0);a('sphere',0,.38,0,.22,.22,.28,[.97,.95,.9]);a('sphere',0,.62,.18,.12,.13,.12,[.97,.95,.9]);a('box',0,.76,.18,.03,.08,.12,[.88,.15,.12]);a('cone',0,.6,.32,.03,.08,.03,[.95,.7,.15],PI/2);a('sphere',0,.5,-.28,.1,.16,.06,[.9,.88,.82],-.4);for(const s of[-1,1]){a('cylinder',s*.07,.12,0,.02,.24,.02,[.95,.7,.15],Math.sin(run*16+id+s)*.5);a('sphere',s*.06,.66,.27,.02,.02,.02,[.05,.05,.05]);}pop();}
- // Grosser weisser Schweizer Schäferhund im Galopp.
+ // Gang: Diagonalpaare (vorne links + hinten rechts) schwingen gemeinsam.
+ const gait=(t,amp,ph)=>Math.sin(t+ph)*amp;
+
+ // Schweizer Fleckvieh-Kuh mit Glocke; walk = Laufphase (0 = steht ruhig).
+ function cow(walk=0,id=0,moving=true){
+  const white=[.95,.93,.88],red=[.62,.32,.17],pink=[.9,.68,.62],hoof=[.18,.15,.12],t=walk*4.2,amp=moving?.38:.03,nod=moving?Math.sin(t*2)*.05:Math.sin(walk*.8+id)*.08,swish=Math.sin(walk*2.2+id);
+  // Rumpf: Brust, Bauch, Becken, Rücken
+  a('sphere',0,1.38,.45,.62,.66,.62,white);a('sphere',0,1.3,-.05,.66,.62,.8,white);a('sphere',0,1.38,-.62,.6,.62,.55,red);
+  a('sphere',0,1.68,0,.5,.22,1.05,white);a('sphere',.36,1.45,-.1,.32,.4,.5,red);a('sphere',-.3,1.5,.4,.3,.38,.36,red);a('sphere',.2,1.62,.55,.22,.2,.3,red);
+  a('sphere',0,.92,-.45,.24,.16,.26,pink);for(const s of[-1,1])a('cylinder',s*.08,.78,-.45,.035,.12,.035,pink);    // Euter
+  a('sphere',0,1.05,.65,.26,.3,.32,white);                                                                            // Wamme
+  // Hals und Kopf
+  push(0,1.55,.95,-.35+nod,0,0);a('cylinder',0,0,.15,.3,.62,.3,white,1.2);
+  push(0,.12,.45,.55,0,0);a('sphere',0,0,0,.26,.3,.36,red);a('sphere',0,.02,.2,.2,.26,.3,white);a('sphere',0,-.12,.42,.19,.17,.15,pink);
+   for(const s of[-1,1]){a('sphere',s*.07,-.12,.55,.035,.03,.02,[.3,.18,.16]);a('sphere',s*.17,.1,.22,.045,.05,.04,[.08,.06,.05]);a('sphere',s*.3,.16,.02,.16,.07,.09,red,0,0,s*.3);
+    push(s*.16,.27,-.02,0,0,s*.9);a('cylinder',0,.08,0,.035,.16,.035,[.94,.9,.8]);a('cone',0,.2,.02,.03,.12,.03,[.94,.9,.8],.5);pop();}
+  pop();pop();
+  // Glocke am Lederband
+  a('ring',0,1.28+nod*.5,1.02,.2,.2,.05,[.35,.22,.12],PI/2.6);a('cone',0,1.02+nod*.5,1.12,.15,.26,.15,[.92,.72,.2],PI);
+  // Beine (Diagonalgang)
+  leg(-.3,1.08,.62,.95,.11,white,gait(t,amp,0),hoof,true);leg(.3,1.08,.62,.95,.11,white,gait(t,amp,PI),hoof,true);
+  leg(-.3,1.12,-.68,.98,.12,white,gait(t,amp,PI),hoof,false);leg(.3,1.12,-.68,.98,.12,white,gait(t,amp,0),hoof,false);
+  // Schwanz mit Quaste
+  push(0,1.62,-1.05,.35+Math.abs(swish)*.2,0,swish*.4);a('cylinder',0,-.4,0,.03,.8,.03,white);a('sphere',0,-.84,0,.07,.14,.07,[.45,.3,.2]);pop();
+ }
+ // Gemse-farbene Gebirgsziege mit gebogenen Hörnern und Bart; jump 0..1 Sprungphase.
+ function goat(run=0,id=0,jump=0){
+  const brown=[.6,.42,.26],dark=[.22,.16,.12],light=[.88,.8,.68],hoof=[.12,.1,.08],t=run*9+id,air=jump>0&&jump<1,hop=air?Math.sin(jump*PI)*.9:0,amp=air?.1:.45;
+  push(0,hop,0,air?(jump-.5)*.5:0,0,0);
+  a('sphere',0,.95,.22,.3,.34,.36,brown);a('sphere',0,.9,-.15,.29,.3,.45,brown);a('sphere',0,.93,-.48,.27,.29,.3,brown);a('box',0,1.18,-.05,.06,.05,.9,dark);   // Aalstrich
+  a('sphere',0,.75,0,.22,.15,.45,light);
+  push(0,1.08,.45,-.6,0,0);a('cylinder',0,.18,0,.13,.4,.13,brown);pop();
+  push(0,1.38,.62,.2,0,0);a('sphere',0,0,0,.15,.17,.21,brown);a('sphere',0,-.06,.18,.1,.1,.14,brown);a('box',0,.02,.08,.07,.18,.2,dark);a('cone',0,-.2,.16,.04,.16,.04,dark,PI);   // Kopf, Gesichtsstreifen, Bart
+   for(const s of[-1,1]){a('sphere',s*.1,.06,.1,.035,.035,.03,[.05,.04,.03]);a('sphere',s*.17,.04,-.02,.1,.04,.05,brown,0,0,s*.4);for(let k=0;k<4;k++){const u=k/3;a('sphere',s*(.06+u*.05),.17+Math.sin(u*2)*.16,-.02-u*.2,.035-u*.008,.05,.035-u*.008,[.3,.26,.2]);}}
+  pop();
+  leg(-.15,.72,.32,.68,.055,brown,gait(t,amp,0)+(air?-.6:0),hoof,true);leg(.15,.72,.32,.68,.055,brown,gait(t,amp,PI)+(air?-.6:0),hoof,true);
+  leg(-.15,.74,-.45,.7,.06,brown,gait(t,amp,PI)+(air?.6:0),hoof,false);leg(.15,.74,-.45,.7,.06,brown,gait(t,amp,0)+(air?.6:0),hoof,false);
+  push(0,1.05,-.68,-.8,0,0);a('cylinder',0,.08,0,.04,.16,.03,dark);pop();
+  pop();
+ }
+ // Huhn mit Kamm, Kehllappen, Flügeln und Schwanzfedern.
+ function chicken(run=0,id=0){
+  const t=run*16+id,bob=Math.abs(Math.sin(t))*.06,cream=[.96,.92,.84],tan=[.85,.62,.36],red=[.88,.14,.12],yel=[.95,.72,.2];
+  push(0,bob,0,Math.sin(t)*.06,0,0);
+  a('sphere',0,.4,0,.21,.2,.27,cream);a('sphere',0,.36,.1,.17,.18,.18,cream);
+  for(const s of[-1,1])a('sphere',s*.17,.43,-.02,.06,.13,.2,tan,.2);
+  for(let k=0;k<4;k++)a('sphere',(k-1.5)*.04,.58-k*.03,-.26-k*.02,.04,.14,.06,k%2?[.2,.18,.15]:tan,-.6+k*.1);
+  push(0,.58,.17,-.15+Math.sin(t*.5)*.25,0,0);a('sphere',0,0,0,.11,.12,.12,cream);a('box',0,.11,.02,.025,.07,.13,red);a('sphere',0,-.08,.1,.03,.05,.025,red);a('cone',0,-.01,.14,.025,.08,.025,yel,PI/2);for(const s of[-1,1])a('sphere',s*.07,.03,.06,.022,.022,.02,[.05,.05,.05]);pop();
+  for(const s of[-1,1]){push(s*.07,.24,0,Math.sin(t+(s>0?PI:0))*.7,0,0);a('cylinder',0,-.1,0,.018,.22,.018,yel);a('box',0,-.21,.04,.07,.012,.09,yel);pop();}
+  pop();
+ }
+ // Grosser weisser Schweizer Schäferhund im Galopp (tiefe Brust, schmale Taille, Stehohren, buschige Rute).
  function dog(run=0){
-  const g=Math.sin(run*15),white=[.97,.96,.93],shade=[.86,.84,.8];push(0,Math.abs(g)*.15,0,g*.06);
-  a('sphere',0,.95,0,.36,.38,.8,white);a('sphere',0,1.02,.25,.38,.4,.42,white);
-  a('sphere',0,1.32,.82,.26,.27,.32,white);a('sphere',0,1.2,1.12,.13,.12,.22,shade);a('sphere',0,1.22,1.32,.06,.05,.05,[.08,.06,.06]);
-  a('box',0,1.06,1.2,.08,.03,.16,[.92,.4,.45],.3);   // Zunge
-  for(const s of[-1,1]){a('cone',s*.14,1.62,.78,.08,.3,.06,white,-.1,0,s*.25);a('sphere',s*.11,1.4,1.04,.04,.04,.03,[.05,.05,.05]);}
-  for(const [x,z,ph] of[[-.2,.5,0],[.2,.5,PI],[-.2,-.55,PI],[.2,-.55,0]]){push(x,.72,z,Math.sin(run*15+ph)*.75,0,0);a('cylinder',0,-.36,0,.08,.72,.08,white);a('sphere',0,-.72,.04,.09,.06,.12,shade);pop();}
-  push(0,1.1,-.75,.9+Math.sin(run*18)*.3,0,Math.sin(run*9)*.3);a('cylinder',0,.3,0,.08,.6,.08,white);a('sphere',0,.6,0,.1,.14,.1,white);pop();
+  const t=run*15,g=Math.sin(t),white=[.97,.96,.93],shade=[.86,.84,.79],nose=[.08,.06,.06],paw=[.84,.8,.74];
+  push(0,Math.abs(g)*.12,0,g*.05,0,0);
+  a('sphere',0,1.0,.35,.34,.42,.4,white);a('sphere',0,.98,-.05,.27,.3,.48,white);a('sphere',0,.98,-.45,.29,.31,.3,white);a('sphere',0,.78,.2,.22,.16,.36,shade);
+  push(0,1.22,.55,-.7,0,0);a('cylinder',0,.18,0,.2,.42,.2,white);pop();
+  push(0,1.45,.78,.15+g*.04,0,0);a('sphere',0,0,0,.2,.21,.24,white);a('sphere',0,-.05,.24,.1,.1,.2,white);a('sphere',0,-.04,.44,.055,.05,.05,nose);
+   a('box',0,-.15,.32,.07,.025,.16,[.92,.42,.46],.4);for(const s of[-1,1]){a('sphere',s*.1,.06,.16,.035,.035,.03,[.1,.07,.05]);push(s*.11,.2,-.02,-.1,0,s*.18);a('cone',0,.1,0,.075,.24,.04,white);a('cone',0,.09,.012,.04,.16,.015,[.95,.82,.8]);pop();}pop();
+  leg(-.16,.82,.42,.78,.07,white,Math.sin(t)*.8,paw,true);leg(.16,.82,.42,.78,.07,white,Math.sin(t+.5)*.8,paw,true);
+  leg(-.16,.86,-.5,.82,.08,white,Math.sin(t+PI)*.8,paw,false);leg(.16,.86,-.5,.82,.08,white,Math.sin(t+PI+.5)*.8,paw,false);
+  push(0,1.05,-.72,-.6+Math.sin(t*1.2)*.25,0,Math.sin(t*.6)*.25);for(let k=0;k<4;k++)a('sphere',0,-.12-k*.15,-.05-k*.03,.09+k*.012,.12,.09+k*.012,white);pop();
   pop();
  }
 

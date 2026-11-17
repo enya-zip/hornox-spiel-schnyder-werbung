@@ -1,10 +1,10 @@
 import {INTRO_DURATION,COUNTDOWN_DURATION} from './intro.js?v=17';
 import {stages,getStage,DURATION,fogAt,bridgeAt,forestSection,meadowSection,meadowWindows} from "./journey.js?v=23";
-import {createScene} from "./scene3d.js?v=45";
+import {createScene} from "./scene3d.js?v=48";
 import {setup,validateAction,applyAction} from "./rules.js?v=36";
 import {installControls} from "./controls.js?v=17";
 import {createAudio} from "./audio.js?v=21";
-import {getZone} from "./scene3d.js?v=45";
+import {getZone} from "./scene3d.js?v=48";
 import {copy} from "./copy.js?v=34";
 import {turnDirection} from "./route.js?v=21";
 const $=id=>document.getElementById(id),q=new URLSearchParams(location.search),app=$("app"),canvas=$("world"),player="guest";
