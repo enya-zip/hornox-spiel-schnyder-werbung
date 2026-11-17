@@ -11,7 +11,7 @@ import {createActor} from './actor.js?v=22';
 import {createEffects} from './effects.js?v=17';
 import {createPath} from './route.js?v=21';
 import {getZone,bridgeAt,fogAt,forestSection,meadowSection,lakeSection,stoneAt} from './journey.js?v=24';
-import {createBlackLake} from './blacklake.js?v=2';
+import {createBlackLake} from './blacklake.js?v=3';
 import {createMeadow} from './meadow.js?v=3';
 import {createForest} from './forest.js?v=4';
 export {getZone};
@@ -154,6 +154,7 @@ export function createScene(canvas){
     if(w<d+260&&k%2===0){at(w+1,side*(6.5+(k%3)*1.6));blacklake.lily(anim,k);pop();}
     if(k%7===(side>0?2:5)&&w<d+300){at(w,side*(11+(k%4)*2));a('rock',0,.05,0,1.2,.5,1,C.rock,0,k);blacklake.reeds(k);pop();}
     if(k%3===(side>0?1:0)&&w<d+220){at(w,side*(6+(k%2)*2));blacklake.swarm(anim,k,5,1.4);pop();}
+    if(side>0&&k%2===0&&w>d+8&&w<d+160){at(w,(k%3-1)*2.5);push(0,.3,0);blacklake.swarm(anim,k+50,3,1.1);pop();pop();}
     if(k%11===(side>0?4:9)&&w<d+240){const ph=(anim*.5+k*.37)%1,up=ph>.3;at(w,side*9);if(!up){blacklake.bubbles(anim,k);}else{a('cylinder',0,.03,0,1.1,.03,1.1,[.25,.6,.25]);push(0,.04-(ph<.36?(.36-ph)*8:0),0,0,-side*PI/2,0,1.2);blacklake.frog(anim,k,0,0,ph>.85?Math.sin((ph-.85)/.15*PI)*1.6:0,ph>.92);pop();blacklake.splash((ph-.3)/.12);}pop();}
     if(k%60===(side>0?17:47)){const cp=point(w,side*55);if(clear(cp.x,cp.z,8,w)){at(w,side*55);a('rock',0,-.3,0,9,1.6,7,[.4,.45,.35],0,k);a('sphere',0,.6,0,6,.8,5,[.32,.55,.24]);push(0,1,0,0,-side*PI/2);alpine.chapel();pop();pop();}}
    }
@@ -238,7 +239,11 @@ export function createScene(canvas){
    push(0,.06-(1-emerge)*1.05,0,0,-side*PI/2,0,1.6);blacklake.frog(time,o.id,warn*(gapT>.35?1:.3),warn*(.5+.5*Math.sin(time*14)),len/1.6*shoot,gapT<=.05&&shoot>0);pop();
    blacklake.splash((1.75-gapT)/.5);pop();
    // Fliege über der Spur, bis die Zunge sie schnappt
-   if(gapT>.05){const tp=point(od,(far-1)*2.5);push(tp.x+Math.sin(time*7+o.id)*.4,tp.y+.55+Math.sin(time*9)*.25,tp.z+Math.cos(time*6)*.3,0,time*4);blacklake.fly(time,o.id);pop();}
+   // Ziel-Fliegen schwirren schon ~3 s vorher gross sichtbar über den bedrohten Spuren; darunter ein Warnring
+   // (gelb, ab dem Auftauchen des Frosches rot blinkend). So sieht man, auf welcher Spur die Zunge kommt.
+   if(gapT<3&&gapT>-.4)for(const l of lanes){const tp=point(od,(l-1)*2.5),hot=gapT<1.75,pulse=hot?.5+.5*Math.abs(Math.sin(time*10)):.6;
+    push(tp.x,tp.y,tp.z,0,-tp.h);a('ring',0,.62,0,1.15,1.15,.1,hot?[1,.15+.25*(1-pulse),.15,49]:[1,.85,.25,49],PI/2);a('ring',0,.64,0,.75,.75,.06,hot?[1,.4,.35,49]:[1,.95,.6,49],PI/2,0,time*3);pop();
+    if(gapT>.05||l!==far){push(tp.x+Math.sin(time*7+o.id+l)*.45,tp.y+1.3+Math.sin(time*9+l)*.3,tp.z+Math.cos(time*6+l)*.35,0,time*4,0,3.2);blacklake.fly(time,o.id+l);pop();}}
    return;}
   if(['fence','gate','haystack','trough','ditch','woodstack','hayBale'].includes(o.kind)){
    // Level 5: Weide-Hindernisse.

@@ -23,7 +23,7 @@ export function createBlackLake(r){
   pop();
  }
  // Einzelne Fliege mit flatternden Flügeln.
- function fly(time,id){const f=Math.sin(time*60+id)*.6;a('sphere',0,0,0,.05,.045,.08,[.12,.12,.14]);for(const s of[-1,1])a('box',s*.06,.03,0,.09,.005,.05,[.85,.92,1,49],0,0,s*f);}
+ function fly(time,id){const f=Math.sin(time*60+id)*.6;a('sphere',0,0,0,.07,.06,.11,[.12,.12,.14]);a('sphere',0,.02,.1,.05,.05,.05,[.6,.1,.1]);for(const s of[-1,1])a('box',s*.06,.03,0,.09,.005,.05,[.85,.92,1,49],0,0,s*f);}
  // Schwarm von Fliegen, die unregelmässig herumschwirren (um den lokalen Ursprung).
  function swarm(time,k,n=6,spread=1.2){for(let j=0;j<n;j++){const t=time*(1.3+j*.17)+k*2.1+j*1.7;push(Math.sin(t*1.7+j)*spread+Math.sin(t*4.3)*.15,1.1+Math.sin(t*2.3+j*.9)*.45,Math.cos(t*1.3+j*2)*spread*.8,0,t*3,0);fly(time,j+k);pop();}}
  // Treibender Baumstamm quer über den Weg (drüberspringen), mit Wellenringen.
