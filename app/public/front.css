@@ -31,3 +31,19 @@
 
 #app[data-screen=home]{touch-action:pan-y}#splash{touch-action:none}
 .overlay{grid-template-columns:minmax(0,1fr)}.panel{width:min(400px,100%);min-width:0;max-width:100%}
+
+/* Rangliste: Top 10 der besten Läufe auf diesem Gerät */
+.ranking-title{margin:18px 0 8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#f2c46d}
+.ranking{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-height:min(42vh,360px);overflow-y:auto;padding-right:4px}
+.ranking li{display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:10px;padding:8px 12px;border-radius:12px;background:#071f286b;border:1px solid #a0b1a826}
+.ranking li b{font-size:15px;color:#f2c46d;text-align:center}
+.ranking li:nth-child(1) b{font-size:18px}
+.ranking li strong{display:block;font-size:16px;line-height:1.2}
+.ranking li small{display:block;font-size:11px;opacity:.75}
+.ranking li .tags{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;max-width:150px}
+.ranking li em{font-style:normal;font-size:10px;padding:2px 7px;border-radius:9px;background:#ffffff1a;white-space:nowrap}
+.ranking li em.won{background:#e8c46a33;color:#ffe2a7}
+.ranking li em.test{background:#4a90c233;color:#bfe0ff}
+.ranking li.latest{border-color:#e8c46a;box-shadow:0 0 0 1px #e8c46a55 inset}
+.ranking li.empty{display:block;text-align:center;font-size:12px;opacity:.7}
+.result-rank{margin:6px 0 0;font-weight:700;color:#f2c46d}

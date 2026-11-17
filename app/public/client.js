@@ -5,7 +5,7 @@ import {setup,validateAction,applyAction} from "./rules.js?v=32";
 import {installControls} from "./controls.js?v=17";
 import {createAudio} from "./audio.js?v=18";
 import {getZone} from "./scene3d.js?v=38";
-import {copy} from "./copy.js?v=26";
+import {copy} from "./copy.js?v=28";
 import {turnDirection} from "./route.js?v=21";
 const $=id=>document.getElementById(id),q=new URLSearchParams(location.search),app=$("app"),canvas=$("world"),player="guest";
 const read=k=>{try{return localStorage.getItem(k);}catch{return null;}},save=(k,v)=>{try{localStorage.setItem(k,String(v));}catch{}};
@@ -101,11 +101,27 @@ function home(){introElapsed=-1;hideLevelBanner();$("power-callout").getAnimatio
 function pause(value=true){if(screen!=="play")return;paused=value;acc=0;$("pause-overlay").hidden=!value;if(value){audio.setActive(false);$("resume").focus();}else {audio.unlock().catch(()=>{});audio.setActive(true);}}
 function openDialog(id){if(screen==="play"&&!paused)pause(true);$(id).showModal();}
 function resultCopy(){
- $("result-title").textContent=t(state.phase==="won"?"won":"lost");$("result-kicker").textContent=state.phase==="won"?t("wonKicker"):state.score>=best()?t("record"):"HORNOX RUN";
+ $("result-title").textContent=t(state.phase==="won"?"won":"lost");$("result-kicker").textContent=state.phase==="won"?t("wonKicker"):testLevel<=1&&state.score>=best()?t("record"):"HORNOX RUN";
  $("result-score").textContent=fmt(state.score);$("result-details").textContent=fmt(state.distance)+" m · "+fmt(state.coins)+" "+t("coins");
  $("result-note").textContent=t(state.phase==="won"?"wonText":"lostText",{distance:fmt(state.distance),coins:fmt(state.coins)});
+ $("result-rank").textContent=lastRankPlace?t(lastRankPlace===1?"rankFirst":"rankPlace",{n:lastRankPlace})+(testLevel>1?" · "+t("rankTest",{n:testLevel}):""):t("rankOut");
 }
-function finish(){if(resultSaved)return;resultSaved=true;audio.setActive(false);if(testLevel<=1&&state.score>best(state.route,state.mode))save(bestKey(state.route,state.mode),state.score);setScreen("result");$("turn-cue").hidden=true;$("tutorial").hidden=true;$("resort-arrival").hidden=true;resultCopy();$("again").focus();}
+// Rangliste: die 10 besten Läufe auf diesem Gerät. Test-Läufe (?level=N) zählen mit und sind markiert,
+// verändern aber den offiziellen Bestwert nicht.
+const rankKey="hornox.ranking.v1";let lastRankId=0,lastRankPlace=0;
+function ranking(){try{const r=JSON.parse(read(rankKey)||"[]");return Array.isArray(r)?r.filter(e=>e&&Number.isFinite(e.score)):[];}catch{return[];}}
+function addRanking(){const list=ranking(),entry={id:Date.now(),score:Math.floor(state.score),coins:state.coins||0,level:Math.min(10,getStage(state.elapsed)+1),won:state.phase==="won",mode:state.mode,test:testLevel>1?testLevel:0,date:new Date().toISOString().slice(0,10)};
+ list.push(entry);list.sort((a,b)=>b.score-a.score||a.id-b.id);const top=list.slice(0,10);save(rankKey,JSON.stringify(top));lastRankId=entry.id;lastRankPlace=top.findIndex(e=>e.id===entry.id)+1;}
+function renderRanking(){const list=ranking(),ol=$("ranking-list"),locale=({en:"en-GB",de:"de-CH",fr:"fr-CH",ja:"ja-JP",zh:"zh-CN"})[lang];
+ if(!list.length){const li=document.createElement("li");li.className="empty";li.textContent=t("rankEmpty");ol.replaceChildren(li);return;}
+ ol.replaceChildren(...list.map((e,i)=>{const li=document.createElement("li"),n=document.createElement("b"),main=document.createElement("div"),score=document.createElement("strong"),info=document.createElement("small");
+  if(e.id===lastRankId)li.className="latest";n.textContent=String(i+1);score.textContent=fmt(e.score);
+  let date="";try{date=new Date(e.date+"T12:00:00").toLocaleDateString(locale,{day:"2-digit",month:"2-digit",year:"2-digit"});}catch{}
+  info.textContent=[t("rankLevel",{n:e.level}),"🪙 "+fmt(e.coins),date].filter(Boolean).join(" · ");main.append(score,info);
+  const tags=document.createElement("span");tags.className="tags";const tag=(txt,cls)=>{const x=document.createElement("em");x.textContent=txt;if(cls)x.className=cls;tags.append(x);};
+  if(e.won)tag("🏔️ "+t("rankSummit"),"won");if(e.mode==="relaxed")tag(t("relaxedMode"));if(e.test)tag(t("rankTest",{n:e.test}),"test");
+  li.append(n,main,tags);return li;}));}
+function finish(){if(resultSaved)return;resultSaved=true;audio.setActive(false);addRanking();if(testLevel<=1&&state.score>best(state.route,state.mode))save(bestKey(state.route,state.mode),state.score);setScreen("result");$("turn-cue").hidden=true;$("tutorial").hidden=true;$("resort-arrival").hidden=true;resultCopy();$("again").focus();}
 function heartFeedback(gained){const node=$('heart-feedback');node.querySelector('span').textContent=t(gained?'heartGain':'heartFull');node.hidden=false;node.getAnimations().forEach(a=>a.cancel());const target=$('lives').getBoundingClientRect(),x=target.left+target.width/2-innerWidth/2,y=target.top+target.height/2-innerHeight*.40;node.animate(reduced?[{opacity:1},{opacity:1,offset:.75},{opacity:0}]:[{opacity:0,transform:'translate(-50%,-50%) scale(.6)'},{opacity:1,transform:'translate(-50%,-50%) scale(1.15)',offset:.18},{opacity:1,transform:'translate(-50%,-50%) scale(1)',offset:.60},{opacity:0,transform:`translate(calc(-50% + ${x}px),calc(-50% + ${y}px)) scale(.22)`}],{duration:reduced?1000:1350,fill:'forwards'});audio.play('pickup',1.6,.85);}
 function processEvents(){
  for(const e of state.events){scene?.emit(e,state);if(["jump","duck","land","pickup","bump"].includes(e.kind))audio.play(e.kind,e.kind==="pickup"?1+(state.chain%8)*.035:1);
@@ -166,7 +182,7 @@ let menuTab="run";
 function selectMenu(tab){menuTab=tab;for(const name of ["run","route","records"]){$("menu-"+name).hidden=name!==tab;const button=document.querySelector('[data-menu="'+name+'"]');if(name===tab)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');}app.dataset.menuTab=tab;updateMenu();}
 function updateMenu(){
  document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode)));
- $('record-classic').textContent=best('summit','classic')?fmt(best('summit','classic')):'—';$('record-relaxed').textContent=best('summit','relaxed')?fmt(best('summit','relaxed')):'—';
+ renderRanking();$('record-classic').textContent=best('summit','classic')?fmt(best('summit','classic')):'—';$('record-relaxed').textContent=best('summit','relaxed')?fmt(best('summit','relaxed')):'—';
  const key=lang;if($('route-stages').dataset.lang!==key){$('route-stages').dataset.lang=key;$('route-stages').replaceChildren(...stages.map((stage,i)=>{const li=document.createElement('li'),n=document.createElement('b'),label=document.createElement('span'),time=document.createElement('small');n.textContent=String(i+1).padStart(2,'0');label.textContent=t(stage.key).split(' · ')[0];time.textContent=Math.floor(stage.start/60)+':'+String(stage.start%60).padStart(2,'0');li.append(n,label,time);return li}));}
 }
 function enterMenu(){app.dataset.front="menu";$('splash').hidden=true;selectMenu('run');audio.unlock().catch(()=>{});audio.setActive(true);$('start').disabled?$('how').focus():$('start').focus();}
@@ -205,7 +221,7 @@ const controls=installControls(app,{enabled:()=>screen==="play"&&!paused&&introE
 document.querySelectorAll("[data-action]").forEach(b=>{b.onpointerdown=e=>{e.preventDefault();input(b.dataset.action);};b.onclick=e=>{if(e.detail===0)input(b.dataset.action);};});
 window.addEventListener("blur",()=>{if(screen==="play")pause(true);});document.addEventListener("visibilitychange",()=>{if(document.hidden&&screen==="play")pause(true);});
 window.addEventListener("resize",resize);canvas.addEventListener("webglcontextlost",e=>{e.preventDefault();pause(true);toast(t("graphicsLost"),999);});
-$("share").onclick=async()=>{const url=new URL(location.origin);url.searchParams.set("challenge",state.seed);url.searchParams.set("route",state.route);url.searchParams.set("mode",state.mode);url.searchParams.set("target",state.score);url.searchParams.set("v","12");const data={title:"Hornox Run · Zermatt",text:t("shareText",{score:fmt(state.score)}),url:url.href};try{if(navigator.share){await navigator.share(data);return;}await navigator.clipboard.writeText(url.href);toast(t("copied"));}catch(e){if(e.name==="AbortError")return;$("copy-link-wrap").hidden=false;$("copy-link").value=url.href;$("copy-link").select();}};
+$("share").onclick=async()=>{const url=new URL(location.pathname,location.origin);url.searchParams.set("challenge",state.seed);url.searchParams.set("route",state.route);url.searchParams.set("mode",state.mode);url.searchParams.set("target",state.score);url.searchParams.set("v","12");const data={title:"Hornox Run · Zermatt",text:t("shareText",{score:fmt(state.score)}),url:url.href};try{if(navigator.share){await navigator.share(data);return;}await navigator.clipboard.writeText(url.href);toast(t("copied"));}catch(e){if(e.name==="AbortError")return;$("copy-link-wrap").hidden=false;$("copy-link").value=url.href;$("copy-link").select();}};
 $("embedded-help").hidden=window.top===window;
 updateCopy();
 try{scene=createScene(canvas);resize();scene.ready.then(()=>{loaded=true;$("start").disabled=false;$("asset-status").textContent="";updateCopy();}).catch(fail);}catch(e){fail(e);}

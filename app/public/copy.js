@@ -121,6 +121,15 @@ export const copy = {
     "fbNoteChase": "Gets closer… dodge his rod! {s}s",
     "fbNoteCooling": "You escaped – he’s calming down",
     "fbNoteRelaxed": "🐟 {n} – he has calmed down",
+    "rankTitle": "Top 10 on this device",
+    "rankEmpty": "No runs yet – your first run will appear here.",
+    "rankLevel": "Level {n}",
+    "rankSummit": "Summit",
+    "rankTest": "Test from level {n}",
+    "rankPlace": "Place {n} in your top 10",
+    "rankFirst": "🏆 New no. 1 in your top 10!",
+    "rankOut": "Not in your top 10 this time.",
+    "recordsNote": "Your 10 best runs are saved on this device. Test runs started with a level link are marked and don’t count as personal best.",
     "levelDone": "Level {done} complete!",
     "levelNext": "Next up · Level {next}",
     "mountain": "Hörnli Trail",
@@ -273,6 +282,15 @@ export const copy = {
     "fbNoteChase": "Kommt näher … weich der Angel aus! {s}s",
     "fbNoteCooling": "Entkommen – er beruhigt sich",
     "fbNoteRelaxed": "🐟 {n} – er hat sich beruhigt",
+    "rankTitle": "Top 10 auf diesem Gerät",
+    "rankEmpty": "Noch keine Läufe – dein erster Lauf erscheint hier.",
+    "rankLevel": "Level {n}",
+    "rankSummit": "Gipfel",
+    "rankTest": "Test ab Level {n}",
+    "rankPlace": "Platz {n} in deiner Top 10",
+    "rankFirst": "🏆 Neuer Platz 1 in deiner Top 10!",
+    "rankOut": "Diesmal nicht in deiner Top 10.",
+    "recordsNote": "Deine 10 besten Läufe werden auf diesem Gerät gespeichert. Test-Läufe über einen Level-Link sind markiert und zählen nicht als Bestleistung.",
     "levelDone": "Level {done} geschafft!",
     "levelNext": "Nächstes Level · Level {next}",
     "mountain": "Hörnliweg",
@@ -425,6 +443,15 @@ export const copy = {
     "fbNoteChase": "Il se rapproche… esquive ! {s}s",
     "fbNoteCooling": "Tu t’es échappé – il se calme",
     "fbNoteRelaxed": "🐟 {n} – il s’est calmé",
+    "rankTitle": "Top 10 sur cet appareil",
+    "rankEmpty": "Aucune course pour l’instant – ta première course apparaîtra ici.",
+    "rankLevel": "Niveau {n}",
+    "rankSummit": "Sommet",
+    "rankTest": "Test dès le niveau {n}",
+    "rankPlace": "{n}e place de ton top 10",
+    "rankFirst": "🏆 Nouveau n° 1 de ton top 10 !",
+    "rankOut": "Pas dans ton top 10 cette fois.",
+    "recordsNote": "Tes 10 meilleures courses sont enregistrées sur cet appareil. Les courses de test via un lien de niveau sont marquées et ne comptent pas comme record.",
     "levelDone": "Niveau {done} réussi !",
     "levelNext": "Niveau suivant · Niveau {next}",
     "mountain": "Sentier du Hörnli",
@@ -577,6 +604,15 @@ export const copy = {
     "fbNoteChase": "近づいてくる…竿をよけろ！{s}秒",
     "fbNoteCooling": "逃げ切った – 落ち着いてきた",
     "fbNoteRelaxed": "🐟 {n} – 落ち着いた",
+    "rankTitle": "この端末のトップ10",
+    "rankEmpty": "まだ記録がありません。最初のランがここに表示されます。",
+    "rankLevel": "レベル{n}",
+    "rankSummit": "山頂",
+    "rankTest": "レベル{n}からのテスト",
+    "rankPlace": "トップ10の{n}位",
+    "rankFirst": "🏆 トップ10の新1位！",
+    "rankOut": "今回はトップ10圏外。",
+    "recordsNote": "ベスト10のランはこの端末に保存されます。レベルリンクから始めたテストランは表示されますが、自己ベストにはなりません。",
     "levelDone": "レベル{done}クリア！",
     "levelNext": "次のレベル · レベル{next}",
     "mountain": "ヘルンリの登山道",
@@ -729,6 +765,14 @@ export const copy = {
     "fbNoteChase": "越来越近…躲开鱼竿！{s}秒",
     "fbNoteCooling": "你逃脱了 – 他在冷静下来",
     "fbNoteRelaxed": "🐟 {n} – 他已经冷静了",
+    "rankTitle": "本设备前10名",
+    "rankEmpty": "还没有记录——你的第一次奔跑会显示在这里。",
+    "rankLevel": "第{n}关",
+    "rankSummit": "登顶",
+    "rankTest": "从第{n}关测试",
+    "rankPlace": "你的前10名中第{n}名",
+    "rankFirst": "🏆 前10名新的第1名！",
+    "rankOut": "这次没有进入前10名。",
     "levelDone": "第{done}关完成！",
     "levelNext": "下一关 · 第{next}关",
     "mountain": "赫尔恩利山径",
@@ -762,8 +806,14 @@ export const copy = {
 };
 
 // Premium launch and main-menu copy.
-Object.assign(copy.en,{"splashLine": "A little courage. A mighty mountain.", "enterGame": "ENTER THE ADVENTURE", "menuKicker": "YOUR ALPINE ADVENTURE", "summitMission": "THE MATTERHORN RUN", "menuMission": "10 worlds · 15 minutes · 3 lives", "modeLabel": "Difficulty", "classicMode": "Classic", "classicNote": "Full adventure", "relaxedMode": "Relaxed", "relaxedNote": "A gentler pace", "routeKicker": "FROM THE VILLAGE TO THE SUMMIT", "routeTitle": "Your mountain journey", "routeNote": "The next world arrives automatically every 90 seconds.", "recordsKicker": "MAKE YOUR MARK", "recordsTitle": "Personal bests", "points": "points", "recordsNote": "Your best runs are saved on this device. Make your first run count.", "mainMenu": "Main menu", "navPlay": "Play", "navRoute": "Journey", "navRecords": "Records"});
+Object.assign(copy.en,{"splashLine": "A little courage. A mighty mountain.", "enterGame": "ENTER THE ADVENTURE", "menuKicker": "YOUR ALPINE ADVENTURE", "summitMission": "THE MATTERHORN RUN", "menuMission": "10 worlds · 15 minutes · 3 lives", "modeLabel": "Difficulty", "classicMode": "Classic", "classicNote": "Full adventure", "relaxedMode": "Relaxed", "relaxedNote": "A gentler pace", "routeKicker": "FROM THE VILLAGE TO THE SUMMIT", "routeTitle": "Your mountain journey", "routeNote": "The next world arrives automatically every 90 seconds.", "recordsKicker": "MAKE YOUR MARK", "recordsTitle": "Personal bests", "points": "points", "recordsNote": "你最好的10次奔跑保存在本设备上。通过关卡链接开始的测试会被标记，不计入个人最佳。", "mainMenu": "Main menu", "navPlay": "Play", "navRoute": "Journey", "navRecords": "Records"});
 Object.assign(copy.de,{"splashLine": "Ein bisschen Mut. Ein grosser Berg.", "enterGame": "AB INS ABENTEUER", "menuKicker": "DEIN ALPENABENTEUER", "summitMission": "DER MATTERHORN RUN", "menuMission": "10 Welten · 15 Minuten · 3 Leben", "modeLabel": "Schwierigkeit", "classicMode": "Klassisch", "classicNote": "Volles Abenteuer", "relaxedMode": "Entspannt", "relaxedNote": "Etwas gemütlicher", "routeKicker": "VOM DORF BIS ZUM GIPFEL", "routeTitle": "Dein Weg zum Matterhorn", "routeNote": "Alle 90 Sekunden beginnt automatisch die nächste Welt.", "recordsKicker": "ZEIG, WAS DU KANNST", "recordsTitle": "Deine Rekorde", "points": "Punkte", "recordsNote": "Deine besten Läufe bleiben auf diesem Gerät gespeichert. Los geht’s mit deinem ersten Run.", "mainMenu": "Hauptmenü", "navPlay": "Spielen", "navRoute": "Bergroute", "navRecords": "Rekorde"});
 Object.assign(copy.fr,{"splashLine": "Un peu de courage. Une grande montagne.", "enterGame": "PLACE À L’AVENTURE", "menuKicker": "TON AVENTURE ALPINE", "summitMission": "LA COURSE AU CERVIN", "menuMission": "10 mondes · 15 minutes · 3 vies", "modeLabel": "Difficulté", "classicMode": "Classique", "classicNote": "L’aventure intense", "relaxedMode": "Détente", "relaxedNote": "Un rythme plus doux", "routeKicker": "DU VILLAGE AU SOMMET", "routeTitle": "Ton chemin vers le Cervin", "routeNote": "Un nouveau monde commence automatiquement toutes les 90 secondes.", "recordsKicker": "À TOI DE JOUER", "recordsTitle": "Tes records", "points": "points", "recordsNote": "Tes meilleurs scores sont enregistrés sur cet appareil. Lance ta première course.", "mainMenu": "Menu principal", "navPlay": "Jouer", "navRoute": "Parcours", "navRecords": "Records"});
 Object.assign(copy.ja,{"splashLine": "小さな勇気で、大きな山へ。", "enterGame": "冒険をはじめる", "menuKicker": "アルプスの冒険", "summitMission": "マッターホルンへの挑戦", "menuMission": "10の世界 · 15分 · ライフ3つ", "modeLabel": "難易度", "classicMode": "クラシック", "classicNote": "本格的な冒険", "relaxedMode": "リラックス", "relaxedNote": "ゆったりしたペース", "routeKicker": "村から山頂へ", "routeTitle": "山頂への道のり", "routeNote": "90秒ごとに次の世界へ自動で進みます。", "recordsKicker": "記録に挑戦", "recordsTitle": "自己ベスト", "points": "ポイント", "recordsNote": "ベストスコアはこの端末に保存されます。最初のランに挑戦しましょう。", "mainMenu": "メインメニュー", "navPlay": "プレイ", "navRoute": "ルート", "navRecords": "記録"});
 Object.assign(copy.zh,{"splashLine": "一点勇气，征服一座大山。", "enterGame": "开启冒险", "menuKicker": "你的阿尔卑斯冒险", "summitMission": "奔向马特洪峰", "menuMission": "10个世界 · 15分钟 · 3条生命", "modeLabel": "难度", "classicMode": "经典", "classicNote": "全力挑战", "relaxedMode": "轻松", "relaxedNote": "更悠闲的节奏", "routeKicker": "从村庄到山顶", "routeTitle": "你的登顶之路", "routeNote": "每90秒自动进入下一个世界。", "recordsKicker": "创造你的纪录", "recordsTitle": "个人最佳", "points": "分", "recordsNote": "最佳成绩保存在此设备上。开始你的第一次奔跑吧。", "mainMenu": "主菜单", "navPlay": "开始", "navRoute": "路线", "navRecords": "纪录"});
+// Rangliste (Top 10): Hinweistext überschreibt die älteren Fassungen oben.
+Object.assign(copy.en,{"recordsNote": "Your 10 best runs are saved on this device. Test runs started with a level link are marked and don’t count as personal best."});
+Object.assign(copy.de,{"recordsNote": "Deine 10 besten Läufe werden auf diesem Gerät gespeichert. Test-Läufe über einen Level-Link sind markiert und zählen nicht als Bestleistung."});
+Object.assign(copy.fr,{"recordsNote": "Tes 10 meilleures courses sont enregistrées sur cet appareil. Les courses de test via un lien de niveau sont marquées et ne comptent pas comme record."});
+Object.assign(copy.ja,{"recordsNote": "ベスト10のランはこの端末に保存されます。レベルリンクから始めたテストランは表示されますが、自己ベストにはなりません。"});
+Object.assign(copy.zh,{"recordsNote": "你最好的10次奔跑保存在本设备上。通过关卡链接开始的测试会被标记，不计入个人最佳。"});
