@@ -103,3 +103,15 @@ html,body{position:fixed;inset:0;overscroll-behavior:none;overflow:hidden}#app{p
 @media (prefers-reduced-motion:reduce){#fisher-bubble.flash{animation:none;background:#7a1512e6}}
 /* Fischer-Bubble auf Smartphones kompakter: Zustand darf umbrechen, Bubble bleibt schmal */
 @media (max-width:700px){#fisher-bubble{max-width:200px;padding:5px 12px 5px 5px;gap:8px}#fisher-bubble #fb-state{font-size:10px;letter-spacing:.04em;white-space:normal;line-height:1.25}#fisher-bubble .fb-meter{width:76px}}
+
+/* Fischer-Bubble auffälliger: grösseres Porträt, goldener Rahmen, leuchtender Ring, sanftes Pulsieren */
+#fisher-bubble{padding:8px 18px 8px 8px;background:linear-gradient(135deg,#123a3ef2,#0b2427f2);border:2px solid #e8c46a;box-shadow:0 10px 30px #0007,0 0 0 4px #e8c46a22,0 0 22px color-mix(in srgb,var(--ring) 45%,transparent)}
+#fisher-bubble .fb-portrait{width:84px;height:84px;flex-basis:84px;padding:4px;box-shadow:0 0 0 3px #0f2d30,0 0 0 5px #e8c46a,0 0 24px color-mix(in srgb,var(--ring) 70%,transparent)}
+#fisher-bubble.near .fb-portrait{width:92px;height:92px;flex-basis:92px}
+#fisher-bubble #fb-state{font-size:14px}
+#fisher-bubble #fb-note{font-size:12px}
+#fisher-bubble .fb-meter{width:150px;height:7px}
+#fisher-bubble[data-mood="1"] .fb-portrait,#fisher-bubble[data-mood="2"] .fb-portrait{animation:fb-idle 2.4s ease-in-out infinite}
+@keyframes fb-idle{50%{transform:scale(1.05);box-shadow:0 0 0 3px #0f2d30,0 0 0 5px #e8c46a,0 0 34px var(--ring)}}
+@media (max-width:700px){#fisher-bubble{max-width:215px;padding:6px 12px 6px 6px}#fisher-bubble .fb-portrait{width:64px;height:64px;flex-basis:64px}#fisher-bubble.near .fb-portrait{width:70px;height:70px;flex-basis:70px}#fisher-bubble #fb-state{font-size:11px}#fisher-bubble .fb-meter{width:84px;height:6px}}
+@media (prefers-reduced-motion:reduce){#fisher-bubble .fb-portrait{animation:none!important}}

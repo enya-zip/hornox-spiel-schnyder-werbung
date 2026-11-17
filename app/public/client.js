@@ -1,10 +1,10 @@
 import {INTRO_DURATION,COUNTDOWN_DURATION} from './intro.js?v=17';
 import {stages,getStage,DURATION} from "./journey.js?v=17";
-import {createScene} from "./scene3d.js?v=37";
+import {createScene} from "./scene3d.js?v=38";
 import {setup,validateAction,applyAction} from "./rules.js?v=32";
 import {installControls} from "./controls.js?v=17";
 import {createAudio} from "./audio.js?v=18";
-import {getZone} from "./scene3d.js?v=37";
+import {getZone} from "./scene3d.js?v=38";
 import {copy} from "./copy.js?v=26";
 import {turnDirection} from "./route.js?v=21";
 const $=id=>document.getElementById(id),q=new URLSearchParams(location.search),app=$("app"),canvas=$("world"),player="guest";

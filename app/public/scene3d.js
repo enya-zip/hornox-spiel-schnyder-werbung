@@ -141,8 +141,8 @@ export function createScene(canvas){
    if(u<=0){if(od-d<160){push(src.x,src.y-.05,src.z);lake.fountain(time,pre*4,o.id);pop();}return;}
    if(u<.75){push(src.x,src.y-.05,src.z);lake.fountain(time,4*(1-u/.75),o.id);pop();}
    if(u<1){const y=.55+Math.sin(u*PI)*2.6;for(let k=1;k<6;k++){const uu=Math.max(0,u-k*.05),tq=point(od,(-2.4+uu*span-1)*2.5);a('sphere',tq.x,tq.y+.55+Math.sin(uu*PI)*2.6,tq.z,.12-k*.015,.12-k*.015,.12-k*.015,[.8,.93,1,49]);}
-    push(q.x,q.y+y,q.z,0,-q.h);push(0,0,0,0,PI/2,0);push(0,0,0,(u-.5)*1.2,0,0);lake.biter(time,o.id,1.6);pop();pop();pop();return;}
-   push(q.x,q.y+.4+Math.abs(Math.sin(time*9+o.id))*.25,q.z,0,-q.h+o.id);push(0,0,0,0,0,PI/2);lake.biter(time,o.id,1.35);pop();pop();return;}
+    push(q.x,q.y+y,q.z,0,-q.h);push(0,0,0,0,PI/2,0);push(0,0,0,(u-.5)*1.2,0,0);lake.biter(time,o.id,1.1);pop();pop();pop();return;}
+   push(q.x,q.y+.4+Math.abs(Math.sin(time*9+o.id))*.25,q.z,0,-q.h+o.id);push(0,0,0,0,0,PI/2);lake.biter(time,o.id,.95);pop();pop();return;}
   if(o.kind==='beaverLog'&&!toss){
    // Biber rollt einen Baumstamm vom Seeufer quer über den ganzen Weg (drüberspringen!).
    const gapT=(od-d)/Math.max(1,speedNow),u=Math.max(0,Math.min(1,(2.6-gapT)/1.1)),e=u*u*(3-2*u),lat=-9.5*(1-e),q=point(od,lat);
