@@ -1,11 +1,11 @@
 import {INTRO_DURATION,COUNTDOWN_DURATION} from './intro.js?v=17';
 import {stages,getStage,DURATION} from "./journey.js?v=17";
-import {createScene} from "./scene3d.js?v=35";
-import {setup,validateAction,applyAction} from "./rules.js?v=31";
+import {createScene} from "./scene3d.js?v=37";
+import {setup,validateAction,applyAction} from "./rules.js?v=32";
 import {installControls} from "./controls.js?v=17";
 import {createAudio} from "./audio.js?v=18";
-import {getZone} from "./scene3d.js?v=35";
-import {copy} from "./copy.js?v=25";
+import {getZone} from "./scene3d.js?v=37";
+import {copy} from "./copy.js?v=26";
 import {turnDirection} from "./route.js?v=21";
 const $=id=>document.getElementById(id),q=new URLSearchParams(location.search),app=$("app"),canvas=$("world"),player="guest";
 const read=k=>{try{return localStorage.getItem(k);}catch{return null;}},save=(k,v)=>{try{localStorage.setItem(k,String(v));}catch{}};
@@ -37,14 +37,14 @@ let fisherMood=1,fisherEscaped=false,fisherLast=0;
 function fisherBubble(){
  const b=$("fisher-bubble"),now=performance.now()/1000,dt=Math.min(.25,Math.max(0,now-(fisherLast||now)));fisherLast=now;
  const angry=state.angry||0,fish=state.fish||0;if(angry>0)fisherEscaped=false;
- const target=angry>0?(angry>200?3:4):fisherEscaped?1:fish>=10?2:1;
+ const gap=state.chaseGap||16,attacking=angry>30&&((state.nextCastTick-state.tick)<10||state.objects.some(o=>o.kind==="hook"&&o.landTick&&state.tick<o.landTick)),target=angry>0?(gap<7||attacking?4:3):fisherEscaped?1:fish>=10?2:1;
  if(!paused)fisherMood=target>=fisherMood?target:Math.max(target,fisherMood-.35*dt);
  const cooling=!angry&&fisherMood>target+.02,show=screen==="play"&&state.phase==="playing"&&(getStage(state.elapsed)===2||angry>0||cooling);
  b.hidden=!show;if(!show)return;
- const mood=Math.max(1,Math.min(4,Math.round(fisherMood)));b.dataset.mood=mood;b.classList.toggle("near",mood===4);b.classList.toggle("with-touch",!$("touch-controls").hidden);
+ const mood=Math.max(1,Math.min(4,Math.round(fisherMood)));b.dataset.mood=mood;b.classList.toggle("near",mood===4);b.classList.toggle("attack",attacking);b.classList.toggle("flash",angry>0&&gap<6);b.classList.toggle("with-touch",!$("touch-controls").hidden);
  $("fb-state").textContent=t(["fbCalm","fbNoticed","fbAngry","fbFurious"][mood-1]);
  let note,meter;
- if(angry>0){note=t("fbNoteChase",{s:Math.ceil(angry/20)});meter=1-angry/400;}
+ if(angry>0){note=t(attacking?"fbNoteAttack":"fbNoteChase",{s:Math.ceil(angry/20)});meter=1-(gap-4)/12;}
  else if(cooling){note=t("fbNoteCooling");meter=(fisherMood-1)/3;}
  else if(fish<10&&!fisherEscaped){note=t("fbNoteCalm",{n:fish});meter=fish/10;}
  else if(fish<20&&!fisherEscaped){note=t("fbNoteNoticed",{n:fish});meter=(fish-10)/10;}
@@ -119,7 +119,7 @@ function processEvents(){
  if(e.kind==="powerPickup"){toast(t(e.power),2.5);audio.play("pickup",1.6,.8);}
  if(e.kind==="heart")heartFeedback(e.gained);if(e.kind==="world"&&e.gained)heartFeedback(true);
  if(e.kind==="world")levelBanner(e.stage);
- if(e.kind==="bump")toast(t(e.object==="sheep"?"sheepBump":e.object==="fish"?"fishBump":e.object==="beaverLog"?"beaverBump":e.object==="hook"?"hookBump":"bump"));else if(e.kind==="checkpoint")toast(t("checkpoint"),2.5);else if(e.kind==="arrival"){$("toast").classList.remove("visible");toastUntil=0;}else if(e.kind==="magnet")toast(t("magnet"),2.3);else if(e.kind==="fishCatch")audio.play("pickup",1.5,.7);else if(e.kind==="fisherNotice"){toast(t("fisherNotice"),3.2);audio.play("pickup",.8,.7);}else if(e.kind==="gull"){toast(t(e.lost>0?"gullSteal":"gullEmpty",{n:e.lost}),2.4);audio.play("bump",1.6,.6);}else if(e.kind==="fisherAngry"){bigAlert(t("fisherAngry"));toast(t("fisherHint"),3);}else if(e.kind==="fisherQuit"){fisherEscaped=true;toast(t("fisherQuit"),2.6);audio.play("pickup",1.1,.8);}else if(e.kind==="crow"){toast(t(e.lost>0?"crowHit":"crowHitEmpty",{n:e.lost}),2.4);audio.play("bump",1.4,.8);}else if(e.kind==="shieldHit")toast(t("shieldHit"));else if(e.kind==="missedTurn")toast(t("turnMiss"));}
+ if(e.kind==="bump")toast(t(e.object==="sheep"?"sheepBump":e.object==="fish"?"fishBump":e.object==="beaverLog"?"beaverBump":e.object==="hook"?"hookBump":"bump"));else if(e.kind==="checkpoint")toast(t("checkpoint"),2.5);else if(e.kind==="arrival"){$("toast").classList.remove("visible");toastUntil=0;}else if(e.kind==="magnet")toast(t("magnet"),2.3);else if(e.kind==="fishCatch")audio.play("pickup",1.5,.7);else if(e.kind==="fisherNotice"){toast(t("fisherNotice"),3.2);audio.play("pickup",.8,.7);}else if(e.kind==="gull"){toast(t(e.lost>0?"gullSteal":"gullEmpty",{n:e.lost}),2.4);audio.play("bump",1.6,.6);}else if(e.kind==="fisherAngry"){bigAlert(t("fisherAngry"));toast(t("fisherHint"),3);}else if(e.kind==="fisherCast")audio.play("jump",.55,.55);else if(e.kind==="hooked"){const f=$("hit-flash");f.getAnimations().forEach(a=>a.cancel());f.animate([{opacity:.75},{opacity:0}],{duration:650,easing:"ease-out"});try{navigator.vibrate?.(140);}catch{}}else if(e.kind==="fisherQuit"){fisherEscaped=true;toast(t("fisherQuit"),2.6);audio.play("pickup",1.1,.8);}else if(e.kind==="crow"){toast(t(e.lost>0?"crowHit":"crowHitEmpty",{n:e.lost}),2.4);audio.play("bump",1.4,.8);}else if(e.kind==="shieldHit")toast(t("shieldHit"));else if(e.kind==="missedTurn")toast(t("turnMiss"));}
 }
 function hud(){if(screen==="play"&&state.phase==="playing")crowWarnings();fisherBubble();
  $("score").textContent=fmt(state.score);$("coins").textContent=state.coins;$("combo").textContent=state.multiplier>1?"×"+state.multiplier:"";

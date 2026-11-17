@@ -93,3 +93,13 @@ html,body{position:fixed;inset:0;overscroll-behavior:none;overflow:hidden}#app{p
 @keyframes fb-steam{50%{transform:translateY(-3px);opacity:.4}}
 @media (prefers-reduced-motion:reduce){#fisher-bubble .fb-portrait,#fisher-bubble .fb-steam{animation:none!important}}
 @media (max-width:700px){#fisher-bubble .fb-portrait{width:54px;height:54px;flex-basis:54px}#fisher-bubble.near .fb-portrait{width:62px;height:62px;flex-basis:62px}#fisher-bubble #fb-note{display:none}#fisher-bubble .fb-meter{width:84px}}
+
+/* Treffer durch die Angel: kurzer roter Bildschirmblitz */
+#hit-flash{position:absolute;inset:0;pointer-events:none;opacity:0;z-index:7;background:radial-gradient(ellipse at center,transparent 35%,#d3201fcc 100%)}
+/* Fischer-Bubble: Angriff = Gesicht sehr wütend, fast erreicht = rotes Aufleuchten */
+#fisher-bubble.attack .fb-portrait{transform:scale(1.08)}
+#fisher-bubble.flash{animation:fb-flash .6s ease-in-out infinite}
+@keyframes fb-flash{50%{background:#7a1512e6;border-color:#ff6b5f;box-shadow:0 0 26px #e5393599}}
+@media (prefers-reduced-motion:reduce){#fisher-bubble.flash{animation:none;background:#7a1512e6}}
+/* Fischer-Bubble auf Smartphones kompakter: Zustand darf umbrechen, Bubble bleibt schmal */
+@media (max-width:700px){#fisher-bubble{max-width:200px;padding:5px 12px 5px 5px;gap:8px}#fisher-bubble #fb-state{font-size:10px;letter-spacing:.04em;white-space:normal;line-height:1.25}#fisher-bubble .fb-meter{width:76px}}

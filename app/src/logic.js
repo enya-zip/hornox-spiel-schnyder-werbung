@@ -2,7 +2,7 @@ export const meta={game:"Hornox Run · Zermatt",minPlayers:1,maxPlayers:1};
 export function setup(players){
  return{version:17,player:players[0]||"guest",phase:"ready",mode:"classic",route:"summit",
  tick:0,elapsed:0,distance:0,speed:18,x:1,target:1,lives:3,maxLives:3,jump:0,jumpCount:0,jumpBase:0,jumpY:0,fallTicks:0,duck:0,queued:"",buffer:0,
- flamingoSpawned:false,coins:0,powerCharge:0,powerTicks:0,powerUses:0,hearts:0,nextHeartAt:40,score:0,chain:0,bestChain:0,multiplier:1,shield:0,magnet:0,coinBoost:0,climb:0,climbReady:0,shoes:0,nextCrowAt:0,nextFishAt:0,nextBeaverAt:0,nextGullAt:0,lastHazardAt:0,fish:0,angry:0,checkpoints:0,arrivals:0,
+ flamingoSpawned:false,coins:0,powerCharge:0,powerTicks:0,powerUses:0,hearts:0,nextHeartAt:40,score:0,chain:0,bestChain:0,multiplier:1,shield:0,magnet:0,coinBoost:0,climb:0,climbReady:0,shoes:0,nextCrowAt:0,nextFishAt:0,nextBeaverAt:0,nextGullAt:0,lastHazardAt:0,fish:0,angry:0,chaseGap:0,nextCastTick:0,lastBumpTick:0,attackSeq:0,checkpoints:0,arrivals:0,
  turnIndex:0,nextTurn:260,turnChoice:0,summitTurn:0,heading:0,turns:0,failReason:"",
  seed:20261029,rng:20261029,nextId:1,nextRow:30,row:0,invulnerable:0,slow:0,objects:[],events:[]};
 }
@@ -59,7 +59,7 @@ export function applyAction(s,p,a){
  let flamingoSpawned=s.flamingoSpawned||false;
  let hearts=s.hearts||0,nextHeartAt=s.nextHeartAt??40;
  let lives=s.lives,score=s.score+Math.floor(distance)-Math.floor(s.distance),coins=s.coins,chain=s.chain,bestChain=s.bestChain,multiplier=s.multiplier;
- let shield=s.shield,magnet=Math.max(0,s.magnet-1),coinBoost=Math.max(0,(s.coinBoost||0)-1),climb=Math.max(0,(s.climb||0)-1),climbReady=s.climbReady||0,nextCrowAt=s.nextCrowAt||0,nextFishAt=s.nextFishAt||0,nextBeaverAt=s.nextBeaverAt||0,nextGullAt=s.nextGullAt||0,lastHazardAt=s.lastHazardAt||0,fish=s.fish||0,angry=Math.max(0,(s.angry||0)-1),shoes=Math.max(0,(s.shoes||0)-1),invulnerable=Math.max(0,s.invulnerable-1),slow=Math.max(0,s.slow-1);
+ let shield=s.shield,magnet=Math.max(0,s.magnet-1),coinBoost=Math.max(0,(s.coinBoost||0)-1),climb=Math.max(0,(s.climb||0)-1),climbReady=s.climbReady||0,nextCrowAt=s.nextCrowAt||0,nextFishAt=s.nextFishAt||0,nextBeaverAt=s.nextBeaverAt||0,nextGullAt=s.nextGullAt||0,lastHazardAt=s.lastHazardAt||0,chaseGap=s.chaseGap||0,nextCastTick=s.nextCastTick||0,lastBumpTick=s.lastBumpTick||0,attackSeq=s.attackSeq||0,hookedAttack=0,fish=s.fish||0,angry=Math.max(0,(s.angry||0)-1),shoes=Math.max(0,(s.shoes||0)-1),invulnerable=Math.max(0,s.invulnerable-1),slow=Math.max(0,s.slow-1);
  let rng=s.rng,nextId=s.nextId,nextRow=s.nextRow,row=s.row,checkpoints=s.checkpoints,arrivals=s.arrivals;
  let summitTurn=s.summitTurn||0,turnIndex=s.turnIndex,nextTurn=s.nextTurn,turnChoice=s.turnChoice,heading=s.heading,turns=s.turns,failReason=s.failReason;
  if(s.powerTicks===1){invulnerable=Math.max(invulnerable,20);events.push({kind:"powerEnd"});}
@@ -105,13 +105,13 @@ export function applyAction(s,p,a){
     if(aligned){const before=powerCharge;powerCharge=Math.min(30,powerCharge+15);if(before===30)score+=100;events.push({kind:'powerPickup',power:'pickupCharge'});if(before<30&&powerCharge===30)events.push({kind:'powerReady'});}
    }else if(aligned&&powering){score+=25;events.push({kind:"powerClear",object:item.kind,lane:item.lane,d:item.d,id:item.id,points:25});item.powerCleared=true;
    }else if(aligned){
-    const safe=item.kind==="hook"||item.kind==="gull"?false:item.kind==="crow"?(item.attack==="snatch"&&height>.4):["iceArch","branch","awning","rope"].includes(item.kind)?duck>0:["crevasse","ridgeGap","manhole"].includes(item.kind)?height>.5:height>.4;
+    const safe=item.kind==="hook"?(item.attack==="high"?duck>0:height>.4):item.kind==="gull"?false:item.kind==="crow"?(item.attack==="snatch"&&height>.4):["iceArch","branch","awning","rope"].includes(item.kind)?duck>0:["crevasse","ridgeGap","manhole"].includes(item.kind)?height>.5:height>.4;
     if(!safe&&!invulnerable&&!climb){
      // Möwe: kostet kein Leben, stiehlt aber bis zu 3 Fische aus dem Rucksack.
      if(item.kind==='gull'){const lost=Math.min(fish,3);fish-=lost;invulnerable=15;events.push({kind:'gull',lost,fish});}
      else if(shield){shield=0;invulnerable=25;events.push({kind:"shieldHit"});}
      else if(item.kind==='crow'){const lost=Math.min(coins,10);coins-=lost;lives--;chain=0;multiplier=1;invulnerable=30;slow=12;failReason='crow';events.push({kind:'crow',lost,attack:item.attack});}
-     else{lives--;chain=0;multiplier=1;score=Math.max(0,score-40);invulnerable=30;slow=12;failReason=item.kind;events.push({kind:"bump",object:item.kind});if(item.kind==='manhole'){fallTicks=20;jump=0;jumpCount=0;jumpBase=0;height=0;events.push({kind:'fall'});}}
+     else{lives--;chain=0;multiplier=1;score=Math.max(0,score-40);invulnerable=item.kind==='hook'?50:30;slow=12;failReason=item.kind;events.push({kind:"bump",object:item.kind});if(item.kind==='hook'){hookedAttack=item.attackId;events.push({kind:'hooked',attack:item.attack});}if(item.kind==='manhole'){fallTicks=20;jump=0;jumpCount=0;jumpBase=0;height=0;events.push({kind:'fall'});}}
     }else if(safe||climb){score+=10;events.push({kind:"clear",object:item.kind,points:10});}
    }else if(item.lane>=0&&Math.abs(x-item.lane)<.95&&!invulnerable){score+=10;events.push({kind:"nearMiss",object:item.kind,points:10});}
   }
@@ -219,8 +219,26 @@ export function applyAction(s,p,a){
   if(row>8&&row%17===8&&pattern!==8)add(z===5?['climbGear','snowshoes'][Math.floor(row/17)%2]:['magnet','shieldOrb','coinBoost','rushCharge'][Math.floor(row/17)%4],safe,-8);
   row++;nextRow+=s.mode==="relaxed"?Math.max(34,38-elapsed/120):Math.max(23,26-elapsed/110);
  }
- // Wütender Fischer: wirft alle 3 s die Angel auf Hornox' Spur (jedes zweite Mal auf zwei Spuren).
- if(angry>40&&angry%60===0){const lane=Math.max(0,Math.min(2,Math.round(s.target))),cast=Math.floor(angry/60)%2;const lanes=cast?[lane,lane===2?1:lane+1]:[lane];for(const l of lanes)objects.push({id:nextId++,kind:'hook',lane:l,d:distance+speed*1.5,front:0,hitWidth:.42,formation:0,bornTick:tick,resolved:false,biome:7,approach:0,rowId:-1,encounter:distance+speed*1.5});events.push({kind:'fisherCast',lanes});}
+ // Verfolgung durch den wütenden Fischer, direkt hinter Hornox auf der Strecke.
+ // chaseGap = Abstand in Streckeneinheiten (4 = fast dran, 16 = weit weg).
+ if(hookedAttack)for(const o of objects)if(o.kind==='hook'&&o.attackId===hookedAttack)o.resolved=true;
+ if(angry>0){
+  if(!(s.angry>0)){chaseGap=13;nextCastTick=tick+50;lastBumpTick=tick;}
+  const bumped=events.some(e=>e.kind==='bump'||e.kind==='shieldHit');
+  if(bumped){chaseGap-=hookedAttack?-1.5:2.5;lastBumpTick=tick;}   // Treffer durch Hindernis: er holt auf; nach Angeltreffer zieht er die Angel ein und fällt kurz zurück
+  else if(slow>0)chaseGap-=.03;                                    // langsamer: er holt auf
+  else if(tick-lastBumpTick>80)chaseGap+=.012;                     // 4 s fehlerfrei: Hornox gewinnt Abstand
+  chaseGap=Math.max(4,Math.min(16,chaseGap-.006));                 // er kommt grundsätzlich langsam näher
+  // Angriff: unregelmässig 2–4 s, mit der Dauer und bei kleinem Abstand häufiger.
+  if(angry>30&&tick>=nextCastTick){
+   rng=random(rng);const roll=(rng>>>9)%10,attack=roll<5?'low':roll<8?'double':'high',lane=Math.max(0,Math.min(2,Math.round(s.target)));
+   const landD=distance+speed*1.45,id=++attackSeq,hook=(l)=>objects.push({id:nextId++,kind:'hook',attack,attackId:id,lane:l,d:landD,front:0,hitWidth:.42,formation:0,bornTick:tick,castTick:tick,landTick:tick+12,resolved:false,biome:7,approach:0,rowId:-1,encounter:landD});
+   const lanes=attack==='high'?[-1]:attack==='double'?[lane,lane===2?1:lane+1]:[lane];for(const l of lanes)hook(l);
+   events.push({kind:'fisherCast',attack,lanes});
+   const progress=(400-angry)/400,near=(chaseGap-4)/12;rng=random(rng);
+   nextCastTick=tick+Math.round((40+((rng>>>12)%40))*(1-.35*progress)*(.75+.25*near));
+  }
+ }else chaseGap=0;
  if(s.angry===1)events.push({kind:'fisherQuit'});
  if(!summitTurn&&elapsed>=785)summitTurn=Math.floor((distance+440)/680)+1;
  if(distance>=nextTurn&&elapsed<892){
@@ -236,7 +254,7 @@ export function applyAction(s,p,a){
  }
  const phase=lives<=0?"lost":elapsed>=900?"won":"playing";
  if(phase==="won"){score+=2000;events.push({kind:"summit",points:2000});}
- return{...s,phase,tick,elapsed,distance,speed,x,lives,jump,jumpCount,jumpBase,jumpY:height,fallTicks,duck,queued,buffer,coins,flamingoSpawned,powerCharge,powerTicks,hearts,nextHeartAt,score,chain,bestChain,multiplier,shield,magnet,coinBoost,climb,climbReady,shoes,nextCrowAt,nextFishAt,nextBeaverAt,nextGullAt,lastHazardAt,fish,angry,checkpoints,arrivals,turnIndex,nextTurn,turnChoice,summitTurn,heading,turns,failReason,invulnerable,slow,rng,nextId,nextRow,row,objects,events};
+ return{...s,phase,tick,elapsed,distance,speed,x,lives,jump,jumpCount,jumpBase,jumpY:height,fallTicks,duck,queued,buffer,coins,flamingoSpawned,powerCharge,powerTicks,hearts,nextHeartAt,score,chain,bestChain,multiplier,shield,magnet,coinBoost,climb,climbReady,shoes,nextCrowAt,nextFishAt,nextBeaverAt,nextGullAt,lastHazardAt,fish,angry,chaseGap,nextCastTick,lastBumpTick,attackSeq,checkpoints,arrivals,turnIndex,nextTurn,turnChoice,summitTurn,heading,turns,failReason,invulnerable,slow,rng,nextId,nextRow,row,objects,events};
 }
 export function isGameOver(s){return ["lost","won"].includes(s.phase)?{over:true,winner:s.phase==="won"?s.player:null,score:s.score,coins:s.coins,distance:Math.floor(s.distance),arrivals:s.arrivals}:{over:false};}
 export function viewFor(s,p){return{...s,objects:s.objects.map(o=>({...o})),events:s.events.map(e=>({...e})),spectator:p!==s.player};}
