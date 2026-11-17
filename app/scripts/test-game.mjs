@@ -16,11 +16,11 @@ check('full 15-minute journey reaches the summit with bounded state',()=>{const 
 check('environment-specific hazards remain appropriate and every variant is reachable',()=>{
  const profiles={
   3:['snowman','luggage','trolley','planter','electric','photographers','manhole','carriage','scooter','skiers','snowboarders','influencer','lostTourists','pedestrian','bike'],
-  6:['hiker','marmot','sheep','log','branch','bike'],7:['hiker','marmot','sheep','log','branch','bike'],8:['hiker','marmot','sheep','log','branch','bike'],1:['hiker','marmot','sheep','log','branch','bike'],
+  6:['hiker','marmot','sheep','log','branch','bike'],7:['hiker','marmot','fish','log','branch','bike'],8:['hiker','marmot','sheep','log','branch','bike'],1:['hiker','marmot','sheep','log','branch','bike'],
   9:['hiker','lowRock','ridgeGap','rope','rockfall','boulder'],4:['hiker','lowRock','ridgeGap','rope','rockfall','boulder'],10:['hiker','lowRock','ridgeGap','rope','rockfall','boulder'],0:['iceBlock','crevasse','iceArch'],5:['iceBlock','crevasse','iceArch','crow','ibex']};
  for(const [elapsed,z]of [[30,3],[110,6],[200,7],[290,8],[390,1],[480,9],[570,4],[660,0],[750,10],[840,5]]){const found=new Set();for(let seed=1;seed<90;seed++){
   const state={...start(seed),flamingoSpawned:true,tick:elapsed*20,elapsed,distance:1000,nextRow:1030,nextTurn:99999,row:20};
-  for(const o of action(state,{type:'step'}).objects){if(['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes'].includes(o.kind))continue;assert.equal(o.biome,z);assert(profiles[z].includes(o.kind),'wrong biome: '+o.kind);found.add(o.kind);}
+  for(const o of action(state,{type:'step'}).objects){if(['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch'].includes(o.kind))continue;assert.equal(o.biome,z);assert(profiles[z].includes(o.kind),'wrong biome: '+o.kind);found.add(o.kind);}
  }assert.deepEqual([...found].sort(),profiles[z].sort());}
 });
 check('walkers, photo groups, bikes and wildlife approach with each simulation step',()=>{const s={...start(),nextRow:9999,objects:['hiker','pedestrian','photographers','bike','sheep'].map((kind,id)=>({id,kind,d:150,lane:0,approach:2.4}))};const out=action(s,{type:'step'});for(const o of out.objects)assert.equal(o.d,149.88);});
@@ -39,7 +39,7 @@ check('dense rows retain an open lane or one consistent jump/slide action',()=>{
  for(let seed=1;seed<=50;seed++)for(const elapsed of [30,110,200,290,390,480,570,660,750,840]){
   const initial={...start(seed),flamingoSpawned:true,tick:elapsed*20,elapsed,distance:1100,nextRow:1120,nextTurn:99999,row:20};
   const s=action(initial,{type:'step'}),rows=new Map();
-  for(const o of s.objects){if(['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes'].includes(o.kind))continue;if(!rows.has(o.rowId))rows.set(o.rowId,[]);rows.get(o.rowId).push(o);if(o.approach>0){incoming++;assert(Math.abs((o.d-(o.front||0)-s.distance)/(s.speed+o.approach)-(o.encounter-s.distance)/s.speed)<.00001);}}
+  for(const o of s.objects){if(['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch'].includes(o.kind))continue;if(!rows.has(o.rowId))rows.set(o.rowId,[]);rows.get(o.rowId).push(o);if(o.approach>0){incoming++;assert(Math.abs((o.d-(o.front||0)-s.distance)/(s.speed+o.approach)-(o.encounter-s.distance)/s.speed)<.00001);}}
   for(const obstacles of rows.values()){
    if(obstacles.some(o=>o.lane===-1)){assert.equal(obstacles.length,1);continue;}
    assert([0,1,2].some(l=>obstacles.every(o=>Math.abs(o.lane-l)>=(o.hitWidth||.38))),'a safe lane remains');if(obstacles.length===2)paired++;
@@ -151,4 +151,15 @@ check('level 10: climbing gear is packed and put on with E, snowshoes speed up, 
 });
 check('level 10: at least 8 seconds between crow attacks',()=>{for(let seed=1;seed<=12;seed++){let s={...start(seed),tick:16200,elapsed:810,distance:20000,nextRow:20030,nextTurn:999999,row:900};const seen=new Set();let last=-1e9,count=0;
  while(s.phase==='playing'&&s.elapsed<899){s=action({...s,lives:999,invulnerable:1},{type:'step'});for(const o of s.objects){if(o.kind!=='crow'||seen.has(o.id))continue;seen.add(o.id);const t=s.elapsed+(o.d-s.distance)/(s.speed+o.approach);if(o.double&&t-last<.5)continue;assert(t-last>=8,'gap '+(t-last));last=t;count++;}}assert(count>=3&&count<=11);}});
+check('level 3: fish leap from the lake, five caught fish make the fisherman angry for 20 s, his hooks must be dodged',()=>{
+ let f={...start(),distance:100,nextRow:10000,nextTurn:99999,x:0,target:0,objects:[{id:1,kind:'fish',target:2,lane:-2.4,d:160,approach:0}]};const lanes=[];for(let k=0;k<80&&f.objects.length;k++){f=action(f,{type:'step'});if(f.objects[0])lanes.push(f.objects[0].lane);}
+ assert(lanes[0]<0);assert(lanes.includes(2));for(let k=1;k<lanes.length;k++)assert(lanes[k]>=lanes[k-1]);
+ assert.equal(collision('fish').lives,2);assert.equal(collision('fish',{jump:9}).lives,3);
+ let s={...start(),fish:4,distance:100,nextRow:10000,nextTurn:99999,x:1,target:1,objects:[{id:1,kind:'fishCatch',lane:1,d:100.9}]};s=action(s,{type:'step'});
+ assert.equal(s.angry,400);assert.equal(s.fish,0);assert(s.events.some(e=>e.kind==='fisherAngry'));
+ let hooks=0,quit=false,hit=0;for(let k=0;k<420;k++){s=action({...s,lives:3,nextRow:s.distance+1e6,nextTurn:s.distance+1e6},{type:'step'});hooks+=s.events.filter(e=>e.kind==='fisherCast').length;if(s.events.some(e=>e.kind==='fisherQuit'))quit=true;if(s.events.some(e=>e.kind==='bump'&&e.object==='hook'))hit++;}
+ assert(hooks>=5);assert(quit);assert.equal(s.angry,0);assert(hit>=1);
+ const dodge=action({...start(),distance:100,nextRow:10000,x:1,objects:[{id:1,kind:'hook',lane:0,d:100.9}]},{type:'step'});assert.equal(dodge.lives,3);
+ assert.equal(collision('hook',{jump:9}).lives,2);
+});
 console.log(`${checks} rule checks passed`);

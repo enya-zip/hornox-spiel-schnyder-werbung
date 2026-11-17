@@ -1,6 +1,7 @@
 import {createAlpine} from './alpine.js?v=17';
 import {createPowerups} from './powerups.js?v=17';
 import {createSummit} from './summit.js?v=3';
+import {createLake} from './lake.js?v=2';
 import {createEncounters} from './encounters.js?v=20';
 import {createSpecials} from './specials.js?v=17';
 import {introFrame} from './intro.js?v=17';
@@ -13,7 +14,7 @@ import {getZone} from './journey.js?v=17';
 export {getZone};
 const PI=Math.PI,C={ice:[.74,.87,.9,10],grass:[.44,.58,.30,11],gravel:[.7,.63,.48,12],cobble:[.65,.66,.61,13],snow:[.86,.92,.94,2],rock:[.48,.52,.53,1],wood:[.32,.22,.15,4],gold:[1,.74,.24,9],dark:[.12,.2,.23],fir:[1,1,1,7],red:[.85,.16,.19],flower:[.97,.85,.40]};
 export function createScene(canvas){
- const r=createRenderer(canvas),a=r.add,push=r.push,pop=r.pop,fx=createEffects(r),arch=createArchitecture(r),special=createSpecials(r),encounters=createEncounters(r),alpine=createAlpine(r),powerups=createPowerups(r),summit=createSummit(r);let actor,showcase,npc={},path,key='',origin={x:0,z:0,h:0},lane=1,cam=0,jump=0,lastD=0,anim=0,visibleActor,instances=[],zone=3,trackD=0,grade=0,streetBuildings=[],cinematic=null,cinematicMetrics=null,rushFov=0,tossed=[],touristGroups=[],flamingoInstances=0;const placementCache=new Map(),clearCache=new Map();let visualSubtick=0,mtn=null,mtnFade=0;
+ const r=createRenderer(canvas),a=r.add,push=r.push,pop=r.pop,fx=createEffects(r),arch=createArchitecture(r),special=createSpecials(r),encounters=createEncounters(r),alpine=createAlpine(r),powerups=createPowerups(r),summit=createSummit(r),lake=createLake(r);let actor,showcase,npc={},path,key='',origin={x:0,z:0,h:0},lane=1,cam=0,jump=0,lastD=0,anim=0,visibleActor,instances=[],zone=3,trackD=0,grade=0,streetBuildings=[],cinematic=null,cinematicMetrics=null,rushFov=0,tossed=[],touristGroups=[],flamingoInstances=0;const placementCache=new Map(),clearCache=new Map();let visualSubtick=0,mtn=null,mtnFade=0;
  const ready=Promise.all([r.ready,createActor(r.gl,'assets/hornox-run.glb','assets/hornox-jump.glb',{brand:true}),createActor(r.gl,'assets/hornox-showcase.glb',null,{brand:true}),...['sheep','marmot','hiker','bike'].map((name,i)=>createActor(r.gl,'assets/'+(name==='hiker'?'hiker-standing':name)+'.glb',null,{height:[1.5,.85,2.35,2.4][i],walk:name==='hiker'}))]).then(([,run,still,...models])=>{actor=run;showcase=still;['sheep','marmot','hiker','bike'].forEach((n,i)=>npc[n]=models[i]);visibleActor=still;r.setExtra((pass,ctx)=>{for(const ins of instances){ins.actor.update(ins.pose);ins.actor.draw(pass,ctx);}visibleActor.draw(pass,ctx);});});
  // Level 10: pyramidenförmiger Gipfel (wie das Matterhorn). Der Zickzack-Weg verläuft nur in zwei
  // Richtungen auf den Gipfel zu, daher steigt er mit der L1-Distanz gleichmässig bis zur Spitze an.
@@ -34,7 +35,7 @@ export function createScene(canvas){
   const ds=[];for(let w=Math.floor((d-32)/8)*8;w<d+650;w+=8)ds.push(w);
   const i=Math.max(0,Math.floor((d-260)/680));for(let j=i;j<i+4;j++){const v=260+j*680;if(v>ds[0]&&v<ds[ds.length-1])ds.push(v);}ds.sort((a,b)=>a-b);const points=[...new Set(ds)],batches=[[],[],[],[]],terrain=[],pavement=[];
   const edges=(w,width=4.15)=>{const p=point(w),before=path.frame(w-.01).h,after=path.frame(w+.01).h;let nx=Math.cos(before)+Math.cos(after),nz=Math.sin(before)+Math.sin(after);const denom=1+Math.cos(before-after);nx=nx/denom*width;nz=nz/denom*width;return[[p.x-nx,groundY(p.x-nx,p.z-nz),p.z-nz],[p.x+nx,groundY(p.x+nx,p.z+nz),p.z+nz]];};
-  for(let i=0;i<points.length-1;i++){const w=points[i],e=edges(w),f=edges(points[i+1]),z=getZone(Math.max(0,elapsed+(w-d)/speed)),out=batches[[4,6,7,8,9,10].includes(z)?1:z===5?0:z];for(const p of[e[0],f[0],e[1],e[1],f[0],f[1]])out.push(...p,0,1,0,1,1,1);}
+  for(let i=0;i<points.length-1;i++){const w=points[i],z=getZone(Math.max(0,elapsed+(w-d)/speed)),wd=z===7?3.3:4.15,e=edges(w,wd),f=edges(points[i+1],wd),out=batches[[4,6,7,8,9,10].includes(z)?1:z===5?0:z];for(const p of[e[0],f[0],e[1],e[1],f[0],f[1]])out.push(...p,0,1,0,1,1,1);}
   for(let i=0;i<points.length-1;i++)if([2,3].includes(getZone(Math.max(0,elapsed+(points[i]-d)/speed)))){const inner=edges(points[i],4.17),outer=edges(points[i],6.30),nextInner=edges(points[i+1],4.17),nextOuter=edges(points[i+1],6.30);for(let side=0;side<2;side++){const quad=[inner[side],outer[side],nextOuter[side],nextInner[side]].map(p=>[p[0],p[1]+.075,p[2]]);for(const j of[0,1,2,0,2,3])pavement.push(...quad[j],0,1,0,.60,.61,.57);const lo=[inner[side],nextInner[side]],hi=lo.map(p=>[p[0],p[1]+.075,p[2]]);for(const p of[lo[0],hi[0],hi[1],lo[0],hi[1],lo[1]])pavement.push(...p,0,1,0,.85,.86,.84);}}
   r.setGeometry('pavement',pavement,24);
   const cell=mtn?90:grade===0?3600:300,gx=mtn?Math.floor((origin.x-mtn.x-1800)/cell)*cell+mtn.x-origin.x:-1800,gz=mtn?Math.floor((origin.z-mtn.z-1800)/cell)*cell+mtn.z-origin.z:-1800;for(let x=gx;x<gx+3600;x+=cell)for(let z=gz;z<gz+3600;z+=cell){const v=(xx,zz)=>[xx,groundY(xx,zz)-(mtn?1.1:.27),zz];const a=v(x,z),b=v(x+cell,z),c=v(x+cell,z+cell),e=v(x,z+cell);if(!mtn){for(const p of[a,e,c,a,c,b])terrain.push(...p,0,1,0,1,1,1);continue;}
@@ -77,10 +78,20 @@ export function createScene(canvas){
   // The village church is passed once toward the end of Bahnhofstrasse.
   if(elapsed>55&&elapsed<90&&Math.abs(cd-d)<280){const p=point(cd,-11);const center=point(cd,-18);if(clear(center.x,center.z,8,cd)){push(p.x,p.y,p.z,0,PI/2-p.h);arch.church();pop();}}
  }
- function environment(d,elapsed,speed){zone=getZone(elapsed);landscape(d,elapsed);road(d,elapsed,speed);street(d,elapsed,speed);
+ // Level 3: See links vom schmalen Wanderweg, mit Ufersteinen und Schilf.
+ function lakeside(d,elapsed,speed){
+  for(let w=Math.floor((d-40)/10)*10;w<d+440;w+=10){
+   if(getZone(Math.max(0,elapsed+(w-d)/speed))!==7)continue;const k=Math.floor(w/10);
+   const c=point(w,-17.5);if(clear(c.x,c.z,9.5,w)){at(w,-17.5);a('box',0,-.14,0,25,.12,10.6,[.08,.27,.34,26]);pop();}
+   const f=point(w,-43);if(clear(f.x,f.z,13,w)){at(w,-43);a('box',0,-.15,0,27,.12,10.6,[.08,.27,.34,26]);pop();}
+   if(k%2===0){at(w,-5.1);a('rock',0,-.12,0,.9,.36,1.3,C.rock,0,w);pop();}
+   if(k%3===1&&w<d+220){at(w,-4.3);for(let j=0;j<5;j++){const h=.8+((k+j)%3)*.25;a('cylinder',(j-2)*.13,h/2,(j%2)*.15,.02,h,.02,[.36,.5,.24]);if(j%2===0)a('cylinder',(j-2)*.13,h,(j%2)*.15,.05,.2,.05,[.42,.27,.14]);}pop();}
+  }
+ }
+ function environment(d,elapsed,speed){zone=getZone(elapsed);landscape(d,elapsed);road(d,elapsed,speed);street(d,elapsed,speed);lakeside(d,elapsed,speed);
   const start=Math.floor((d-22)/14)*14;
   for(let w=start;w<d+430;w+=14){const z=getZone(Math.max(0,elapsed+(w-d)/speed)),index=Math.floor(w/14),side=index%2?1:-1,off=side*(7.7+(Math.abs(index)%3)*1.4),p=point(w,off);
-   if([2,3].includes(z)||!clear(p.x,p.z,1.8,w))continue;
+   if([2,3].includes(z)||z===7&&side<0||!clear(p.x,p.z,1.8,w))continue;
    if(z===0||z===5){at(w,off);a('rock',0,-.16,0,2.2,.45,3.5,C.snow,0,w*.2);if(index%3===0){a('box',0,1,0,.06,2,.06,C.wood);a('box',0,1.8,0,.09,.22,.09,C.red);}pop();}
    else if([1,6,7,8].includes(z)){if(index%3===0||z===8)tree(p.x,p.z,.65+(Math.abs(index)%4)*.12,p.y);if([6,7].includes(z)&&index%3===0){at(w,side*(z===6?10:13));push(0,0,0,0,side<0?PI/2:-PI/2,0,z===7?.83:1);alpine.chalet(Math.abs(index)%3);pop();pop();}if(z===6&&index%23===0){at(w,side*19);alpine.chapel();pop();}if(z===8&&index%29===0){at(w,side*14);alpine.bridge();pop();}if(w<d+150){flowers(p.x,p.z,w,p.y);const f=point(w,side*4.65);flowers(f.x,f.z,w+2,f.y);}at(w,side*4.9);a('box',0,.65,0,.1,1.3,.1,C.wood);a('box',0,1.03,0,.07,.07,5,C.wood);a('box',0,.60,0,.07,.07,5,C.wood);pop();if(index%7===0&&w<d+150){const q=point(w,side*7);instances.push({actor:npc.sheep,pose:{x:q.x,y:q.y,z:q.z,heading:side*PI/2,home:true}});}}
    else if([4,9,10].includes(z)){at(w,off);a('rock',0,-.25,0,1.8,.8,2.5,C.rock,0,w*.3);if(index%3===0){a('box',0,.65,0,.10,1.6,.1,C.wood);a('box',0,1.35,0,.16,.23,.16,C.red);}pop();if(z!==10&&index%5===0)tree(p.x,p.z,.38,p.y);if(z===9&&index%31===0){const lp=point(w,side*42);if(clear(lp.x,lp.z,23,w)){at(w,side*42);const h=path.frame(w).h,sx=grade*(.55*Math.cos(h)-.83*Math.sin(h)),sz=grade*(-.55*Math.sin(h)-.83*Math.cos(h));push(0,0,0,Math.atan(-sz),0,Math.atan(sx));alpine.lake(anim);pop();pop();}}if(z===10&&index%3===0){at(w,off);a('rock',0,.24,0,1.9,.33,2.6,C.snow);pop();}}
@@ -107,7 +118,7 @@ export function createScene(canvas){
   }
  }
  let speedNow=16;
- function obstacle(o,d,time,toss=null){const od=o.d-(toss?0:(o.approach||0)*visualSubtick);if(!toss&&(od<d-8||od>d+180||(o.resolved&&['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes'].includes(o.kind))))return;const off=(o.lane<0?0:(o.lane-1)*2.5)+(toss?.side||0),p=point(od,off),rise=toss?.y||0;
+ function obstacle(o,d,time,toss=null){const od=o.d-(toss?0:(o.approach||0)*visualSubtick);if(!toss&&(od<d-8||od>d+180||(o.resolved&&['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch'].includes(o.kind))))return;const off=(o.lane<0?0:(o.lane-1)*2.5)+(toss?.side||0),p=point(od,off),rise=toss?.y||0;
   if(['pedestrian','hiker','photographers','influencer','lostTourists','scooter','skiers','snowboarders'].includes(o.kind)){visitors(o,p,time,toss);if(o.kind!=='scooter')return;}
   if(o.kind==='ibex'&&!toss){
    // Steinbock galoppiert von links oder rechts auf die Piste und bleibt dann stehen (Spur kommt aus den Regeln).
@@ -120,6 +131,12 @@ export function createScene(canvas){
    const low=o.attack==='snatch'?.55:1.35,y=low+Math.max(0,gapT-.7)*7.5,q=point(od,(lane-1)*2.5);
    if(gapT>2.7&&!toss)for(let k=0;k<5;k++)a('sphere',q.x+Math.sin(k*2.1)*1.2,q.y+y+.4+Math.cos(k*1.7)*.4,q.z,1.1-k*.12,.55,1.1-k*.12,[.97,.98,1,49]);
    push(q.x,q.y+y+(toss?toss.y||0:0),q.z,0,-q.h);if(toss)push(0,0,0,0,toss.spin,toss.lean);push(0,0,0,gapT>.7?.55:0,0);summit.crow(time,o.id);pop();if(toss)pop();pop();return;}
+  if(o.kind==='fish'&&!toss){
+   // Fisch springt im Bogen aus dem See auf seine Spur und zappelt danach auf dem Weg.
+   const span=(o.target??1)+2.4,u=Math.max(0,Math.min(1,(o.lane+2.4)/span)),q=point(od,(o.lane-1)*2.5);
+   if(u<=0){if(od-d<120)a('ring',q.x,q.y+.03,q.z,.5+Math.abs(Math.sin(time*3+o.id))*.5,.5+Math.abs(Math.sin(time*3+o.id))*.5,.04,[.85,.95,1,49],PI/2);return;}
+   if(u<1){push(q.x,q.y+.45+Math.sin(u*PI)*2.6,q.z,0,-q.h);push(0,0,0,0,PI/2,0);push(0,0,0,(u-.5)*1.4,0,0);lake.fish(time,o.id,1.3);pop();pop();pop();if(u<.25)a('ring',q.x,q.y+.03,q.z,1.1,1.1,.05,[.85,.95,1,49],PI/2);return;}
+   push(q.x,q.y+.22+Math.abs(Math.sin(time*9+o.id))*.25,q.z,0,-q.h+o.id);push(0,0,0,0,0,PI/2);lake.fish(time,o.id,1.3);pop();pop();return;}
   if(o.kind==='flamingo')flamingoInstances++;
   const model=o.kind==='scooter'?null:o.kind;
   if(npc[model]){const animal=['marmot','sheep'].includes(o.kind),idle=model==='hiker';instances.push({actor:npc[model],pose:{x:p.x,z:p.z,y:p.y+rise+(animal?Math.abs(Math.sin(time*(model==='marmot'?10:6)+o.id))*(model==='marmot'?.14:.05):0),heading:(toss?.spin||0)-PI/2-p.h+(idle?Math.sin(time*.7+o.id)*.035:0),distance:idle?0:time*3,home:idle,lean:toss?toss.lean:animal?Math.sin(time*7+o.id)*.025:0}});return;}
@@ -134,6 +151,8 @@ export function createScene(canvas){
   else if(o.kind==='coin')special.coin(time,o.id);
   else if(['magnet','shieldOrb','coinBoost','rushCharge'].includes(o.kind))powerups.pickup(o.kind,time,o.id);
   else if(o.kind==='climbGear'||o.kind==='snowshoes')summit.pickup(o.kind,time,o.id);
+  else if(o.kind==='fishCatch')lake.pickup(time,o.id);
+  else if(o.kind==='hook')lake.hook(time,o.id);
   else if(o.kind==='ibex')summit.ibex(time,0,o.id);
   else if(o.kind==='crevasse'||o.kind==='ridgeGap'){const width=o.lane<0?8.3:2.3;a('crack',0,.025,1.15,width,2.3,1,o.kind==='ridgeGap'?[.10,.09,.07]:[.02,.12,.19,21],-PI/2);for(let i=0;i<7;i++)for(const side of[-1,1]){const x=(i/6-.5)*width,z=side*(1.03+Math.sin(i*5.2+o.id)*.1);a('rock',x,.03,z,width/14,.09,.16,o.kind==='ridgeGap'?C.rock:[.66,.88,.97,20],0,i);}}
   else if(['lowRock','rockfall','boulder'].includes(o.kind)){const small=o.kind==='lowRock';a('rock',0,small?.42:.8,0,small?.8:1,small?.62:1.1,.8,C.rock,o.kind==='rockfall'?time*2:0,o.id*.7);}
@@ -164,6 +183,14 @@ export function createScene(canvas){
   const p=path.frame(d);origin=p;if(Math.abs(d-lastD)>50)cam=p.h;lastD=d;cam+=(p.h-cam)*Math.min(1,delta*(reduced?40:7));lane+=(s.x-lane)*Math.min(1,delta*28);if(!paused&&screen!=='result')anim+=delta;
   jump+=((s.jumpY||0)-jump)*Math.min(1,delta*28);instances=[];touristGroups=[];flamingoInstances=0;r.begin();r.setOrigin(p.x,p.z);r.setHoles(active?s.objects.filter(o=>o.kind==='manhole'&&o.d>d-10&&o.d<d+180).map(o=>{const q=point(o.d,(o.lane-1)*2.5);return[q.x,q.z,.81];}):[]);r.setEnvironment(active?s.elapsed:0,s.speed||16,p.h);environment(d,active?s.elapsed:0,s.speed||16);special.snow(anim,reduced,1-Math.max(0,Math.min(1,((active?s.elapsed:0)-84)/6)),cam);if(active)for(const o of s.objects)obstacle(o,d,anim);
   tossed=tossed.filter(t=>anim-t.time<1.1);if(active)for(const t of tossed){const age=Math.max(0,anim-t.time),u=age/1.1;obstacle(t.o,d,anim,{side:t.side*(u*7),y:Math.sin(u*PI)*2.6,spin:reduced?0:t.side*u*2.4,lean:reduced?0:t.side*u*.65});}
+  if(active&&s.angry>0&&npc.hiker){
+   // Wütender Fischer rennt hinter Hornox her und wirft die Angel; am Ende läuft er seitlich davon.
+   const leaving=s.angry<40,u=leaving?(40-s.angry)/40:0,fd=d-4.4-u*3,fo=(lane-1)*2.5+1.9+u*16,q=point(fd,fo),swing=Math.max(0,Math.sin(anim*2.1))*.8;
+   instances.push({actor:npc.hiker,pose:{x:q.x,y:q.y,z:q.z,heading:PI/2-q.h,time:anim*1.7,variant:7,heightScale:1.05,style:0}});
+   push(q.x,q.y,q.z,0,PI-q.h);lake.rod(swing);push(0,2.38*1.05,0);lake.hat();pop();pop();
+   const hk=s.objects.filter(o=>o.kind==='hook'&&!o.resolved).sort((x,y)=>y.bornTick-x.bornTick)[0];
+   if(hk&&!leaving){const tip=point(fd+1.9,fo+.3),hp=point(hk.d,(hk.lane-1)*2.5);lake.line(tip.x,tip.y+3.05-swing*.6,tip.z,hp.x,hp.y+1.25,hp.z,1.4);}
+  }
   if(active&&s.elapsed<892&&s.nextTurn-d<100&&s.nextTurn>d){at(s.nextTurn,-path.direction(s.turnIndex)*5);a('box',0,1.4,0,.13,2.8,.13,C.wood);a('box',0,2.5,0,1.5,.7,.16,C.gold);pop();}
   const offset=active?(lane-1)*2.5:0,ax=Math.cos(p.h)*offset,az=cinematic?cinematic.z:Math.sin(p.h)*offset,powered=s.powerTicks>0,lift=(powered?.28:0)-(s.fallTicks?Math.sin((20-s.fallTicks)/20*PI)*2.7:0);
   a('billboard',ax,groundY(ax,az)+.025,az,2.2,1.5,1,[.1,.16,.17,8],-PI/2);
