@@ -162,4 +162,6 @@ check('level 3: fish leap from the lake, five caught fish make the fisherman ang
  const dodge=action({...start(),distance:100,nextRow:10000,x:1,objects:[{id:1,kind:'hook',lane:0,d:100.9}]},{type:'step'});assert.equal(dodge.lives,3);
  assert.equal(collision('hook',{jump:9}).lives,2);
 });
+check('level 3: at least 6 seconds between jumping fish',()=>{for(let seed=1;seed<=12;seed++){let s={...start(seed),tick:3600,elapsed:180,distance:3800,nextRow:3830,nextTurn:999999,row:200};const seen=new Set();let last=-1e9,count=0;
+ while(s.phase==='playing'&&s.elapsed<269){s=action({...s,lives:999,invulnerable:1},{type:'step'});for(const o of s.objects){if(o.kind!=='fish'||seen.has(o.id))continue;seen.add(o.id);const t=s.elapsed+(o.d-s.distance)/s.speed;assert(t-last>=6,'gap '+(t-last));last=t;count++;}}assert(count>=4&&count<=15);}});
 console.log(`${checks} rule checks passed`);
