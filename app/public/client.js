@@ -1,11 +1,11 @@
 import {INTRO_DURATION,COUNTDOWN_DURATION} from './intro.js?v=17';
 import {stages,getStage,DURATION} from "./journey.js?v=17";
-import {createScene} from "./scene3d.js?v=25";
-import {setup,validateAction,applyAction} from "./rules.js?v=23";
+import {createScene} from "./scene3d.js?v=26";
+import {setup,validateAction,applyAction} from "./rules.js?v=24";
 import {installControls} from "./controls.js?v=17";
 import {createAudio} from "./audio.js?v=18";
-import {getZone} from "./scene3d.js?v=25";
-import {copy} from "./copy.js?v=21";
+import {getZone} from "./scene3d.js?v=26";
+import {copy} from "./copy.js?v=22";
 import {turnDirection} from "./route.js?v=21";
 const $=id=>document.getElementById(id),q=new URLSearchParams(location.search),app=$("app"),canvas=$("world"),player="guest";
 const read=k=>{try{return localStorage.getItem(k);}catch{return null;}},save=(k,v)=>{try{localStorage.setItem(k,String(v));}catch{}};
@@ -26,7 +26,9 @@ let bannerTimer=0;
 function levelBanner(stage){const b=$("level-banner");$("level-done").textContent=t("levelDone",{done:stage});$("level-name").textContent=t(stages[stage].key);$("level-next").textContent=t("levelNext",{next:stage+1});b.hidden=false;b.classList.add("visible");clearTimeout(bannerTimer);bannerTimer=setTimeout(()=>{b.classList.remove("visible");bannerTimer=setTimeout(()=>{b.hidden=true;},400);},3200);}
 // Warnt einmal pro Krähe, sobald sie aus den Wolken auftaucht (etwa 2,6 s vor Hornox).
 let crowsSeen=new Set();
-function crowWarnings(){for(const o of state.objects){if(o.kind!=="crow"||o.resolved||crowsSeen.has(o.id))continue;const gap=(o.d-state.distance)/Math.max(1,state.speed+(o.approach||0));if(gap>2.6)continue;crowsSeen.add(o.id);if(o.double&&o.lane!==Math.min(...state.objects.filter(q=>q.kind==="crow"&&q.double&&!q.resolved).map(q=>q.lane)))continue;toast(t(o.double?"crowDouble":o.attack==="snatch"?"crowSnatch":o.attack==="feint"?"crowFeint":"crowDive"),1.8);}}
+function crowWarnings(){for(const o of state.objects){if(o.kind!=="crow"||o.resolved||crowsSeen.has(o.id))continue;const gap=(o.d-state.distance)/Math.max(1,state.speed+(o.approach||0));if(gap>2.6)continue;crowsSeen.add(o.id);if(o.double&&o.lane!==Math.min(...state.objects.filter(q=>q.kind==="crow"&&q.double&&!q.resolved).map(q=>q.lane)))continue;crowAlert(o.double);}}
+// Grosse Warnung: «Achtung Angriff!» (1 Krähe) oder «Achtung Doppelangriff!» (2 Krähen).
+function crowAlert(double){const n=$("power-callout");n.textContent=t(double?"crowDouble":"crowAttack");n.classList.add("alert");n.getAnimations().forEach(a=>a.cancel());const anim=n.animate([{opacity:0,transform:"translate(-50%,12px) scale(.8)"},{opacity:1,transform:"translate(-50%,0) scale(1.08)",offset:.15},{opacity:1,transform:"translate(-50%,0) scale(1)",offset:.8},{opacity:0,transform:"translate(-50%,-8px) scale(1)"}],{duration:1700,easing:"ease-out"});anim.onfinish=()=>n.classList.remove("alert");audio.play("bump",.7,.35);}
 function hideLevelBanner(){clearTimeout(bannerTimer);$("level-banner").classList.remove("visible");$("level-banner").hidden=true;}
 function toast(value,seconds=1.8){$("toast").textContent=value;$("toast").classList.add("visible");toastUntil=time+seconds;}
 function updateCopy(){

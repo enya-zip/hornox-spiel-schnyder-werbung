@@ -66,8 +66,8 @@ export function applyAction(s,p,a){
  const objects=[];
  for(const old of s.objects){
   const item={...old};item.d-=(item.approach||0)*.05;
-  // Steinbock läuft von links nach rechts über die Spuren und erreicht Hornox auf seiner Ziel-Spur.
-  if(item.kind==='ibex'&&!item.resolved)item.lane=Math.max(-2.6,item.target-1.4*(item.d-distance)/speed);
+  // Steinbock kommt von links oder rechts auf die Piste und bleibt etwa 1,2 s vor Hornox auf einer Spur stehen.
+  if(item.kind==='ibex'&&!item.resolved){const dir=item.dir||1,move=1.4*Math.max(0,(item.d-distance)/speed-1.2);item.lane=dir>0?Math.max(-2.6,item.target-move):Math.min(4.6,item.target+move);}
   // Scheinangriff: Die Krähe zielt erst auf eine Spur und wechselt kurz vor Hornox auf die andere.
   if(item.kind==='crow'&&item.attack==='feint'&&!item.swerved&&(item.d-distance)/speed<.8){item.fake=item.lane;item.lane=item.real;item.swerved=true;}
   // The active shockwave clears all three lanes just ahead of Hornox, once per object.
@@ -120,7 +120,7 @@ export function applyAction(s,p,a){
    // This preserves the open lane and prevents faster NPCs overtaking jump/slide rows.
    const lead=Math.max(0,(d+offset-distance)/speed)*approach;
    const front=kind==='carriage'?5:0;
-   objects.push({id:nextId++,kind,lane,d:d+offset+lead+front,front,hitWidth:kind==='carriage'?.91:.38,formation:row%2,bornTick:tick,resolved:false,biome:z,approach,rowId:row,encounter:d+offset,...(kind==='ibex'?{target:lane,lane:-2.6}:{}),...extra});
+   objects.push({id:nextId++,kind,lane,d:d+offset+lead+front,front,hitWidth:kind==='carriage'?.91:.38,formation:row%2,bornTick:tick,resolved:false,biome:z,approach,rowId:row,encounter:d+offset,...(kind==='ibex'?{target:lane,dir:(rng&1024)?1:-1,lane:(rng&1024)?-2.6:4.6}:{}),...extra});
   };
   let pattern=row<2?8:row===2?0:row===3?1:row===4?2:variant;
   const nearest=260+Math.max(0,Math.round((d-260)/680))*680;

@@ -56,3 +56,6 @@ html,body{position:fixed;inset:0;overscroll-behavior:none;overflow:hidden}#app{p
 #rush-button.climb .rush-disc{background:radial-gradient(circle at center,#7a3a12 62%,transparent 64%),conic-gradient(#ffb05a var(--charge),#34595a var(--charge))}
 #rush-button.climb.ready .rush-disc{box-shadow:0 0 0 2px #ffb05a,0 0 26px #ff8a2a88}
 #rush-button.climb #rush-name{color:#ffc27a}
+
+/* Krähen-Warnung im grossen Callout */
+#power-callout.alert{color:#fff;background:#b3261ee8;padding:10px 22px;border-radius:16px;box-shadow:0 10px 30px #0005;text-shadow:none}

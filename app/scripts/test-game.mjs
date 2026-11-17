@@ -146,5 +146,7 @@ check('level 10: climbing gear is packed and put on with E, snowshoes speed up, 
  const feint=action({...start(),distance:100,nextRow:10000,x:1,objects:[{id:1,kind:'crow',attack:'feint',lane:1,real:2,d:110}]},{type:'step'});assert.equal(feint.objects[0].lane,2);assert.equal(feint.objects[0].fake,1);
  let s={...start(),distance:100,nextRow:10000,nextTurn:99999,x:0,target:0,objects:[{id:1,kind:'ibex',target:1,lane:-2.6,d:160,approach:0}]};const lanes=[];for(let k=0;k<60&&s.objects.length;k++){s=action(s,{type:'step'});if(s.objects[0])lanes.push(s.objects[0].lane);}
  assert(lanes[0]<0);for(let k=1;k<lanes.length;k++)assert(lanes[k]>=lanes[k-1]);
+ let r={...start(),distance:100,nextRow:10000,nextTurn:99999,x:0,target:0,objects:[{id:1,kind:'ibex',target:0,dir:-1,lane:4.6,d:200,approach:0}]};const back=[];for(let k=0;k<200&&r.objects.length;k++){r=action(r,{type:'step'});if(r.objects[0])back.push({lane:r.objects[0].lane,gap:(r.objects[0].d-r.distance)/r.speed});}
+ assert(back[0].lane>2);for(let k=1;k<back.length;k++)assert(back[k].lane<=back[k-1].lane);assert(back.filter(b=>b.gap<1.2).every(b=>b.lane===0));
 });
 console.log(`${checks} rule checks passed`);

@@ -110,9 +110,9 @@ export function createScene(canvas){
  function obstacle(o,d,time,toss=null){const od=o.d-(toss?0:(o.approach||0)*visualSubtick);if(!toss&&(od<d-8||od>d+180||(o.resolved&&['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes'].includes(o.kind))))return;const off=(o.lane<0?0:(o.lane-1)*2.5)+(toss?.side||0),p=point(od,off),rise=toss?.y||0;
   if(['pedestrian','hiker','photographers','influencer','lostTourists','scooter','skiers','snowboarders'].includes(o.kind)){visitors(o,p,time,toss);if(o.kind!=='scooter')return;}
   if(o.kind==='ibex'&&!toss){
-   // Steinbock galoppiert von links nach rechts quer über die Piste (Spur kommt aus den Regeln).
-   const q=point(od,(o.lane-1)*2.5),moving=o.lane>-2.59,hop=moving?Math.abs(Math.sin(time*7+o.id))*.45:0;
-   push(q.x,q.y+hop,q.z,0,-q.h);push(0,0,0,0,PI/2);summit.ibex(time,moving?.35+.3*Math.sin(time*14):0,o.id);pop();pop();return;}
+   // Steinbock galoppiert von links oder rechts auf die Piste und bleibt dann stehen (Spur kommt aus den Regeln).
+   const dir=o.dir||1,waiting=dir>0?o.lane<=-2.59:o.lane>=4.59,moving=!waiting&&Math.abs(o.lane-o.target)>.01,hop=moving?Math.abs(Math.sin(time*7+o.id))*.45:0,q=point(od,(o.lane-1)*2.5);
+   push(q.x,q.y+hop,q.z,0,-q.h);push(0,0,0,0,moving||waiting?dir*PI/2:0);summit.ibex(time,moving?.35+.3*Math.sin(time*14):0,o.id);pop();pop();return;}
   if(o.kind==='crow'){
    // Krähe taucht oben aus den Wolken auf und stösst auf Hornox herab.
    const gapT=Math.max(0,(od-d)/Math.max(1,speedNow+(o.approach||0)));if(!toss&&gapT>3.2)return;
