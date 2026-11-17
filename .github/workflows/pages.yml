@@ -21,6 +21,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Versionskennung eintragen: Die Startseite vergleicht sie mit version.json
+      # und lädt sich neu, wenn der Browser noch eine alte Version zwischengespeichert hat.
+      - name: Version eintragen
+        run: |
+          BUILD=${GITHUB_SHA::7}
+          sed -i "s/__BUILD__/$BUILD/g" app/public/index.html
+          echo "{\"build\":\"$BUILD\"}" > app/public/version.json
       - uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
