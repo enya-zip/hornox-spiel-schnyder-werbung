@@ -20,3 +20,6 @@ export const bridgeAt=t=>t>=317&&t<327;
 export const fogAt=t=>{let f=0;for(const [a,b] of [[302,310],[345,355]])f=Math.max(f,Math.min(1,(t-a)/2,(b-t)/2));return Math.max(0,f);};
 // Abschnitte von Level 4: 1 heller Wald, 2 tiefer Wald, 3 Waldschlucht, 4 wilde Waldjagd.
 export const forestSection=t=>t<270||t>=360?0:t<292.5?1:t<315?2:t<337.5?3:4;
+// Level 5 «Alpweiden» (6:00–7:30): Abschnitte und Challenge-Fenster (müssen mit rules.js übereinstimmen).
+export const meadowSection=t=>t<360||t>=450?0:t<382.5?1:t<405?2:t<427.5?3:4;
+export const meadowWindows={herd:[388,394],cows:[398,404],hay:[409,421]};

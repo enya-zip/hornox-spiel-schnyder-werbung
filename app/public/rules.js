@@ -2,7 +2,7 @@ export const meta={game:"Hornox Run · Zermatt",minPlayers:1,maxPlayers:1};
 export function setup(players){
  return{version:17,player:players[0]||"guest",phase:"ready",mode:"classic",route:"summit",
  tick:0,elapsed:0,distance:0,speed:18,x:1,target:1,lives:3,maxLives:3,jump:0,jumpCount:0,jumpBase:0,jumpY:0,fallTicks:0,duck:0,queued:"",buffer:0,
- flamingoSpawned:false,coins:0,powerCharge:0,powerTicks:0,powerUses:0,hearts:0,nextHeartAt:40,score:0,chain:0,bestChain:0,multiplier:1,shield:0,magnet:0,coinBoost:0,climb:0,climbReady:0,shoes:0,nextCrowAt:0,nextFishAt:0,nextBeaverAt:0,nextGullAt:0,lastHazardAt:0,fish:0,angry:0,chaseGap:0,nextCastTick:0,lastBumpTick:0,attackSeq:0,boar:0,boarGap:0,boarBump:0,checkpoints:0,arrivals:0,
+ flamingoSpawned:false,coins:0,powerCharge:0,powerTicks:0,powerUses:0,hearts:0,nextHeartAt:40,score:0,chain:0,bestChain:0,multiplier:1,shield:0,magnet:0,coinBoost:0,climb:0,climbReady:0,shoes:0,nextCrowAt:0,nextFishAt:0,nextBeaverAt:0,nextGullAt:0,lastHazardAt:0,fish:0,angry:0,chaseGap:0,nextCastTick:0,lastBumpTick:0,attackSeq:0,boar:0,boarGap:0,boarBump:0,dog:0,dogGap:0,dogBump:0,dogMode:0,scared:0,checkpoints:0,arrivals:0,
  turnIndex:0,nextTurn:260,turnChoice:0,summitTurn:0,heading:0,turns:0,failReason:"",
  seed:20261029,rng:20261029,nextId:1,nextRow:30,row:0,invulnerable:0,slow:0,objects:[],events:[]};
 }
@@ -29,9 +29,12 @@ export function validateAction(s,p,a){
 function random(n){return(n*1664525+1013904223)>>>0;}
 function stage(t){return Math.min(9,Math.floor(Math.max(0,t)/90));}
 function zone(t){return [3,6,7,8,1,9,4,0,10,5][stage(t)];}
-const pickups=['coin','heart','magnet','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom'];
+const pickups=['coin','heart','magnet','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom','herb','cheese','goldBell','edelweiss'];
 // Level 4 (Furi): morsche Holzbrücke über den Bach – in diesen Zeitfenstern brechen Bretter weg.
 function bridgeAt(t){return t>=317&&t<327;} // gleiche Zeiten wie in journey.js
+// Level 5 «Alpweiden» (6:00–7:30): Abschnitte und Challenge-Fenster (gleich wie in journey.js).
+function meadowSection(t){return t<360||t>=450?0:t<382.5?1:t<405?2:t<427.5?3:4;}
+const HERD=[388,394],COWS=[398,404],HAY=[409,421];
 // Level 10: ab summitTurn wechseln die Kurven immer ab (Zickzack zum Gipfel).
 function turnDir(seed,summitTurn,i){const base=k=>((seed+k*13)%5)<2?-1:1;return !summitTurn||i<summitTurn?base(i):base(summitTurn-1)*((i-summitTurn)%2?1:-1);}
 export function applyAction(s,p,a){
@@ -61,7 +64,7 @@ export function applyAction(s,p,a){
  let flamingoSpawned=s.flamingoSpawned||false;
  let hearts=s.hearts||0,nextHeartAt=s.nextHeartAt??40;
  let lives=s.lives,score=s.score+Math.floor(distance)-Math.floor(s.distance),coins=s.coins,chain=s.chain,bestChain=s.bestChain,multiplier=s.multiplier;
- let shield=s.shield,magnet=Math.max(0,s.magnet-1),coinBoost=Math.max(0,(s.coinBoost||0)-1),climb=Math.max(0,(s.climb||0)-1),climbReady=s.climbReady||0,nextCrowAt=s.nextCrowAt||0,nextFishAt=s.nextFishAt||0,nextBeaverAt=s.nextBeaverAt||0,nextGullAt=s.nextGullAt||0,lastHazardAt=s.lastHazardAt||0,chaseGap=s.chaseGap||0,nextCastTick=s.nextCastTick||0,lastBumpTick=s.lastBumpTick||0,attackSeq=s.attackSeq||0,hookedAttack=0,boar=Math.max(0,(s.boar||0)-1),boarGap=s.boarGap||0,boarBump=s.boarBump||0,fish=s.fish||0,angry=Math.max(0,(s.angry||0)-1),shoes=Math.max(0,(s.shoes||0)-1),invulnerable=Math.max(0,s.invulnerable-1),slow=Math.max(0,s.slow-1);
+ let shield=s.shield,magnet=Math.max(0,s.magnet-1),coinBoost=Math.max(0,(s.coinBoost||0)-1),climb=Math.max(0,(s.climb||0)-1),climbReady=s.climbReady||0,nextCrowAt=s.nextCrowAt||0,nextFishAt=s.nextFishAt||0,nextBeaverAt=s.nextBeaverAt||0,nextGullAt=s.nextGullAt||0,lastHazardAt=s.lastHazardAt||0,chaseGap=s.chaseGap||0,nextCastTick=s.nextCastTick||0,lastBumpTick=s.lastBumpTick||0,attackSeq=s.attackSeq||0,hookedAttack=0,boar=Math.max(0,(s.boar||0)-1),boarGap=s.boarGap||0,boarBump=s.boarBump||0,dog=Math.max(0,(s.dog||0)-1),dogGap=s.dogGap||0,dogBump=s.dogBump||0,dogMode=s.dogMode||0,scared=s.scared||0,fish=s.fish||0,angry=Math.max(0,(s.angry||0)-1),shoes=Math.max(0,(s.shoes||0)-1),invulnerable=Math.max(0,s.invulnerable-1),slow=Math.max(0,s.slow-1);
  let rng=s.rng,nextId=s.nextId,nextRow=s.nextRow,row=s.row,checkpoints=s.checkpoints,arrivals=s.arrivals;
  let summitTurn=s.summitTurn||0,turnIndex=s.turnIndex,nextTurn=s.nextTurn,turnChoice=s.turnChoice,heading=s.heading,turns=s.turns,failReason=s.failReason;
  if(s.powerTicks===1){invulnerable=Math.max(invulnerable,20);events.push({kind:"powerEnd"});}
@@ -70,6 +73,9 @@ export function applyAction(s,p,a){
   const item={...old};item.d-=(item.approach||0)*.05;
   // Steinbock kommt von links oder rechts auf die Piste und bleibt etwa 1,2 s vor Hornox auf einer Spur stehen.
   if(item.kind==='ibex'&&!item.resolved){const dir=item.dir||1,move=1.4*Math.max(0,(item.d-distance)/speed-1.2);item.lane=dir>0?Math.max(-2.6,item.target-move):Math.min(4.6,item.target+move);}
+  // Level 5: Tiere und Heuballen bewegen sich quer zur Strecke (v = Spuren pro Sekunde). «stop» = bleibt rund 1 s vor
+  // Hornox auf seiner Spur stehen (Ziegen, stehende Schafe), sonst läuft es weiter und kreuzt genau bei Hornox die Ziel-Spur.
+  if(item.v&&!item.resolved&&item.target!==undefined){const g=(item.d-distance)/speed,move=item.v*Math.max(0,item.stop?g-1:g),dir=item.dir||1;item.lane=dir>0?Math.max(-2.6,item.target-move):Math.min(4.6,item.target+move);}
   // Level 4: Wildschweine laufen quer über den Weg und erreichen Hornox auf ihrer Ziel-Spur.
   if(item.kind==='boarCross'&&!item.resolved&&item.target!==undefined)item.lane=Math.max(-2.6,Math.min(4.6,item.target-(item.dir||1)*3.6*(item.d-distance)/speed));
   // Level 3: Fisch springt links aus dem See und landet genau dann auf seiner Spur, wenn Hornox dort ankommt.
@@ -102,6 +108,9 @@ export function applyAction(s,p,a){
    }else if(item.kind==='mushroom'){
     // Level 4: Glückspilz = Bonuspunkte.
     if(aligned){score+=250;events.push({kind:'mushroom',points:250,lane:item.lane});}
+   }else if(['herb','cheese','goldBell','edelweiss'].includes(item.kind)){
+    // Level 5: Alpenkräuter, Käse, goldene Kuhglocken, goldenes Edelweiss. «high» = schwebt über einem Hindernis, nur im Sprung.
+    const pts={herb:150,cheese:200,goldBell:400,edelweiss:1000}[item.kind];if(aligned&&(!item.high||height>.4)){score+=pts;events.push({kind:'meadowPickup',item:item.kind,points:pts});}
    }else if(item.kind==='climbGear'){
     // Level 10: Kletterausrüstung wird eingepackt und später mit E / Button angezogen.
     if(aligned){climbReady=1;events.push({kind:'powerPickup',power:'pickupClimb'});}
@@ -112,7 +121,7 @@ export function applyAction(s,p,a){
     if(aligned){const before=powerCharge;powerCharge=Math.min(30,powerCharge+15);if(before===30)score+=100;events.push({kind:'powerPickup',power:'pickupCharge'});if(before<30&&powerCharge===30)events.push({kind:'powerReady'});}
    }else if(aligned&&powering){score+=25;events.push({kind:"powerClear",object:item.kind,lane:item.lane,d:item.d,id:item.id,points:25});item.powerCleared=true;
    }else if(aligned){
-    const safe=["trunk","fallingBranch","sign"].includes(item.kind)?false:item.kind==="hook"?(item.attack==="high"?duck>0:height>.4):item.kind==="gull"?false:item.kind==="crow"?(item.attack==="snatch"&&height>.4):["iceArch","branch","awning","rope","highLog"].includes(item.kind)?duck>0:["crevasse","ridgeGap","manhole","plankGap","stream"].includes(item.kind)?height>.5:height>.4;
+    const safe=["trunk","fallingBranch","sign","hayBale","haystack","cow","cowWalk","hayRoll"].includes(item.kind)?false:item.kind==="hook"?(item.attack==="high"?duck>0:height>.4):item.kind==="gull"?false:item.kind==="crow"?(item.attack==="snatch"&&height>.4):["iceArch","branch","awning","rope","highLog","gate"].includes(item.kind)?duck>0:["crevasse","ridgeGap","manhole","plankGap","stream","ditch"].includes(item.kind)?height>.5:height>.4;
     if(!safe&&!invulnerable&&!climb){
      // Möwe: kostet kein Leben, stiehlt aber bis zu 3 Fische aus dem Rucksack.
      if(item.kind==='gull'){const lost=Math.min(fish,3);fish-=lost;invulnerable=15;events.push({kind:'gull',lost,fish});}
@@ -203,7 +212,29 @@ export function applyAction(s,p,a){
     else if(pattern===3)add("highLog",-1);else if(pattern===4){add("fallingBranch",one);add("roots",two);}else if(pattern===5)add("log",-1);
     else if(pattern===6){add("trunk",one);add("sign",two);}else{cross("boarCross",one);add("fallingBranch",two);}
    }
-  }else if([1,6].includes(z)){
+  }else if(z===1){
+   // Level 5 «Alpweiden» in vier Abschnitten: 1 sonniger Blumenweg, 2 grosse Schafweide (Schafherde, Kühe, Ziegen),
+   // 3 steile Alp (rollende Heuballen, Gräben), 4 wilde Weide (Schäferhund-Jagd, viele Tiere, Kombinationen).
+   const sec=meadowSection(arrivalTime),side=(rng&2048)?1:-1,mover=(kind,lane,v,stop=false)=>add(kind,lane,0,{target:lane,dir:side,v,stop,lane:side>0?-2.6:4.6}),bell=()=>{if(row%3===0)add("goldBell",safe,0,{high:true});};
+   const inW=w=>arrivalTime>=w[0]&&arrivalTime<w[1];
+   if(pattern===8){}
+   else if(inW(HERD)){mover("sheepCross",one,2.2,pattern%3===0);mover("sheepCross",two,2.2,pattern%3===1);}       // Challenge A: Schafherde
+   else if(inW(COWS)){add("cow",one);if(pattern%2)mover("cowWalk",two,.9);}                                        // Challenge B: Kuhweide
+   else if(inW(HAY)){mover("hayRoll",one,1.4+2.2*(arrivalTime-HAY[0])/(HAY[1]-HAY[0]));}                          // Challenge C: Heuballen
+   else if(sec===1){const k=["fence","hayBale","trough","boulder","woodstack","log","sheepCross","fence"][pattern];if(k==="sheepCross")mover(k,one,2.2);else add(k,k==="fence"||k==="log"?-1:one);if(k==="fence")bell();}
+   else if(sec===2){
+    if(pattern===0){mover("sheepCross",one,2.2);if(busy)mover("sheepCross",two,2.2);}else if(pattern===1)mover("goat",one,3,true);else if(pattern===2){add("cow",one);if(busy)add("trough",two);}
+    else if(pattern===3)mover("chicken",one,4.2);else if(pattern===4)add("gate",-1);else if(pattern===5){add("haystack",one);if(busy)add("trough",two);}
+    else if(pattern===6){add("ditch",-1);bell();}else mover("sheepStop",one,2.2,true);
+   }else if(sec===3){
+    if(pattern===0||pattern===4){add("ditch",-1);bell();}else if(pattern===1){add("hayBale",one);add("trough",two);}else if(pattern===2){add("log",-1);bell();}
+    else if(pattern===3)add("gate",-1);else if(pattern===5){add("woodstack",one);add("boulder",two);}else if(pattern===6)mover("goat",one,3,true);else{add("fence",-1);bell();}
+   }else{
+    if(pattern===0){mover("sheepCross",one,2.4);add("cow",two);}else if(pattern===1){mover("chicken",one,4.5);add("hayBale",two);}else if(pattern===2){add("fence",-1);bell();}
+    else if(pattern===3){mover("goat",one,3.2,true);add("haystack",two);}else if(pattern===4)add("ditch",-1);else if(pattern===5){mover("cowWalk",one,1);add("boulder",two);}
+    else if(pattern===6)add("gate",-1);else{mover("sheepStop",one,2.4,true);add("trough",two);}
+   }
+  }else if([6].includes(z)){
    if(pattern===0){add("hiker",one);if(busy)add("sheep",two);}
    else if(pattern===1)add("log",-1);
    else if(pattern===2)add("branch",-1);
@@ -246,6 +277,8 @@ export function applyAction(s,p,a){
   if(z===7&&row%2===1&&!heartDue)add("fishCatch",safe,22);
   // Level 4: Glückspilze geben Bonuspunkte (Haselnüsse sind die normalen Münzen).
   if(z===8&&!heartDue&&row%6===4)add("mushroom",safe,22);
+  // Level 5: Alpenkräuter (selten), Käse, goldene Kuhglocken, goldenes Edelweiss (sehr selten). Blumen = normale Münzen.
+  if(z===1&&!heartDue){const sec=meadowSection(arrivalTime);if(sec>=2&&row%29===14)add("edelweiss",safe,22);else if(row%7===3)add("herb",safe,22);else if(row%11===5)add("cheese",safe,22);else if(row%17===9)add("goldBell",safe,22);}
   if(row>8&&row%17===8&&pattern!==8)add(z===5?['climbGear','snowshoes'][Math.floor(row/17)%2]:['magnet','shieldOrb','coinBoost','rushCharge'][Math.floor(row/17)%4],safe,-8);
   row++;nextRow+=s.mode==="relaxed"?Math.max(34,38-elapsed/120):Math.max(23,26-elapsed/110);
  }
@@ -284,6 +317,23 @@ export function applyAction(s,p,a){
   if(boarGap<=3){boarGap=12;if(!invulnerable&&!climb){if(shield){shield=0;events.push({kind:'shieldHit'});}else{lives--;chain=0;multiplier=1;failReason='boar';}invulnerable=50;}events.push({kind:'boarRam'});}
   if(boar===1)events.push({kind:'boarQuit'});
  }else boarGap=0;
+ // Level 5: Schäferhund. Zuerst nur Bellen (6:28 und 6:36). Er jagt Hornox, sobald 5 Schafe erschreckt wurden
+ // (angerempelt, übersprungen oder knapp passiert) – frühestens ab 6:24 –, spätestens aber ab 7:07,5 in der
+ // «wilden Schäferhund-Jagd» bis zum Levelende. Nahe dran wird er schneller. Erwischen kostet genau ein Leben.
+ if(meadowSection(elapsed)>0){
+  const sheepKinds=['sheepCross','sheepStop'];scared+=events.filter(e=>(e.kind==='bump'||e.kind==='clear'||e.kind==='nearMiss')&&sheepKinds.includes(e.object)).length;
+  for(const t of[388,396])if(s.elapsed<t&&elapsed>=t)events.push({kind:'dogBark'});
+  if(!dog&&dogMode<1&&scared>=5&&elapsed>=384&&elapsed<425){dog=320;dogGap=14;dogBump=tick;dogMode=1;events.push({kind:'dogAppear',reason:'sheep'});}
+  if(dogMode<2&&s.elapsed<427.5&&elapsed>=427.5){dog=Math.max(dog,(450-427.5)*20);dogGap=dog&&dogMode===1&&s.dog>0?dogGap:14;dogBump=tick;dogMode=2;events.push({kind:'dogAppear',reason:'hunt'});}
+ }
+ if(dog>0){
+  if(events.some(e=>e.kind==='bump'||e.kind==='shieldHit')){dogGap-=3.5;dogBump=tick;}
+  else{dogGap+=events.filter(e=>e.kind==='clear').length*.9+events.filter(e=>e.kind==='nearMiss').length*.35;if(tick-dogBump>60)dogGap+=.012;}
+  const hunt=dogMode===2?.03+.02*Math.min(1,(elapsed-427.5)/20):.02;
+  dogGap+=powering?.06:-hunt*(dogGap<7?1.3:1)*(s.mode==='relaxed'?.55:1);dogGap=Math.min(16,dogGap);
+  if(dogGap<=3){dogGap=12;if(!invulnerable&&!climb){if(shield){shield=0;events.push({kind:'shieldHit'});}else{lives--;chain=0;multiplier=1;failReason='dog';}invulnerable=50;}events.push({kind:'dogCatch'});}
+  if(dog===1)events.push({kind:'dogQuit'});
+ }else dogGap=0;
  if(!summitTurn&&elapsed>=785)summitTurn=Math.floor((distance+440)/680)+1;
  if(distance>=nextTurn&&elapsed<892){
   const direction=turnDir(s.seed,summitTurn,turnIndex);
@@ -298,7 +348,7 @@ export function applyAction(s,p,a){
  }
  const phase=lives<=0?"lost":elapsed>=900?"won":"playing";
  if(phase==="won"){score+=2000;events.push({kind:"summit",points:2000});}
- return{...s,phase,tick,elapsed,distance,speed,x,lives,jump,jumpCount,jumpBase,jumpY:height,fallTicks,duck,queued,buffer,coins,flamingoSpawned,powerCharge,powerTicks,hearts,nextHeartAt,score,chain,bestChain,multiplier,shield,magnet,coinBoost,climb,climbReady,shoes,nextCrowAt,nextFishAt,nextBeaverAt,nextGullAt,lastHazardAt,fish,angry,chaseGap,nextCastTick,lastBumpTick,attackSeq,boar,boarGap,boarBump,checkpoints,arrivals,turnIndex,nextTurn,turnChoice,summitTurn,heading,turns,failReason,invulnerable,slow,rng,nextId,nextRow,row,objects,events};
+ return{...s,phase,tick,elapsed,distance,speed,x,lives,jump,jumpCount,jumpBase,jumpY:height,fallTicks,duck,queued,buffer,coins,flamingoSpawned,powerCharge,powerTicks,hearts,nextHeartAt,score,chain,bestChain,multiplier,shield,magnet,coinBoost,climb,climbReady,shoes,nextCrowAt,nextFishAt,nextBeaverAt,nextGullAt,lastHazardAt,fish,angry,chaseGap,nextCastTick,lastBumpTick,attackSeq,boar,boarGap,boarBump,dog,dogGap,dogBump,dogMode,scared,checkpoints,arrivals,turnIndex,nextTurn,turnChoice,summitTurn,heading,turns,failReason,invulnerable,slow,rng,nextId,nextRow,row,objects,events};
 }
 export function isGameOver(s){return ["lost","won"].includes(s.phase)?{over:true,winner:s.phase==="won"?s.player:null,score:s.score,coins:s.coins,distance:Math.floor(s.distance),arrivals:s.arrivals}:{over:false};}
 export function viewFor(s,p){return{...s,objects:s.objects.map(o=>({...o})),events:s.events.map(e=>({...e})),spectator:p!==s.player};}
