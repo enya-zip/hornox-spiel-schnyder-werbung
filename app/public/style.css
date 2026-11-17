@@ -123,3 +123,10 @@ html,body{position:fixed;inset:0;overscroll-behavior:none;overflow:hidden}#app{p
 #fisher-bubble[data-who="boar"] .boar-face{display:block}
 #fisher-bubble[data-who="boar"] .fisher-face{display:none}
 #fisher-bubble .boar-dust{animation:fb-steam .5s ease-in-out infinite}
+
+/* Level 4: Lichtstimmung je Waldabschnitt (heller Wald warm, tiefer Wald und Waldjagd dunkel) */
+#forest-shade{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity 2.5s,background 2.5s}
+#forest-shade[data-sec="1"]{opacity:.22;background:radial-gradient(ellipse at 70% 0%,#ffe9a8 0%,transparent 60%)}
+#forest-shade[data-sec="2"]{opacity:.5;background:radial-gradient(ellipse at center,transparent 25%,#0b1f12 100%),linear-gradient(#0c2414aa,#0c241444)}
+#forest-shade[data-sec="3"]{opacity:.2;background:linear-gradient(#1a3a2a,transparent 70%)}
+#forest-shade[data-sec="4"]{opacity:.6;background:radial-gradient(ellipse at center,transparent 20%,#0a160c 100%),linear-gradient(#08180dcc,#08180d33)}

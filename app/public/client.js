@@ -1,11 +1,11 @@
 import {INTRO_DURATION,COUNTDOWN_DURATION} from './intro.js?v=17';
-import {stages,getStage,DURATION,fogAt,bridgeAt} from "./journey.js?v=21";
-import {createScene} from "./scene3d.js?v=40";
-import {setup,validateAction,applyAction} from "./rules.js?v=33";
+import {stages,getStage,DURATION,fogAt,bridgeAt,forestSection} from "./journey.js?v=22";
+import {createScene} from "./scene3d.js?v=42";
+import {setup,validateAction,applyAction} from "./rules.js?v=34";
 import {installControls} from "./controls.js?v=17";
-import {createAudio} from "./audio.js?v=18";
-import {getZone} from "./scene3d.js?v=40";
-import {copy} from "./copy.js?v=30";
+import {createAudio} from "./audio.js?v=19";
+import {getZone} from "./scene3d.js?v=42";
+import {copy} from "./copy.js?v=32";
 import {turnDirection} from "./route.js?v=21";
 const $=id=>document.getElementById(id),q=new URLSearchParams(location.search),app=$("app"),canvas=$("world"),player="guest";
 const read=k=>{try{return localStorage.getItem(k);}catch{return null;}},save=(k,v)=>{try{localStorage.setItem(k,String(v));}catch{}};
@@ -39,7 +39,7 @@ function fisherBubble(){
  $("fog-layer").style.opacity=screen==="play"?String(fogAt(state.elapsed)*.92):"0";
  // Wildschwein-Verfolgung (Level 4) nutzt dieselbe Bubble mit eigenem Porträt.
  if(screen==="play"&&state.phase==="playing"&&state.boar>0){const gap=state.boarGap||14,mood=gap<6?4:3;b.hidden=false;b.dataset.who="boar";b.dataset.mood=mood;b.classList.toggle("near",mood===4);b.classList.toggle("attack",false);b.classList.toggle("flash",gap<5);b.classList.toggle("with-touch",!$("touch-controls").hidden);
-  $("fb-state").textContent=t(mood===4?"boarClose":"boarChase");$("fb-note").textContent=t("boarNote",{s:Math.ceil(state.boar/20)});$("fb-meter").style.width=Math.round(Math.max(0,Math.min(1,1-(gap-3)/13))*100)+"%";return;}
+  $("fb-state").textContent=t(mood===4?"boarClose":state.elapsed>=337.5?"boarRaceTitle":"boarChase");$("fb-note").textContent=t("boarNote",{s:Math.ceil(state.boar/20)});$("fb-meter").style.width=Math.round(Math.max(0,Math.min(1,1-(gap-3)/13))*100)+"%";return;}
  b.dataset.who="fisher";
  const angry=state.angry||0,fish=state.fish||0;if(angry>0)fisherEscaped=false;
  const gap=state.chaseGap||16,attacking=angry>30&&((state.nextCastTick-state.tick)<10||state.objects.some(o=>o.kind==="hook"&&o.landTick&&state.tick<o.landTick)),target=angry>0?(gap<7||attacking?4:3):fisherEscaped?1:fish>=10?2:1;
@@ -99,7 +99,7 @@ function skipToLevel(){
  renderDistance=distance;introElapsed=INTRO_DURATION;
 }
 function start(){
- if(!loaded)return;hideLevelBanner();crowsSeen=new Set();fisherMood=1;fisherEscaped=false;$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;state=setup([player]);dispatch({type:"start",seed,mode,route});setScreen("play");acc=0;renderDistance=0;countdown=0;introElapsed=0;lastCount=-1;resultSaved=false;tiltBase=null;$("countdown").hidden=true;$("countdown").textContent="";
+ if(!loaded)return;hideLevelBanner();crowsSeen=new Set();forestSec=0;forestSounds.clear();fisherMood=1;fisherEscaped=false;$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;state=setup([player]);dispatch({type:"start",seed,mode,route});setScreen("play");acc=0;renderDistance=0;countdown=0;introElapsed=0;lastCount=-1;resultSaved=false;tiltBase=null;$("countdown").hidden=true;$("countdown").textContent="";
  audio.unlock().catch(()=>{});audio.setActive(true);controls.reset();scene?.resetEffects();$("feedback-label").textContent="";skipToLevel();hud();
 }
 function home(){introElapsed=-1;hideLevelBanner();$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;audio.setActive(true);scene?.resetEffects();$("feedback-label").textContent="";state=setup([player]);setScreen("home");selectMenu("run");countdown=0;renderDistance=0;$("countdown").hidden=true;$("turn-cue").hidden=true;$("tutorial").hidden=true;$("powerup").hidden=true;$("resort-arrival").hidden=true;updateCopy();}
@@ -140,9 +140,24 @@ function processEvents(){
  if(e.kind==="powerPickup"){toast(t(e.power),2.5);audio.play("pickup",1.6,.8);}
  if(e.kind==="heart")heartFeedback(e.gained);if(e.kind==="world"&&e.gained)heartFeedback(true);
  if(e.kind==="world")levelBanner(e.stage);
- if(e.kind==="bump")toast(t(e.object==="sheep"?"sheepBump":e.object==="fish"?"fishBump":e.object==="beaverLog"?"beaverBump":e.object==="hook"?"hookBump":"bump"));else if(e.kind==="checkpoint")toast(t("checkpoint"),2.5);else if(e.kind==="arrival"){$("toast").classList.remove("visible");toastUntil=0;}else if(e.kind==="magnet")toast(t("magnet"),2.3);else if(e.kind==="fishCatch")audio.play("pickup",1.5,.7);else if(e.kind==="fisherNotice"){toast(t("fisherNotice"),3.2);audio.play("pickup",.8,.7);}else if(e.kind==="gull"){toast(t(e.lost>0?"gullSteal":"gullEmpty",{n:e.lost}),2.4);audio.play("bump",1.6,.6);}else if(e.kind==="fisherAngry"){bigAlert(t("fisherAngry"));toast(t("fisherHint"),3);}else if(e.kind==="boarAppear"){bigAlert(t("boarAlert"));toast(t("boarHint"),3);}else if(e.kind==="boarRam"){const f=$("hit-flash");f.getAnimations().forEach(a=>a.cancel());f.animate([{opacity:.75},{opacity:0}],{duration:650,easing:"ease-out"});toast(t("boarRam"),2.4);audio.play("bump",.8,.9);try{navigator.vibrate?.(160);}catch{}}else if(e.kind==="boarQuit")toast(t("boarQuit"),2.6);else if(e.kind==="mushroom"){toast(t("mushroom"),1.6);audio.play("pickup",2,.8);}else if(e.kind==="fisherCast")audio.play("jump",.55,.55);else if(e.kind==="hooked"){const f=$("hit-flash");f.getAnimations().forEach(a=>a.cancel());f.animate([{opacity:.75},{opacity:0}],{duration:650,easing:"ease-out"});try{navigator.vibrate?.(140);}catch{}}else if(e.kind==="fisherQuit"){fisherEscaped=true;toast(t("fisherQuit"),2.6);audio.play("pickup",1.1,.8);}else if(e.kind==="crow"){toast(t(e.lost>0?"crowHit":"crowHitEmpty",{n:e.lost}),2.4);audio.play("bump",1.4,.8);}else if(e.kind==="shieldHit")toast(t("shieldHit"));else if(e.kind==="missedTurn")toast(t("turnMiss"));}
+ if(e.kind==="bump")toast(t(e.object==="sheep"?"sheepBump":e.object==="fish"?"fishBump":e.object==="beaverLog"?"beaverBump":e.object==="hook"?"hookBump":"bump"));else if(e.kind==="checkpoint")toast(t("checkpoint"),2.5);else if(e.kind==="arrival"){$("toast").classList.remove("visible");toastUntil=0;}else if(e.kind==="magnet")toast(t("magnet"),2.3);else if(e.kind==="fishCatch")audio.play("pickup",1.5,.7);else if(e.kind==="fisherNotice"){toast(t("fisherNotice"),3.2);audio.play("pickup",.8,.7);}else if(e.kind==="gull"){toast(t(e.lost>0?"gullSteal":"gullEmpty",{n:e.lost}),2.4);audio.play("bump",1.6,.6);}else if(e.kind==="fisherAngry"){bigAlert(t("fisherAngry"));toast(t("fisherHint"),3);}else if(e.kind==="boarGrunt"){toast(t("boarGrunt"),2.6);audio.synth("grunt",.7);}else if(e.kind==="boarAppear"){bigAlert(t("boarAlert"));toast(t("boarHint"),3);audio.synth("grunt",1.2);}else if(e.kind==="boarRace"){bigAlert(t("boarRaceAlert"));toast(t("boarRaceHint"),3);audio.synth("grunt",1.3);}else if(e.kind==="squirrelSteal"){bigAlert(t("squirrelAlert",{n:e.n}));toast(t("squirrelHint"),3);}else if(e.kind==="squirrelCaught"){toast(t("squirrelCaught",{n:e.n}),2.6);audio.play("pickup",1.4,1);}else if(e.kind==="squirrelEscaped")toast(t("squirrelEscaped",{n:e.n}),2.6);else if(e.kind==="wood")audio.play("pickup",.9,.5);else if(e.kind==="crystal"){toast(t("crystal"),2);audio.play("pickup",2.2,1);}else if(e.kind==="feather"){toast(t("feather"),1.8);audio.play("jump",1.6,.6);}else if(e.kind==="boarRam"){const f=$("hit-flash");f.getAnimations().forEach(a=>a.cancel());f.animate([{opacity:.75},{opacity:0}],{duration:650,easing:"ease-out"});toast(t("boarRam"),2.4);audio.play("bump",.8,.9);try{navigator.vibrate?.(160);}catch{}}else if(e.kind==="boarQuit")toast(t("boarQuit"),2.6);else if(e.kind==="mushroom"){toast(t("mushroom"),1.6);audio.play("pickup",2,.8);}else if(e.kind==="fisherCast")audio.play("jump",.55,.55);else if(e.kind==="hooked"){const f=$("hit-flash");f.getAnimations().forEach(a=>a.cancel());f.animate([{opacity:.75},{opacity:0}],{duration:650,easing:"ease-out"});try{navigator.vibrate?.(140);}catch{}}else if(e.kind==="fisherQuit"){fisherEscaped=true;toast(t("fisherQuit"),2.6);audio.play("pickup",1.1,.8);}else if(e.kind==="crow"){toast(t(e.lost>0?"crowHit":"crowHitEmpty",{n:e.lost}),2.4);audio.play("bump",1.4,.8);}else if(e.kind==="shieldHit")toast(t("shieldHit"));else if(e.kind==="missedTurn")toast(t("turnMiss"));}
 }
-function hud(){if(screen==="play"&&state.phase==="playing")crowWarnings();fisherBubble();
+// Level 4 «Furi · Waldpfad»: Abschnitts-Hinweise, heller/dunkler Wald und Waldgeräusche.
+let forestSec=0,nextChirp=0,nextWind=0,nextGrunt=0;const forestSounds=new Set();
+function forestAmbience(){
+ const sec=screen==="play"&&state.phase==="playing"?forestSection(state.elapsed):0,now=performance.now()/1000;
+ $("forest-shade").dataset.sec=String(sec);
+ if(sec!==forestSec){if(sec>0)toast(t("forestSec"+sec),3.2);forestSec=sec;}
+ if(!sec||paused)return;
+ if(now>nextChirp){nextChirp=now+(sec===2||sec===4?4.5:2.2)+Math.random()*2.5;audio.synth("chirp",.9);}
+ if(now>nextWind){nextWind=now+6+Math.random()*4;audio.synth("wind",sec===4?1.3:.9);}
+ if(state.boar>0&&now>nextGrunt){nextGrunt=now+(state.boarGap<6?1.6:3.2);audio.synth("grunt",state.boarGap<6?1:.6);}
+ for(const o of state.objects){const gap=(o.d-state.distance)/Math.max(1,state.speed);if(forestSounds.has(o.id))continue;
+  if((o.kind==="plankGap"||o.kind==="fallingBranch")&&gap<1.05){forestSounds.add(o.id);audio.synth("crack",.9);}
+  else if(o.kind==="stream"&&gap<2){forestSounds.add(o.id);audio.synth("stream",1);}}
+ if(forestSounds.size>200)forestSounds.clear();
+}
+function hud(){if(screen==="play"&&state.phase==="playing")crowWarnings();fisherBubble();forestAmbience();
  $("score").textContent=fmt(state.score);$("coins").textContent=state.coins;$("combo").textContent=state.multiplier>1?"×"+state.multiplier:"";
  $("distance").textContent=Math.floor(state.elapsed/60)+":"+String(Math.floor(state.elapsed%60)).padStart(2,"0")+" / 15:00 · "+(getStage(state.elapsed)+1)+"/10";
  $("stage").textContent=t(stages[getStage(state.elapsed)].key).toUpperCase();
@@ -153,7 +168,7 @@ function hud(){if(screen==="play"&&state.phase==="playing")crowWarnings();fisher
  const rem=state.nextTurn-state.distance,show=active&&state.nextTurn>0&&rem<state.speed*2.8&&state.elapsed<892;
  $("turn-cue").hidden=!show;
  if(show){const direction=turnDirection(state.seed,state.summitTurn,state.turnIndex),ready=state.turnChoice===direction;$("turn-arrow").textContent=direction<0?"↰":"↱";$("turn-label").textContent=t(direction<0?"turnLeft":"turnRight");$("turn-distance").textContent=ready?t("turnReady"):inTurn()?t("turnNow"):Math.ceil(rem)+" m";$("turn-cue").classList.toggle("now",inTurn()&&!ready);$("turn-cue").classList.toggle("accepted",ready);}
- const power=[state.magnet>0?t("magnetShort",{n:Math.ceil(state.magnet/20)}):"",state.shield?t("shieldShort"):"",state.coinBoost>0?t("boostShort",{n:Math.ceil(state.coinBoost/20)}):"",state.shoes>0?t("shoesShort",{n:Math.ceil(state.shoes/20)}):"",!state.angry&&(state.fish>0||getStage(state.elapsed)===2)?t("fishShort",{n:state.fish||0}):""].filter(Boolean).join(" · ");
+ const power=[state.magnet>0?t("magnetShort",{n:Math.ceil(state.magnet/20)}):"",state.shield?t("shieldShort"):"",state.coinBoost>0?t("boostShort",{n:Math.ceil(state.coinBoost/20)}):"",state.shoes>0?t("shoesShort",{n:Math.ceil(state.shoes/20)}):"",!state.angry&&(state.fish>0||getStage(state.elapsed)===2)?t("fishShort",{n:state.fish||0}):"",getStage(state.elapsed)===3?t("forestShort",{w:state.wood||0,c:state.crystals||0}):"",state.squirrel>0?t("squirrelShort",{n:state.sqStolen||0}):"",state.feather>0?"🪶":""].filter(Boolean).join(" · ");
  $("powerup").hidden=!active||!power;$("powerup").textContent=power;
 
  $("resort-arrival").hidden=true;
