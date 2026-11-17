@@ -47,3 +47,8 @@
 .ranking li.latest{border-color:#e8c46a;box-shadow:0 0 0 1px #e8c46a55 inset}
 .ranking li.empty{display:block;text-align:center;font-size:12px;opacity:.7}
 .result-rank{margin:6px 0 0;font-weight:700;color:#f2c46d}
+
+/* Levelauswahl: jede Stufe der Bergroute lässt sich direkt starten */
+#route-stages li{grid-template-columns:27px 1fr auto 34px}
+#route-stages .stage-go{width:30px;height:30px;border-radius:50%;border:1px solid #e8c46a88;background:#e8c46a22;color:#ffe2a7;font-size:11px;cursor:pointer;display:grid;place-items:center;padding:0}
+#route-stages .stage-go:hover,#route-stages .stage-go:focus-visible{background:#e8c46a55;outline:none}

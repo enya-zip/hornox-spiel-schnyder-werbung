@@ -2,7 +2,7 @@ export const meta={game:"Hornox Run · Zermatt",minPlayers:1,maxPlayers:1};
 export function setup(players){
  return{version:17,player:players[0]||"guest",phase:"ready",mode:"classic",route:"summit",
  tick:0,elapsed:0,distance:0,speed:18,x:1,target:1,lives:3,maxLives:3,jump:0,jumpCount:0,jumpBase:0,jumpY:0,fallTicks:0,duck:0,queued:"",buffer:0,
- flamingoSpawned:false,coins:0,powerCharge:0,powerTicks:0,powerUses:0,hearts:0,nextHeartAt:40,score:0,chain:0,bestChain:0,multiplier:1,shield:0,magnet:0,coinBoost:0,climb:0,climbReady:0,shoes:0,nextCrowAt:0,nextFishAt:0,nextBeaverAt:0,nextGullAt:0,lastHazardAt:0,fish:0,angry:0,chaseGap:0,nextCastTick:0,lastBumpTick:0,attackSeq:0,boar:0,boarGap:0,boarBump:0,squirrel:0,sqGap:0,sqLane:1,sqStolen:0,sqNext:0,wood:0,crystals:0,feather:0,checkpoints:0,arrivals:0,
+ flamingoSpawned:false,coins:0,powerCharge:0,powerTicks:0,powerUses:0,hearts:0,nextHeartAt:40,score:0,chain:0,bestChain:0,multiplier:1,shield:0,magnet:0,coinBoost:0,climb:0,climbReady:0,shoes:0,nextCrowAt:0,nextFishAt:0,nextBeaverAt:0,nextGullAt:0,lastHazardAt:0,fish:0,angry:0,chaseGap:0,nextCastTick:0,lastBumpTick:0,attackSeq:0,boar:0,boarGap:0,boarBump:0,checkpoints:0,arrivals:0,
  turnIndex:0,nextTurn:260,turnChoice:0,summitTurn:0,heading:0,turns:0,failReason:"",
  seed:20261029,rng:20261029,nextId:1,nextRow:30,row:0,invulnerable:0,slow:0,objects:[],events:[]};
 }
@@ -29,7 +29,7 @@ export function validateAction(s,p,a){
 function random(n){return(n*1664525+1013904223)>>>0;}
 function stage(t){return Math.min(9,Math.floor(Math.max(0,t)/90));}
 function zone(t){return [3,6,7,8,1,9,4,0,10,5][stage(t)];}
-const pickups=['coin','heart','magnet','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom','wood','crystal','feather'];
+const pickups=['coin','heart','magnet','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom'];
 // Level 4 (Furi): morsche Holzbrücke über den Bach – in diesen Zeitfenstern brechen Bretter weg.
 function bridgeAt(t){return t>=317&&t<327;} // gleiche Zeiten wie in journey.js
 // Level 10: ab summitTurn wechseln die Kurven immer ab (Zickzack zum Gipfel).
@@ -55,13 +55,13 @@ export function applyAction(s,p,a){
  if(!jump&&!duck&&queued&&buffer>0){jump=queued==="jump"?18:0;jumpCount=jump?1:0;jumpBase=0;duck=queued==="duck"?16:0;events.push({kind:queued});queued="";buffer=0;}
  if(!buffer)queued="";
  const rushRamp=s.powerTicks>0?Math.min(1,(121-s.powerTicks)/7,s.powerTicks/12):0;
- const speed=(1+.55*rushRamp)*((s.mode==="relaxed"?14:19)+Math.min(s.mode==="relaxed"?6:8,elapsed/42))*(s.slow>0&&!(s.shoes>0)?.7:1)*(s.shoes>0?1.2:1)*((s.feather||0)>0?1.3:1),distance=s.distance+speed*.05;
+ const speed=(1+.55*rushRamp)*((s.mode==="relaxed"?14:19)+Math.min(s.mode==="relaxed"?6:8,elapsed/42))*(s.slow>0&&!(s.shoes>0)?.7:1)*(s.shoes>0?1.2:1),distance=s.distance+speed*.05;
  let height=jump?jumpBase*(jump/18)+Math.sin((18-jump)/18*Math.PI)*(jumpCount===2?1.15:1):0;
  let powerCharge=s.powerCharge,powerTicks=Math.max(0,s.powerTicks-1);const powering=s.powerTicks>0;
  let flamingoSpawned=s.flamingoSpawned||false;
  let hearts=s.hearts||0,nextHeartAt=s.nextHeartAt??40;
  let lives=s.lives,score=s.score+Math.floor(distance)-Math.floor(s.distance),coins=s.coins,chain=s.chain,bestChain=s.bestChain,multiplier=s.multiplier;
- let shield=s.shield,magnet=Math.max(0,s.magnet-1),coinBoost=Math.max(0,(s.coinBoost||0)-1),climb=Math.max(0,(s.climb||0)-1),climbReady=s.climbReady||0,nextCrowAt=s.nextCrowAt||0,nextFishAt=s.nextFishAt||0,nextBeaverAt=s.nextBeaverAt||0,nextGullAt=s.nextGullAt||0,lastHazardAt=s.lastHazardAt||0,chaseGap=s.chaseGap||0,nextCastTick=s.nextCastTick||0,lastBumpTick=s.lastBumpTick||0,attackSeq=s.attackSeq||0,hookedAttack=0,boar=Math.max(0,(s.boar||0)-1),boarGap=s.boarGap||0,boarBump=s.boarBump||0,squirrel=Math.max(0,(s.squirrel||0)-1),sqGap=s.sqGap||0,sqLane=s.sqLane??1,sqStolen=s.sqStolen||0,sqNext=s.sqNext||0,wood=s.wood||0,crystals=s.crystals||0,feather=Math.max(0,(s.feather||0)-1),fish=s.fish||0,angry=Math.max(0,(s.angry||0)-1),shoes=Math.max(0,(s.shoes||0)-1),invulnerable=Math.max(0,s.invulnerable-1),slow=Math.max(0,s.slow-1);
+ let shield=s.shield,magnet=Math.max(0,s.magnet-1),coinBoost=Math.max(0,(s.coinBoost||0)-1),climb=Math.max(0,(s.climb||0)-1),climbReady=s.climbReady||0,nextCrowAt=s.nextCrowAt||0,nextFishAt=s.nextFishAt||0,nextBeaverAt=s.nextBeaverAt||0,nextGullAt=s.nextGullAt||0,lastHazardAt=s.lastHazardAt||0,chaseGap=s.chaseGap||0,nextCastTick=s.nextCastTick||0,lastBumpTick=s.lastBumpTick||0,attackSeq=s.attackSeq||0,hookedAttack=0,boar=Math.max(0,(s.boar||0)-1),boarGap=s.boarGap||0,boarBump=s.boarBump||0,fish=s.fish||0,angry=Math.max(0,(s.angry||0)-1),shoes=Math.max(0,(s.shoes||0)-1),invulnerable=Math.max(0,s.invulnerable-1),slow=Math.max(0,s.slow-1);
  let rng=s.rng,nextId=s.nextId,nextRow=s.nextRow,row=s.row,checkpoints=s.checkpoints,arrivals=s.arrivals;
  let summitTurn=s.summitTurn||0,turnIndex=s.turnIndex,nextTurn=s.nextTurn,turnChoice=s.turnChoice,heading=s.heading,turns=s.turns,failReason=s.failReason;
  if(s.powerTicks===1){invulnerable=Math.max(invulnerable,20);events.push({kind:"powerEnd"});}
@@ -70,8 +70,8 @@ export function applyAction(s,p,a){
   const item={...old};item.d-=(item.approach||0)*.05;
   // Steinbock kommt von links oder rechts auf die Piste und bleibt etwa 1,2 s vor Hornox auf einer Spur stehen.
   if(item.kind==='ibex'&&!item.resolved){const dir=item.dir||1,move=1.4*Math.max(0,(item.d-distance)/speed-1.2);item.lane=dir>0?Math.max(-2.6,item.target-move):Math.min(4.6,item.target+move);}
-  // Level 4: Rehe, kreuzende Wildschweine und Eichhörnchen laufen quer über den Weg und erreichen Hornox auf ihrer Ziel-Spur.
-  if((item.kind==='deer'||item.kind==='boarCross'||item.kind==='squirrelHop')&&!item.resolved&&item.target!==undefined){const v=item.kind==='deer'?2.6:item.kind==='boarCross'?3.6:4.2;item.lane=Math.max(-2.6,Math.min(4.6,item.target-(item.dir||1)*v*(item.d-distance)/speed));}
+  // Level 4: Wildschweine laufen quer über den Weg und erreichen Hornox auf ihrer Ziel-Spur.
+  if(item.kind==='boarCross'&&!item.resolved&&item.target!==undefined)item.lane=Math.max(-2.6,Math.min(4.6,item.target-(item.dir||1)*3.6*(item.d-distance)/speed));
   // Level 3: Fisch springt links aus dem See und landet genau dann auf seiner Spur, wenn Hornox dort ankommt.
   if(item.kind==='fish'&&!item.resolved&&item.target!==undefined)item.lane=Math.min(item.target,Math.max(-2.4,item.target-3.2*(item.d-distance)/speed));
   // Scheinangriff: Die Krähe zielt erst auf eine Spur und wechselt kurz vor Hornox auf die andere.
@@ -102,13 +102,6 @@ export function applyAction(s,p,a){
    }else if(item.kind==='mushroom'){
     // Level 4: Glückspilz = Bonuspunkte.
     if(aligned){score+=250;events.push({kind:'mushroom',points:250,lane:item.lane});}
-   }else if(item.kind==='wood'){
-    if(aligned){wood++;score+=20;events.push({kind:'wood',wood});}
-   }else if(item.kind==='crystal'){
-    if(aligned){crystals++;score+=500;events.push({kind:'crystal',crystals,points:500});}
-   }else if(item.kind==='feather'){
-    // Feder: 3 Sekunden Geschwindigkeitsschub, das Wildschwein fällt zurück.
-    if(aligned){feather=60;if(boar)boarGap+=3;events.push({kind:'feather'});}
    }else if(item.kind==='climbGear'){
     // Level 10: Kletterausrüstung wird eingepackt und später mit E / Button angezogen.
     if(aligned){climbReady=1;events.push({kind:'powerPickup',power:'pickupClimb'});}
@@ -197,18 +190,18 @@ export function applyAction(s,p,a){
    // 3 Waldschlucht (Bäche, schwierige Sprünge), 4 wilde Waldjagd (Kombinationen).
    const sec=arrivalTime<292.5?1:arrivalTime<315?2:arrivalTime<337.5?3:4,side=(rng&2048)?1:-1,cross=(kind,lane)=>add(kind,lane,0,{target:lane,dir:side,lane:side>0?-2.6:4.6});
    if(pattern===8){}
-   else if(sec===1){const k=["roots","log","bigMushroom","branchPile","boulder","woodpile","sign","roots"][pattern];add(k,k==="log"?-1:one);}
+   else if(sec===1){const k=["roots","log","boulder","sign","roots","trunk","boulder","log"][pattern];add(k,k==="log"?-1:one);}
    else if(sec===2){
-    if(pattern===0)cross("deer",one);else if(pattern===1)add("highLog",-1);else if(pattern===2){cross("squirrelHop",one);if(busy)add("roots",two);}
-    else if(pattern===3){add("trunk",one);if(busy)add("bigMushroom",two);}else if(pattern===4)cross("boarCross",one);else if(pattern===5)add("log",-1);
-    else if(pattern===6){add("woodpile",one);if(busy)add("branchPile",two);}else{add("sign",one);if(busy)add("trunk",two);}
+    if(pattern===0)cross("boarCross",one);else if(pattern===1)add("highLog",-1);else if(pattern===2){add("roots",one);if(busy)add("boulder",two);}
+    else if(pattern===3){add("trunk",one);if(busy)add("sign",two);}else if(pattern===4){add("fallingBranch",one);if(busy)add("roots",two);}else if(pattern===5)add("log",-1);
+    else if(pattern===6){cross("boarCross",one);if(busy)add("trunk",two);}else{add("sign",one);if(busy)add("boulder",two);}
    }else if(sec===3){
-    if(pattern===0||pattern===4)add("stream",-1);else if(pattern===1){add("fallingBranch",one);if(busy)add("roots",two);}else if(pattern===2)cross("deer",one);
-    else if(pattern===3)add("log",-1);else if(pattern===5){add("roots",one);add("woodpile",two);}else if(pattern===6)add("trunk",one);else add("highLog",-1);
+    if(pattern===0||pattern===4)add("stream",-1);else if(pattern===1){add("fallingBranch",one);if(busy)add("roots",two);}else if(pattern===2)cross("boarCross",one);
+    else if(pattern===3)add("log",-1);else if(pattern===5){add("roots",one);add("boulder",two);}else if(pattern===6)add("trunk",one);else add("highLog",-1);
    }else{
-    if(pattern===0){add("fallingBranch",one);add("trunk",two);}else if(pattern===1)add("stream",-1);else if(pattern===2){cross("boarCross",one);add("bigMushroom",two);}
-    else if(pattern===3)add("highLog",-1);else if(pattern===4){cross("deer",one);add("fallingBranch",two);}else if(pattern===5)add("log",-1);
-    else if(pattern===6){add("trunk",one);add("woodpile",two);}else{add("sign",one);add("branchPile",two);}
+    if(pattern===0){add("fallingBranch",one);add("trunk",two);}else if(pattern===1)add("stream",-1);else if(pattern===2){cross("boarCross",one);add("boulder",two);}
+    else if(pattern===3)add("highLog",-1);else if(pattern===4){add("fallingBranch",one);add("roots",two);}else if(pattern===5)add("log",-1);
+    else if(pattern===6){add("trunk",one);add("sign",two);}else{cross("boarCross",one);add("fallingBranch",two);}
    }
   }else if([1,6].includes(z)){
    if(pattern===0){add("hiker",one);if(busy)add("sheep",two);}
@@ -251,8 +244,8 @@ export function applyAction(s,p,a){
   for(const offset of(heartDue?[5,17]:[5,9,13,17]))add("coin",safe,offset);
   // Level 3: jede zweite Reihe ein Fisch zum Sammeln, damit der Fischer nach rund 10–15 s wütend wird.
   if(z===7&&row%2===1&&!heartDue)add("fishCatch",safe,22);
-  // Level 4: Glückspilze (Bonus), Holzstücke (Levelwährung), seltene Waldkristalle, Federn (Tempo-Schub).
-  if(z===8&&!heartDue){if(row%9===4)add("mushroom",safe,22);else if(row%23===11&&arrivalTime>=292.5)add("crystal",safe,22);else if(row%13===6)add("feather",safe,22);else if(row%3===1)add("wood",safe,22);}
+  // Level 4: Glückspilze geben Bonuspunkte (Haselnüsse sind die normalen Münzen).
+  if(z===8&&!heartDue&&row%6===4)add("mushroom",safe,22);
   if(row>8&&row%17===8&&pattern!==8)add(z===5?['climbGear','snowshoes'][Math.floor(row/17)%2]:['magnet','shieldOrb','coinBoost','rushCharge'][Math.floor(row/17)%4],safe,-8);
   row++;nextRow+=s.mode==="relaxed"?Math.max(34,38-elapsed/120):Math.max(23,26-elapsed/110);
  }
@@ -280,7 +273,7 @@ export function applyAction(s,p,a){
  // Level 4: Das Wildschwein ist zuerst nur zu hören (Grunzen bei 5:05, 5:11 und 5:25),
  // ab 5:27 jagt es Hornox direkt hinter ihm bis zum Levelende; ab 5:37,5 wird es schneller («Wildschwein-Rennen»).
  // boarGap = Abstand (16 = weit, 3 = erwischt). Hindernis-Treffer: es holt auf. Überwundene Hindernisse
- // (gesprungen, geduckt, knapp ausgewichen) und sauberes Laufen bringen Abstand. Ansturm und Feder verscheuchen es.
+ // (gesprungen, geduckt, knapp ausgewichen) und sauberes Laufen bringen Abstand. Der Hornox-Ansturm verscheucht es.
  for(const t of[305,311,325])if(s.elapsed<t&&elapsed>=t)events.push({kind:'boarGrunt'});
  if(!boar&&s.elapsed<327&&elapsed>=327){boar=660;boarGap=14;boarBump=tick;events.push({kind:'boarAppear'});}
  if(boar>0){
@@ -291,15 +284,6 @@ export function applyAction(s,p,a){
   if(boarGap<=3){boarGap=12;if(!invulnerable&&!climb){if(shield){shield=0;events.push({kind:'shieldHit'});}else{lives--;chain=0;multiplier=1;failReason='boar';}invulnerable=50;}events.push({kind:'boarRam'});}
   if(boar===1)events.push({kind:'boarQuit'});
  }else boarGap=0;
- // Level 4: Freches Eichhörnchen (4:56 und 5:40) klaut bis zu 15 Haselnüsse und rennt vor Hornox her.
- // Wer es auf seiner Spur einholt, bekommt die Nüsse zurück (+5 Bonus); nach 10 s ist es weg.
- if(!squirrel&&[296,340].some(t=>s.elapsed<t&&elapsed>=t)){sqStolen=Math.min(coins,15);coins-=sqStolen;squirrel=200;sqGap=24;sqLane=(Math.round(x)+1)%3;sqNext=tick+30;events.push({kind:'squirrelSteal',n:sqStolen});}
- else if(squirrel>0){
-  sqGap=Math.max(1.2,sqGap-.13);
-  if(tick>=sqNext){rng=random(rng);sqLane=(sqLane+1+((rng>>>10)%2))%3;sqNext=tick+25+((rng>>>14)%20);}
-  if(sqGap<=1.6&&Math.abs(x-sqLane)<.5){coins+=sqStolen+5;events.push({kind:'squirrelCaught',n:sqStolen+5});squirrel=0;sqStolen=0;}
-  else if(squirrel===1){events.push({kind:'squirrelEscaped',n:sqStolen});sqStolen=0;}
- }
  if(!summitTurn&&elapsed>=785)summitTurn=Math.floor((distance+440)/680)+1;
  if(distance>=nextTurn&&elapsed<892){
   const direction=turnDir(s.seed,summitTurn,turnIndex);
@@ -314,7 +298,7 @@ export function applyAction(s,p,a){
  }
  const phase=lives<=0?"lost":elapsed>=900?"won":"playing";
  if(phase==="won"){score+=2000;events.push({kind:"summit",points:2000});}
- return{...s,phase,tick,elapsed,distance,speed,x,lives,jump,jumpCount,jumpBase,jumpY:height,fallTicks,duck,queued,buffer,coins,flamingoSpawned,powerCharge,powerTicks,hearts,nextHeartAt,score,chain,bestChain,multiplier,shield,magnet,coinBoost,climb,climbReady,shoes,nextCrowAt,nextFishAt,nextBeaverAt,nextGullAt,lastHazardAt,fish,angry,chaseGap,nextCastTick,lastBumpTick,attackSeq,boar,boarGap,boarBump,squirrel,sqGap,sqLane,sqStolen,sqNext,wood,crystals,feather,checkpoints,arrivals,turnIndex,nextTurn,turnChoice,summitTurn,heading,turns,failReason,invulnerable,slow,rng,nextId,nextRow,row,objects,events};
+ return{...s,phase,tick,elapsed,distance,speed,x,lives,jump,jumpCount,jumpBase,jumpY:height,fallTicks,duck,queued,buffer,coins,flamingoSpawned,powerCharge,powerTicks,hearts,nextHeartAt,score,chain,bestChain,multiplier,shield,magnet,coinBoost,climb,climbReady,shoes,nextCrowAt,nextFishAt,nextBeaverAt,nextGullAt,lastHazardAt,fish,angry,chaseGap,nextCastTick,lastBumpTick,attackSeq,boar,boarGap,boarBump,checkpoints,arrivals,turnIndex,nextTurn,turnChoice,summitTurn,heading,turns,failReason,invulnerable,slow,rng,nextId,nextRow,row,objects,events};
 }
 export function isGameOver(s){return ["lost","won"].includes(s.phase)?{over:true,winner:s.phase==="won"?s.player:null,score:s.score,coins:s.coins,distance:Math.floor(s.distance),arrivals:s.arrivals}:{over:false};}
 export function viewFor(s,p){return{...s,objects:s.objects.map(o=>({...o})),events:s.events.map(e=>({...e})),spectator:p!==s.player};}

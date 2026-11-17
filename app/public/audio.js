@@ -1,7 +1,7 @@
 export function createAudio(){
  const urls={music:"assets/hornox-alpine-party-210s.mp3",jump:"assets/jump-funny.mp3",duck:"assets/slide.mp3",pickup:"assets/cowbell-coin.mp3",land:"assets/land.mp3",bump:"assets/bonk-funny.mp3"};
  let context,master,musicNode,musicGain,enabled=true,active=false,foreground=!document.hidden,readyPromise=null,resuming=null,musicOffset=0,musicStarted=0;
- const buffers={},stats={played:0,last:"",musicStarts:0};let noiseBuffer=null;
+ const buffers={},stats={played:0,last:"",musicStarts:0};let noiseBuffer=null,chaseOn=false,chaseTimer=null,chaseNext=0,chaseStep=0;
  const files=Promise.all(Object.entries(urls).map(async([k,url])=>{const r=await fetch(url);if(!r.ok)throw Error(url);return[k,await r.arrayBuffer()];})).catch(e=>{console.warn("Audio preload",e.message);return[];});
  const wanted=()=>enabled&&active&&foreground&&!document.hidden;
  function stopMusic(){
@@ -14,7 +14,7 @@ export function createAudio(){
   if(!wanted()||context?.state!=="running"){stopMusic();return;}
   if(!buffers.music||musicNode)return;
   const node=context.createBufferSource(),gain=context.createGain();
-  node.buffer=buffers.music;node.loop=true;gain.gain.value=.60;node.connect(gain).connect(master);
+  node.buffer=buffers.music;node.loop=true;gain.gain.value=chaseOn?.2:.60;node.connect(gain).connect(master);
   musicNode=node;musicGain=gain;musicStarted=context.currentTime;node.start(0,musicOffset%node.buffer.duration);stats.musicStarts++;
   node.onended=()=>{node.disconnect();gain.disconnect();if(musicNode===node){musicNode=null;musicGain=null;}};
  }
@@ -62,20 +62,33 @@ export function createAudio(){
  // Retry in the actual user gesture if the browser blocked automatic recovery.
  const gesture=()=>{if(enabled&&active&&!document.hidden&&(!foreground||context?.state!=="running"))unlock().catch(()=>{});};
  for(const type of["pointerdown","touchend","keydown"])document.addEventListener(type,gesture,{capture:true,passive:true});
+ function noiseSource(ctx){if(!noiseBuffer||noiseBuffer.sampleRate!==ctx.sampleRate){noiseBuffer=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate);const d=noiseBuffer.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;}const n=ctx.createBufferSource();n.buffer=noiseBuffer;return n;}
+ // Spannende Verfolgungsmusik (Level 4): 150 BPM, Bass-Ostinato in a-Moll, Kick und Hi-Hat, im Browser erzeugt.
+ function chaseTick(){
+  if(!chaseOn||!wanted()||context?.state!=="running")return;const ctx=context,step8=60/150/2,notes=[45,45,48,45,52,45,50,45,45,45,48,45,53,52,50,48];
+  while(chaseNext<ctx.currentTime+.3){const t=Math.max(chaseNext,ctx.currentTime),step=chaseStep%16,out=ctx.createGain();out.gain.value=.5;out.connect(master);
+   if(step%4===0||step===10){const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(42,t+.18);g.gain.setValueAtTime(.8,t);g.gain.exponentialRampToValueAtTime(.0001,t+.25);o.connect(g).connect(out);o.start(t);o.stop(t+.26);}
+   if(step%2===1){const n=noiseSource(ctx),f=ctx.createBiquadFilter(),g=ctx.createGain();f.type="highpass";f.frequency.value=7000;g.gain.setValueAtTime(.14,t);g.gain.exponentialRampToValueAtTime(.0001,t+.05);n.connect(f).connect(g).connect(out);n.start(t,Math.random());n.stop(t+.06);}
+   {const o=ctx.createOscillator(),f=ctx.createBiquadFilter(),g=ctx.createGain();o.type="sawtooth";o.frequency.value=440*Math.pow(2,(notes[step]-69)/12);f.type="lowpass";f.frequency.value=650;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.2,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+.17);o.connect(f).connect(g).connect(out);o.start(t);o.stop(t+.18);}
+   setTimeout(()=>out.disconnect(),1500);chaseNext+=step8;chaseStep++;}
+ }
  return{
-  unlock,setEnabled(value){enabled=!!value;if(master&&context.state!=="closed")master.gain.setTargetAtTime(enabled?.65:0,context.currentTime,.03);sync();if(wanted())wake();},
+  unlock,
+  setChase(on){on=!!on&&enabled;if(on===chaseOn)return;chaseOn=on;if(musicGain&&context)musicGain.gain.setTargetAtTime(on?.2:.6,context.currentTime,.4);clearInterval(chaseTimer);chaseTimer=null;if(on&&context){chaseNext=context.currentTime+.05;chaseStep=0;chaseTimer=setInterval(chaseTick,80);}},setEnabled(value){enabled=!!value;if(master&&context.state!=="closed")master.gain.setTargetAtTime(enabled?.65:0,context.currentTime,.03);sync();if(wanted())wake();},
   setActive(value){active=!!value;sync();if(wanted()&&context)wake();},
   play(name,rate=1,volume=1){if(!wanted()||context?.state!=="running"||!buffers[name])return;const source=context.createBufferSource();source.buffer=buffers[name];source.playbackRate.value=rate;const gain=context.createGain();gain.gain.value=(name==="pickup"?.48:.8)*volume;source.connect(gain).connect(master);source.onended=()=>{source.disconnect();gain.disconnect();};source.start();stats.played++;stats.last=name;},
   // Level 4: Waldgeräusche direkt im Browser erzeugt (keine Audiodateien nötig).
   synth(kind,volume=1){
    if(!wanted()||context?.state!=="running")return;const ctx=context,t=ctx.currentTime,out=ctx.createGain();out.gain.value=volume;out.connect(master);
-   if(!noiseBuffer||noiseBuffer.sampleRate!==ctx.sampleRate){noiseBuffer=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate);const d=noiseBuffer.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;}
    const ramp=(g,start,peak,attack,decay)=>{g.gain.setValueAtTime(.0001,start);g.gain.exponentialRampToValueAtTime(peak,start+attack);g.gain.exponentialRampToValueAtTime(.0001,start+attack+decay);};
-   const noise=(start,dur,type,freq,q=1)=>{const n=ctx.createBufferSource();n.buffer=noiseBuffer;const f=ctx.createBiquadFilter();f.type=type;f.frequency.value=freq;f.Q.value=q;const g=ctx.createGain();n.connect(f).connect(g).connect(out);n.start(start,Math.random());n.stop(start+dur);return{g,f};};
+   const noise=(start,dur,type,freq,q=1)=>{const n=noiseSource(ctx);const f=ctx.createBiquadFilter();f.type=type;f.frequency.value=freq;f.Q.value=q;const g=ctx.createGain();n.connect(f).connect(g).connect(out);n.start(start,Math.random());n.stop(start+dur);return{g,f};};
    if(kind==="chirp"){const n=2+Math.floor(Math.random()*3),base=2600+Math.random()*1800;for(let i=0;i<n;i++){const st=t+i*.13,o=ctx.createOscillator(),g=ctx.createGain();o.type="sine";o.frequency.setValueAtTime(base,st);o.frequency.exponentialRampToValueAtTime(base*1.35,st+.06);o.frequency.exponentialRampToValueAtTime(base*.9,st+.1);ramp(g,st,.08,.015,.1);o.connect(g).connect(out);o.start(st);o.stop(st+.13);}}
    else if(kind==="wind"){const{g,f}=noise(t,3.4,"bandpass",320,.6);ramp(g,t,.16,1.3,1.9);f.frequency.setValueAtTime(300,t);f.frequency.linearRampToValueAtTime(620,t+1.6);f.frequency.linearRampToValueAtTime(320,t+3.3);}
    else if(kind==="stream"){const{g}=noise(t,2.6,"bandpass",1500,1.2);ramp(g,t,.1,.6,1.8);}
    else if(kind==="grunt"){for(let i=0;i<3;i++){const st=t+i*.22,o=ctx.createOscillator(),g=ctx.createGain(),lp=ctx.createBiquadFilter();o.type="sawtooth";o.frequency.setValueAtTime(115-i*10,st);o.frequency.exponentialRampToValueAtTime(62,st+.18);lp.type="lowpass";lp.frequency.value=520;ramp(g,st,.5,.03,.17);o.connect(lp).connect(g).connect(out);o.start(st);o.stop(st+.22);const nz=noise(st,.2,"lowpass",700);ramp(nz.g,st,.22,.02,.16);}}
+   else if(kind==="water"){const a=noise(t,3.2,"bandpass",700,.5);ramp(a.g,t,.16,.8,2.2);const b=noise(t,3.2,"highpass",3500);ramp(b.g,t,.05,.8,2.2);}
+   else if(kind==="hoof"){for(let i=0;i<2;i++){const st=t+i*.09,o=ctx.createOscillator(),g=ctx.createGain();o.frequency.setValueAtTime(95,st);o.frequency.exponentialRampToValueAtTime(48,st+.07);ramp(g,st,.45,.005,.08);o.connect(g).connect(out);o.start(st);o.stop(st+.1);const n=noise(st,.06,"lowpass",500);ramp(n.g,st,.18,.003,.05);}}
+   else if(kind==="plank"){const n=noise(t,.12,"bandpass",900,2);ramp(n.g,t,.6,.003,.1);const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.setValueAtTime(140,t+.03);o.frequency.exponentialRampToValueAtTime(55,t+.3);ramp(g,t+.03,.5,.01,.3);o.connect(g).connect(out);o.start(t+.03);o.stop(t+.36);for(let i=1;i<3;i++){const st=t+i*.06,c=noise(st,.05,"highpass",2200);ramp(c.g,st,.35,.002,.04);}}
    else if(kind==="crack"){for(let i=0;i<2;i++){const st=t+i*.07,nz=noise(st,.1,"highpass",1800);nz.g.gain.setValueAtTime(.55,st);nz.g.gain.exponentialRampToValueAtTime(.0001,st+.09);}}
    setTimeout(()=>out.disconnect(),4500);stats.played++;stats.last=kind;
   },

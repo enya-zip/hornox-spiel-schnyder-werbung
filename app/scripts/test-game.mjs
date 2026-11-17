@@ -16,11 +16,11 @@ check('full 15-minute journey reaches the summit with bounded state',()=>{const 
 check('environment-specific hazards remain appropriate and every variant is reachable',()=>{
  const profiles={
   3:['snowman','luggage','trolley','planter','electric','photographers','manhole','carriage','scooter','skiers','snowboarders','influencer','lostTourists','pedestrian','bike'],
-  6:['hiker','marmot','sheep','log','branch','bike'],7:['fish','beaverLog','gull'],8:['roots','log','bigMushroom','branchPile','boulder','woodpile','sign'],1:['hiker','marmot','sheep','log','branch','bike'],
+  6:['hiker','marmot','sheep','log','branch','bike'],7:['fish','beaverLog','gull'],8:['roots','log','boulder','sign','trunk'],1:['hiker','marmot','sheep','log','branch','bike'],
   9:['hiker','lowRock','ridgeGap','rope','rockfall','boulder'],4:['hiker','lowRock','ridgeGap','rope','rockfall','boulder'],10:['hiker','lowRock','ridgeGap','rope','rockfall','boulder'],0:['iceBlock','crevasse','iceArch'],5:['iceBlock','crevasse','iceArch','crow','ibex']};
  for(const [elapsed,z]of [[30,3],[110,6],[200,7],[276,8],[390,1],[480,9],[570,4],[660,0],[750,10],[840,5]]){const found=new Set();for(let seed=1;seed<90;seed++){
   const state={...start(seed),flamingoSpawned:true,tick:elapsed*20,elapsed,distance:1000,nextRow:1030,nextTurn:99999,row:20,nextFishAt:seed%3===0?0:9999};
-  for(const o of action(state,{type:'step'}).objects){if(['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom','wood','crystal','feather'].includes(o.kind))continue;assert.equal(o.biome,z);assert(profiles[z].includes(o.kind),'wrong biome: '+o.kind);found.add(o.kind);}
+  for(const o of action(state,{type:'step'}).objects){if(['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom'].includes(o.kind))continue;assert.equal(o.biome,z);assert(profiles[z].includes(o.kind),'wrong biome: '+o.kind);found.add(o.kind);}
  }assert.deepEqual([...found].sort(),profiles[z].sort());}
 });
 check('walkers, photo groups, bikes and wildlife approach with each simulation step',()=>{const s={...start(),nextRow:9999,objects:['hiker','pedestrian','photographers','bike','sheep'].map((kind,id)=>({id,kind,d:150,lane:0,approach:2.4}))};const out=action(s,{type:'step'});for(const o of out.objects)assert.equal(o.d,149.88);});
@@ -39,7 +39,7 @@ check('dense rows retain an open lane or one consistent jump/slide action',()=>{
  for(let seed=1;seed<=50;seed++)for(const elapsed of [30,110,200,290,390,480,570,660,750,840]){
   const initial={...start(seed),flamingoSpawned:true,tick:elapsed*20,elapsed,distance:1100,nextRow:1120,nextTurn:99999,row:20};
   const s=action(initial,{type:'step'}),rows=new Map();
-  for(const o of s.objects){if(['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom','wood','crystal','feather'].includes(o.kind))continue;if(!rows.has(o.rowId))rows.set(o.rowId,[]);rows.get(o.rowId).push(o);if(o.approach>0){incoming++;assert(Math.abs((o.d-(o.front||0)-s.distance)/(s.speed+o.approach)-(o.encounter-s.distance)/s.speed)<.00001);}}
+  for(const o of s.objects){if(['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom'].includes(o.kind))continue;if(!rows.has(o.rowId))rows.set(o.rowId,[]);rows.get(o.rowId).push(o);if(o.approach>0){incoming++;assert(Math.abs((o.d-(o.front||0)-s.distance)/(s.speed+o.approach)-(o.encounter-s.distance)/s.speed)<.00001);}}
   for(const obstacles of rows.values()){
    if(obstacles.some(o=>o.lane===-1)){assert.equal(obstacles.length,1);continue;}
    assert([0,1,2].some(l=>obstacles.every(o=>Math.abs(o.lane-l)>=(o.hitWidth||.38))),'a safe lane remains');if(obstacles.length===2)paired++;
@@ -180,7 +180,7 @@ check('level 3: fish leap from the lake, five caught fish make the fisherman ang
 });
 check('level 3: fish every 10 s, beavers and seagulls, at least 3 s between lake hazards, nothing else on the trail',()=>{for(let seed=1;seed<=12;seed++){let s={...start(seed),tick:3600,elapsed:180,distance:3800,nextRow:3830,nextTurn:999999,row:200};const seen=new Set();let last=-1e9,count=0;
  while(s.phase==='playing'&&s.elapsed<269){s=action({...s,lives:999,invulnerable:1},{type:'step'});for(const o of s.objects){if(o.kind!=='fish'||seen.has(o.id))continue;seen.add(o.id);const t=s.elapsed+(o.d-s.distance)/s.speed;assert(t-last>=9.9,'gap '+(t-last));last=t;count++;}for(const o of s.objects)if(o.biome===7)assert(['fish','beaverLog','gull','coin','fishCatch','heart','magnet','shieldOrb','coinBoost','rushCharge','hook'].includes(o.kind),o.kind);}assert(count>=6&&count<=9,'count '+count);}});
-check('level 4: grunts, boar hunt from the gorge to the end, race mode, bridge, squirrel thief and forest collectibles',()=>{
+check('level 4: grunts, boar hunt from the gorge to the end, race mode, bridge, forest obstacles and lucky mushrooms',()=>{
  let g={...start(),tick:6099,elapsed:304.95,distance:7600,nextRow:1e9,nextTurn:1e9,objects:[]};g=action(g,{type:'step'});assert(g.events.some(e=>e.kind==='boarGrunt'));assert.equal(g.boar,0);
  let s={...start(),tick:6539,elapsed:326.95,distance:8200,nextRow:1e9,nextTurn:1e9,checkpoints:2,objects:[]};s=action(s,{type:'step'});assert.equal(s.boar,660);assert(s.events.some(e=>e.kind==='boarAppear'));
  let clean=s,rams=0;for(let k=0;k<180;k++){clean=action({...clean,nextRow:1e9},{type:'step'});if(clean.events.some(e=>e.kind==='boarRam'))rams++;}assert.equal(rams,0);
@@ -189,15 +189,14 @@ check('level 4: grunts, boar hunt from the gorge to the end, race mode, bridge, 
  const jumped=action({...s,boarGap:8,x:1,target:1,jump:10,objects:[{id:1,kind:'log',lane:-1,d:s.distance+.9}]},{type:'step'});assert(jumped.boarGap>8.5);
  const rammed=action({...s,shield:0,boarGap:3.01,lives:3},{type:'step'});assert(rammed.events.some(e=>e.kind==='boarRam'));assert.equal(rammed.lives,2);assert.equal(rammed.boarGap,12);assert(rammed.invulnerable>=45);
  const both=action({...s,shield:0,boarGap:5,lives:3,x:1,target:1,objects:[{id:1,kind:'boulder',lane:1,d:s.distance+.9}]},{type:'step'});assert(both.events.some(e=>e.kind==='boarRam'));assert.equal(both.lives,2);
- let bridge=0;for(let seed=1;seed<30;seed++){const b=action({...start(seed),tick:6400,elapsed:320,distance:8000,nextRow:8030,nextTurn:99999,row:30},{type:'step'});const onBridge=b.objects.filter(o=>320+(o.encounter-b.distance)/b.speed<326.5);const gaps=onBridge.filter(o=>o.kind==='plankGap');bridge+=gaps.length;for(const row of new Set(gaps.map(o=>o.rowId)))assert(new Set(gaps.filter(o=>o.rowId===row).map(o=>o.lane)).size<3);for(const o of onBridge)if(!['coin','mushroom','heart','magnet','shieldOrb','coinBoost','rushCharge','wood','crystal','feather'].includes(o.kind))assert.equal(o.kind,'plankGap');}
+ let bridge=0;for(let seed=1;seed<30;seed++){const b=action({...start(seed),tick:6400,elapsed:320,distance:8000,nextRow:8030,nextTurn:99999,row:30},{type:'step'});const onBridge=b.objects.filter(o=>320+(o.encounter-b.distance)/b.speed<326.5);const gaps=onBridge.filter(o=>o.kind==='plankGap');bridge+=gaps.length;for(const row of new Set(gaps.map(o=>o.rowId)))assert(new Set(gaps.filter(o=>o.rowId===row).map(o=>o.lane)).size<3);for(const o of onBridge)if(!['coin','mushroom','heart','magnet','shieldOrb','coinBoost','rushCharge'].includes(o.kind))assert.equal(o.kind,'plankGap');}
  assert(bridge>10);assert.equal(collision('plankGap').lives,2);assert.equal(collision('plankGap',{jump:10}).lives,3);
- let q={...start(),tick:5919,elapsed:295.95,distance:7300,coins:40,nextRow:1e9,nextTurn:1e9,objects:[]};q=action(q,{type:'step'});assert.equal(q.coins,25);assert.equal(q.sqStolen,15);
- let caught=false;for(let k=0;k<200&&!caught;k++){q=action({...q,x:q.sqLane,target:q.sqLane},{type:'step'});caught=q.events.some(e=>e.kind==='squirrelCaught');}assert(caught);assert.equal(q.coins,45);
- let lost={...start(),tick:5919,elapsed:295.95,distance:7300,coins:40,nextRow:1e9,nextTurn:1e9,objects:[]};lost=action(lost,{type:'step'});let esc=false;for(let k=0;k<210;k++){lost=action({...lost,x:(lost.sqLane+1)%3,target:(lost.sqLane+1)%3},{type:'step'});if(lost.events.some(e=>e.kind==='squirrelEscaped'))esc=true;}assert(esc);assert.equal(lost.coins,25);
  assert.equal(collision('trunk',{jump:10}).lives,2);assert.equal(collision('fallingBranch',{jump:10}).lives,2);assert.equal(collision('highLog',{lane:-1,duck:9}).lives,3);assert.equal(collision('highLog',{lane:-1,jump:10}).lives,2);
- assert.equal(collision('stream',{lane:-1,jump:10}).lives,3);assert.equal(collision('roots',{jump:10}).lives,3);assert.equal(collision('deer',{lane:0}).lives,3);
+ assert.equal(collision('stream',{lane:-1,jump:10}).lives,3);assert.equal(collision('roots',{jump:10}).lives,3);assert.equal(collision('boarCross',{lane:0}).lives,3);assert.equal(collision('sign',{jump:10}).lives,2);
  const pick=kind=>action({...start(),distance:100,nextRow:10000,x:1,objects:[{id:1,kind,lane:1,d:100.9}]},{type:'step'});
- assert.equal(pick('wood').wood,1);assert.equal(pick('crystal').crystals,1);assert.equal(pick('feather').feather,60);assert(pick('mushroom').events.some(e=>e.kind==='mushroom'));
- const fast=action({...start(),feather:30,distance:100,nextRow:10000,objects:[]},{type:'step'}),base=action({...start(),distance:100,nextRow:10000,objects:[]},{type:'step'});assert(Math.abs(fast.speed/base.speed-1.3)<1e-9);
+ assert(pick('mushroom').events.some(e=>e.kind==='mushroom'));
+ // Nur die gewünschten Waldobjekte erscheinen im ganzen Level
+ const allowed=['roots','log','highLog','boulder','trunk','stream','sign','boarCross','fallingBranch','plankGap','coin','mushroom','heart','magnet','shieldOrb','coinBoost','rushCharge'];
+ for(let seed=1;seed<8;seed++){let r={...start(seed),tick:5400,elapsed:270,distance:6800,nextRow:6830,nextTurn:1e9,row:40};while(r.elapsed<358){r=action({...r,lives:9,invulnerable:1},{type:'step'});for(const o of r.objects)if(o.biome===8)assert(allowed.includes(o.kind),o.kind);}}
 });
 console.log(`${checks} rule checks passed`);

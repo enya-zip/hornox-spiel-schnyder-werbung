@@ -11,7 +11,7 @@ import {createActor} from './actor.js?v=22';
 import {createEffects} from './effects.js?v=17';
 import {createPath} from './route.js?v=21';
 import {getZone,bridgeAt,fogAt,forestSection} from './journey.js?v=22';
-import {createForest} from './forest.js?v=3';
+import {createForest} from './forest.js?v=4';
 export {getZone};
 const PI=Math.PI,C={ice:[.74,.87,.9,10],grass:[.44,.58,.30,11],gravel:[.7,.63,.48,12],cobble:[.65,.66,.61,13],snow:[.86,.92,.94,2],rock:[.48,.52,.53,1],wood:[.32,.22,.15,4],gold:[1,.74,.24,9],dark:[.12,.2,.23],fir:[1,1,1,7],red:[.85,.16,.19],flower:[.97,.85,.40]};
 export function createScene(canvas){
@@ -144,8 +144,8 @@ export function createScene(canvas){
    push(x,y,z,0,-h,(toss?.lean||0)+sway,style===4?.83:scale);encounters.accessory(poseStyle,variant,pace);pop();
   }
  }
- let sqLaneVis=1,speedNow=16,flyingFish=[],tickNow=0,chaser=null,chaseVis=40,chaseLane=1,reelT=-9,fogNow=0,boarVis=40,boarLane=1,rammed=new Set();
- function obstacle(o,d,time,toss=null){if(!toss&&(rammed.has(o.id)||fogNow>0&&o.d-d>180-140*fogNow))return;const od=o.d-(toss?0:(o.approach||0)*visualSubtick);if(!toss&&(od<d-8||od>d+180||(o.resolved&&['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom','wood','crystal','feather'].includes(o.kind))))return;const off=(o.lane<0?0:(o.lane-1)*2.5)+(toss?.side||0),p=point(od,off),rise=toss?.y||0;
+ let speedNow=16,flyingFish=[],tickNow=0,chaser=null,chaseVis=40,chaseLane=1,reelT=-9,fogNow=0,boarVis=40,boarLane=1,rammed=new Set();
+ function obstacle(o,d,time,toss=null){if(!toss&&(rammed.has(o.id)||fogNow>0&&o.d-d>180-140*fogNow))return;const od=o.d-(toss?0:(o.approach||0)*visualSubtick);if(!toss&&(od<d-8||od>d+180||(o.resolved&&['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom'].includes(o.kind))))return;const off=(o.lane<0?0:(o.lane-1)*2.5)+(toss?.side||0),p=point(od,off),rise=toss?.y||0;
   if(['pedestrian','hiker','photographers','influencer','lostTourists','scooter','skiers','snowboarders'].includes(o.kind)){visitors(o,p,time,toss);if(o.kind!=='scooter')return;}
   if(o.kind==='ibex'&&!toss){
    // Steinbock galoppiert von links oder rechts auf die Piste und bleibt dann stehen (Spur kommt aus den Regeln).
@@ -181,13 +181,13 @@ export function createScene(canvas){
   if(o.kind==='plankGap'&&!toss){
    // Morsches Brett: hat zuerst Risse, bricht etwa 1 s vor Hornox weg und hinterlässt ein Loch.
    const gapT=(od-d)/Math.max(1,speedNow),brk=Math.max(0,Math.min(1,(1.05-gapT)/.45));at(od,(o.lane-1)*2.5);forest.brokenPlank(brk,time,o.id);pop();return;}
-  if(['roots','bigMushroom','branchPile','woodpile','sign','trunk','highLog','stream'].includes(o.kind)){
+  if(['roots','sign','trunk','highLog','stream'].includes(o.kind)){
    // Level 4: Waldhindernisse.
    at(od,o.lane<0?0:(o.lane-1)*2.5,rise);if(toss)push(0,0,0,0,toss.spin,toss.lean);forest[o.kind](time);if(toss)pop();pop();return;}
-  if(['deer','boarCross','squirrelHop'].includes(o.kind)){
-   // Rehe, Wildschweine und Eichhörnchen rennen quer über den Weg (Spur kommt aus den Regeln).
+  if(o.kind==='boarCross'){
+   // Wildschweine rennen quer über den Weg (Spur kommt aus den Regeln).
    const q=point(od,(o.lane-1)*2.5);push(q.x,q.y+rise,q.z,0,-q.h);if(toss)push(0,0,0,0,toss.spin,toss.lean);push(0,0,0,0,(o.dir||1)*PI/2);
-   if(o.kind==='deer')forest.deer(time,o.id);else if(o.kind==='boarCross'){push(0,0,0,0,0,0,.72);forest.boar(time,o.id);pop();}else{push(0,0,0,0,0,0,1.6);forest.squirrel(time,o.id);pop();}
+   push(0,0,0,0,0,0,.72);forest.boar(time,o.id);pop();
    pop();if(toss)pop();pop();return;}
   if(o.kind==='fallingBranch'&&!toss){
    // Ast wackelt oben (Schatten auf der Spur warnt) und fällt etwa 1 s vor Hornox herunter.
@@ -212,9 +212,6 @@ export function createScene(canvas){
   else if(o.kind==='heart'){a('heart',0,2.12+Math.sin(time*3+o.id)*.12,0,.62,.62,.62,[1,.12,.27,49],0,Math.sin(time*1.4+o.id)*.35);a('ring',0,.08,0,.55,.55,.045,[1,.35,.45,49],PI/2);}
   else if(o.kind==='coin'){if(o.biome===8)forest.nut(time,o.id);else special.coin(time,o.id);}
   else if(o.kind==='mushroom')forest.mushroom(time,o.id);
-  else if(o.kind==='wood')forest.woodPiece(time,o.id);
-  else if(o.kind==='crystal')forest.crystal(time,o.id);
-  else if(o.kind==='feather')forest.feather(time,o.id);
   else if(['magnet','shieldOrb','coinBoost','rushCharge'].includes(o.kind))powerups.pickup(o.kind,time,o.id);
   else if(o.kind==='climbGear'||o.kind==='snowshoes')summit.pickup(o.kind,time,o.id);
   else if(o.kind==='fishCatch')lake.pickup(time,o.id);
@@ -252,7 +249,7 @@ export function createScene(canvas){
    const goal=s.boar>0?(s.boarGap||14):40;boarVis+=(goal-boarVis)*Math.min(1,delta*(goal>boarVis?.8:2.5));boarLane+=(lane-boarLane)*Math.min(1,delta*3);
    if(boarVis<30){const back=1.4+Math.max(0,boarVis-3)*.4,off=(boarLane-1)*2.5+(Math.abs(boarLane-lane)<.5?1.2:0),q=point(d-back,off);
     push(q.x,q.y,q.z,0,PI-q.h,0,.78);forest.boar(anim,1);forest.dust(anim);pop();
-    for(const o of s.objects){if(rammed.has(o.id)||o.powerCleared||['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom','wood','crystal','feather','plankGap','crevasse','ridgeGap','manhole','hook','stream'].includes(o.kind))continue;
+    for(const o of s.objects){if(rammed.has(o.id)||o.powerCleared||['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom','plankGap','crevasse','ridgeGap','manhole','hook','stream'].includes(o.kind))continue;
      const od=o.d-(o.approach||0)*visualSubtick;if(od<d-back+1.4&&od>d-back-3){rammed.add(o.id);if(tossed.length>=12)tossed.shift();tossed.push({o:{id:o.id,kind:o.kind,lane:o.lane,d:o.d},time:anim,side:o.lane===0?-1:o.lane===2?1:(o.id%2?-1:1)});}}
    }
   }
@@ -267,11 +264,6 @@ export function createScene(canvas){
     // Nach einem Treffer zieht er die Angel mit der Schnur zurück.
     if(reel){const u=(anim-reelT)/.6,hx=Math.cos(cam)*(lane-1)*2.5,hz=Math.sin(cam)*(lane-1)*2.5,ex=hx+(chaser.tip[0]-hx)*u,ey=1.5+(chaser.tip[1]-1.5)*u,ez=hz+(chaser.tip[2]-hz)*u;lake.line(...chaser.tip,ex,ey,ez,.3);push(ex,ey,ez);lake.hook(anim,1);pop();}
    }
-  }
-  if(active&&s.squirrel>0){
-   // Freches Eichhörnchen mit den geklauten Nüssen rennt vor Hornox her und wechselt die Spur.
-   sqLaneVis+=((s.sqLane??1)-sqLaneVis)*Math.min(1,delta*6);const q=point(d+(s.sqGap||1.2)*1.05+2.5,(sqLaneVis-1)*2.5);
-   a('ring',q.x,q.y+.05,q.z,.9,.9,.06,[1,.75,.3,49],PI/2);push(q.x,q.y,q.z,0,PI-q.h,0,2.6);forest.squirrel(anim*1.4,3,true);pop();
   }
   if(active)for(const o of s.objects)obstacle(o,d,anim);
   tossed=tossed.filter(t=>anim-t.time<1.1);if(active)for(const t of tossed){const age=Math.max(0,anim-t.time),u=age/1.1;obstacle(t.o,d,anim,{side:t.side*(u*7),y:Math.sin(u*PI)*2.6,spin:reduced?0:t.side*u*2.4,lean:reduced?0:t.side*u*.65});}
