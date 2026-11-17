@@ -211,7 +211,8 @@ export function applyAction(s,p,a){
   const heartDue=arrivalTime>=nextHeartAt&&arrivalTime<885&&pattern!==1&&pattern!==2&&Math.abs(d-nearest)>Math.max(80,speed*3);
   if(heartDue){add("heart",safe,11);nextHeartAt=arrivalTime+52+((rng>>>24)%22);}
   for(const offset of(heartDue?[5,17]:[5,9,13,17]))add("coin",safe,offset);
-  if(z===7&&row%4===1&&!heartDue)add("fishCatch",safe,22);
+  // Level 3: jede zweite Reihe ein Fisch zum Sammeln, damit der Fischer nach rund 10–15 s wütend wird.
+  if(z===7&&row%2===1&&!heartDue)add("fishCatch",safe,22);
   if(row>8&&row%17===8&&pattern!==8)add(z===5?['climbGear','snowshoes'][Math.floor(row/17)%2]:['magnet','shieldOrb','coinBoost','rushCharge'][Math.floor(row/17)%4],safe,-8);
   row++;nextRow+=s.mode==="relaxed"?Math.max(34,38-elapsed/120):Math.max(23,26-elapsed/110);
  }
