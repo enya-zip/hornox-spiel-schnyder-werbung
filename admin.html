@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><meta name="theme-color" content="#102d31">
+<title>Hornox Run · Gewinnspiel-Admin</title><link rel="icon" href="hornox-icon.svg" type="image/svg+xml">
+<style>
+@font-face{font-family:Resort;src:url('assets/resort-sans-400.ttf');font-weight:400;font-display:swap}
+@font-face{font-family:Resort;src:url('assets/resort-sans-700.ttf');font-weight:700;font-display:swap}
+:root{--ink:#163b3e;--cream:#fff6dc;--gold:#f2c56b;--line:#e7d6a83d;color-scheme:dark;font-family:Resort,Arial,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(circle at 20% 0,#1d4a4c,#081d25 60%);color:var(--cream)}
+main{max-width:1100px;margin:0 auto;padding:28px 16px 60px}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+header img{width:150px;filter:brightness(0) invert(1);opacity:.92}
+.eyebrow{font-size:10px;font-weight:700;letter-spacing:.22em;color:var(--gold);margin:0 0 6px}
+h1{font-size:28px;margin:0;letter-spacing:-.03em}
+.card{background:linear-gradient(145deg,#1b4142,#09232d);border:1px solid #dfc88d4d;border-radius:22px;padding:24px;box-shadow:0 25px 80px #00101966}
+.login{max-width:400px;margin:8vh auto 0}
+label{display:grid;gap:6px;font-size:12px;color:#d6e2dd;margin-top:14px}
+input{font:inherit;font-size:16px;padding:12px 14px;border-radius:12px;border:1px solid #e8c46a66;background:#071f28;color:#fff8ec;width:100%}
+input:focus{outline:2px solid var(--gold);outline-offset:1px}
+button{font:inherit;cursor:pointer;border:0;color:inherit;transition:transform .15s,filter .2s,background .2s}
+.primary{width:100%;margin-top:20px;min-height:50px;border-radius:15px;background:linear-gradient(180deg,#ffdda0,#eeb351);color:#382b16;font-weight:700;font-size:15px;box-shadow:0 4px 0 #a4732c}
+.primary:hover{filter:brightness(1.05)}.primary:active{transform:translateY(2px)}.primary:disabled{opacity:.6;cursor:progress}
+.ghost{background:#ffffff0d;border:1px solid #ffffff2e;border-radius:12px;padding:10px 14px;font-size:13px}
+.ghost:hover{border-color:#f2c56b99;background:#ffffff16}
+.note{font-size:12px;color:#b8cbc5;line-height:1.6}
+.error{margin:14px 0 0;padding:10px 12px;border-radius:10px;background:#c6282833;border:1px solid #e57373aa;color:#ffd7d2;font-size:13px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.toolbar input{flex:1;min-width:200px;font-size:14px;padding:10px 12px}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.stat{background:#071f2866;border:1px solid var(--line);border-radius:14px;padding:10px 14px;min-width:150px}
+.stat b{display:block;font-size:22px;color:var(--gold);font-variant-numeric:tabular-nums}.stat span{font-size:11px;color:#a9c0bc;letter-spacing:.08em;text-transform:uppercase}
+.table-wrap{overflow-x:auto;border-radius:16px;border:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:720px}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid #ffffff14;white-space:nowrap}
+th{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#a9c0bc;background:#071f28aa;position:sticky;top:0}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+tbody tr:hover{background:#ffffff08}
+tbody tr.top td:first-child{color:var(--gold);font-weight:700}
+.email{user-select:all}
+.empty{padding:30px;text-align:center;color:#b8cbc5}
+[hidden]{display:none!important}
+</style></head><body>
+<main>
+ <header><div><p class="eyebrow">HORNOX RUN · NUR FÜR ADMINS</p><h1>Gewinnspiel-Teilnehmer</h1></div><img src="assets/logo-blue.png" alt="Alpen Resort Zermatt" width="150" height="40"></header>
+
+ <section id="login" class="card login" hidden>
+  <p class="eyebrow">ADMIN-LOGIN</p>
+  <p class="note">Melde dich mit dem Admin-Konto an. Nur damit sind die E-Mail-Adressen der Teilnehmenden sichtbar.</p>
+  <form id="login-form">
+   <label>E-Mail<input id="login-email" type="email" autocomplete="username" required></label>
+   <label>Passwort<input id="login-password" type="password" autocomplete="current-password" required></label>
+   <button class="primary" type="submit">Anmelden</button>
+  </form>
+  <p id="login-error" class="error" role="alert" hidden></p>
+ </section>
+
+ <section id="offline" class="card login" hidden><p class="eyebrow">NICHT VERBUNDEN</p><p class="note">Die Datenbank ist noch nicht eingerichtet (leaderboard-config.js ist leer). Sobald die Supabase-Zugangsdaten eingetragen sind, funktioniert diese Seite.</p></section>
+
+ <section id="list" hidden>
+  <div class="toolbar">
+   <input id="search" type="search" placeholder="Suchen nach Name oder E-Mail …" aria-label="Suchen">
+   <button id="refresh" class="ghost" type="button">↻ Aktualisieren</button>
+   <button id="csv" class="ghost" type="button">⬇ CSV herunterladen</button>
+   <button id="logout" class="ghost" type="button">Abmelden</button>
+  </div>
+  <div class="stats"><div class="stat"><b id="count">0</b><span>Teilnehmende mit E-Mail</span></div><div class="stat"><b id="leader">—</b><span>Aktuell auf Platz 1</span></div><div class="stat"><b id="updated">—</b><span>Stand</span></div></div>
+  <div class="table-wrap"><table><thead><tr><th>Platz</th><th>Name</th><th>E-Mail</th><th class="num">Level</th><th class="num">Punkte</th><th class="num">Läufe</th><th>Bestleistung am</th><th>Angemeldet am</th></tr></thead><tbody id="rows"></tbody></table></div>
+  <p class="note">«Platz» ist der Rang in der öffentlichen Rangliste (Level, dann Punkte, bei Gleichstand wer früher dort war). Es erscheinen nur Spieler, die beim Game Over ihre E-Mail angegeben und der Teilnahme zugestimmt haben.</p>
+  <p id="list-error" class="error" role="alert" hidden></p>
+ </section>
+</main>
+<script type="module" src="admin.js?v=1"></script>
+</body></html>

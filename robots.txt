@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://ab-ins-spa-alpen-resort.higgsfield.app/sitemap.xml
