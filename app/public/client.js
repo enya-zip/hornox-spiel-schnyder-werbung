@@ -64,7 +64,7 @@ function hideLevelBanner(){clearTimeout(bannerTimer);$("level-banner").classList
 function toast(value,seconds=1.8){$("toast").textContent=value;$("toast").classList.add("visible");toastUntil=time+seconds;}
 function updateCopy(){
  document.documentElement.lang=lang;document.querySelectorAll("[data-i18n]").forEach(e=>e.textContent=t(e.dataset.i18n));document.querySelectorAll("[data-label]").forEach(e=>e.setAttribute("aria-label",t(e.dataset.label)));
- $("language").value=lang;$("quick-sound").textContent=sound?"♪":"♪̸";$("quick-sound").setAttribute("aria-label",t(sound?"soundOn":"soundOff"));$("quick-sound").setAttribute("aria-pressed",String(sound));
+ $("language").value=lang;$("quick-sound").classList.toggle("muted",!sound);$("quick-sound").setAttribute("aria-label",t(sound?"soundOn":"soundOff"));$("quick-sound").setAttribute("aria-pressed",String(sound));
  $("start").querySelector("span").textContent=t(loaded?"start":"loading");$("best-score").textContent=best()?fmt(best()):"—";
  $("challenge").hidden=!q.has("challenge");$("challenge").textContent=t("challenge",{score:fmt(target)});
  document.querySelectorAll("[data-route]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.route===route)));

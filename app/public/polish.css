@@ -135,3 +135,9 @@ dialog .dialog-close{border-radius:var(--radius-s)}
 }
 /* Beschriftung unter dem Blitz auch auf hellem Schnee lesbar */
 #rush-name{background:#0b2834c4;border-radius:8px;padding:2px 6px}
+
+/* Ton-Knopf: gezeichnete Symbole statt Textzeichen (Lautsprecher an / aus) */
+#quick-sound svg{width:22px;height:22px;stroke-width:2}
+#quick-sound .snd-off,#quick-sound.muted .snd-on{display:none}
+#quick-sound.muted .snd-off{display:block}
+#quick-sound.muted{color:#e9a8a0;border-color:#e9a8a066}
