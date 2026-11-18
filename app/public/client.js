@@ -5,9 +5,10 @@ import {setup,validateAction,applyAction} from "./rules.js?v=39";
 import {installControls} from "./controls.js?v=17";
 import {createAudio} from "./audio.js?v=23";
 import {getZone} from "./scene3d.js?v=58";
-import {copy} from "./copy.js?v=39";
+import {copy} from "./copy.js?v=40";
 import {turnDirection} from "./route.js?v=21";
-import {createLeaderboard} from "./leaderboard.js?v=1";
+import {createLeaderboard} from "./leaderboard.js?v=2";
+import {LEADERBOARD} from "./leaderboard-config.js?v=2";
 const $=id=>document.getElementById(id),q=new URLSearchParams(location.search),app=$("app"),canvas=$("world"),player="guest";
 const read=k=>{try{return localStorage.getItem(k);}catch{return null;}},save=(k,v)=>{try{localStorage.setItem(k,String(v));}catch{}};
 const today=Number(new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Zurich",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date()).replaceAll("-",""));
@@ -104,7 +105,7 @@ function skipToLevel(){
 }
 let runBest=0,bestAnnounced=false;
 function start(){
- if(!loaded)return;runBest=best();bestAnnounced=false;countToken=0;watchBoard(false);hideLevelBanner();crowsSeen=new Set();forestSec=0;forestSounds.clear();meadowSec=0;meadowSounds.clear();lakeSec=0;lakeSounds.clear();fisherMood=1;fisherEscaped=false;$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;state=setup([player]);dispatch({type:"start",seed,mode,route});setScreen("play");acc=0;renderDistance=0;countdown=0;introElapsed=0;lastCount=-1;resultSaved=false;tiltBase=null;$("countdown").hidden=true;$("countdown").textContent="";
+ if(!loaded)return;pendingSend=null;$("name-dialog").open&&$("name-dialog").close();runBest=best();bestAnnounced=false;countToken=0;watchBoard(false);hideLevelBanner();crowsSeen=new Set();forestSec=0;forestSounds.clear();meadowSec=0;meadowSounds.clear();lakeSec=0;lakeSounds.clear();fisherMood=1;fisherEscaped=false;$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;state=setup([player]);dispatch({type:"start",seed,mode,route});setScreen("play");acc=0;renderDistance=0;countdown=0;introElapsed=0;lastCount=-1;resultSaved=false;tiltBase=null;$("countdown").hidden=true;$("countdown").textContent="";
  audio.unlock().catch(()=>{});audio.setActive(true);controls.reset();scene?.resetEffects();$("feedback-label").textContent="";skipToLevel();hud();
 }
 function home(){introElapsed=-1;hideLevelBanner();audio.setChase(false);$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;audio.setActive(true);scene?.resetEffects();$("feedback-label").textContent="";state=setup([player]);setScreen("home");selectMenu("run");countdown=0;renderDistance=0;$("countdown").hidden=true;$("turn-cue").hidden=true;$("tutorial").hidden=true;$("powerup").hidden=true;$("resort-arrival").hidden=true;updateCopy();}
@@ -146,7 +147,40 @@ const board=createLeaderboard();
 const playerId=(()=>{let id=read("hornox.player.id");if(!id){id=(crypto.randomUUID?crypto.randomUUID():"10000000-1000-4000-8000-100000000000".replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16)));save("hornox.player.id",id);}return id;})();
 let playerName=read("hornox.player.name")||"",boardTimer=0,lastGlobal=null;
 const medal=r=>r===1?"🥇":r===2?"🥈":r===3?"🥉":"";
-function askName(then){const d=$("name-dialog");$("name-input").value=playerName;d.showModal();$("name-input").focus();$("name-form").onsubmit=e=>{e.preventDefault();const v=$("name-input").value.trim().slice(0,20);if(!v)return;const renamed=playerName&&playerName!==v;playerName=v;save("hornox.player.name",v);d.close();updateNameButton();if(renamed)board.rename(playerId,v).catch(()=>{});then?.();};}
+// Gewinnspiel-Dialog: Spielername (Pflicht) + E-Mail (freiwillig, nur mit Einwilligung).
+// Die E-Mail wird nur auf diesem Gerät (zum Vorausfüllen) und in der gesperrten Kontakt-Tabelle gespeichert.
+let playerEmail=read("hornox.player.email")||"",contestAsked=false,pendingSend=null;
+const validEmail=v=>/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)&&v.length<=254;
+function askName(then,{fromResult=false}={}){
+ const d=$("name-dialog"),err=$("name-error");contestAsked=true;
+ $("name-input").value=playerName;$("email-input").value=playerEmail;$("consent-input").checked=!!playerEmail;err.hidden=true;
+ const terms=$("terms-link");terms.hidden=!LEADERBOARD.termsUrl;if(LEADERBOARD.termsUrl)terms.href=LEADERBOARD.termsUrl;
+ let saved=false;d.showModal();(playerName?$("email-input"):$("name-input")).focus();
+ const fail=msg=>{err.textContent=msg;err.hidden=false;};
+ $("name-later").onclick=()=>d.close();
+ d.onclose=()=>{d.onclose=null;if(!saved){if(playerName)runPending(fromResult?null:then);else if(pendingSend){$("result-global").hidden=false;$("global-place").textContent=t("nameNeeded");$("global-change").textContent="";$("global-around").replaceChildren();}}updateContestCard();};
+ $("name-form").onsubmit=async e=>{e.preventDefault();
+  const v=$("name-input").value.trim().slice(0,20),mail=$("email-input").value.trim().toLowerCase(),ok=$("consent-input").checked;
+  if(!v){fail(t("nameMissing"));$("name-input").focus();return;}
+  if(mail&&!validEmail(mail)){fail(t("emailInvalid"));$("email-input").focus();return;}
+  if(mail&&!ok){fail(t("consentMissing"));$("consent-input").focus();return;}
+  const renamed=playerName&&playerName!==v,emailChanged=mail!==playerEmail;
+  playerName=v;save("hornox.player.name",v);updateNameButton();
+  if(emailChanged||mail){const btn=$("name-form").querySelector("button[type=submit]");btn.disabled=true;
+   try{await board.saveContact(playerId,v,mail,ok);playerEmail=mail;save("hornox.player.email",mail);}
+   catch(x){btn.disabled=false;fail(t("contestError"));return;}btn.disabled=false;
+   if(mail)toast(t("contestSaved"),2.6);}
+  else if(renamed)board.rename(playerId,v).catch(()=>{});
+  saved=true;d.close();runPending(fromResult?null:then);refreshResultName();};
+}
+// Ein noch nicht gemeldetes Ergebnis (Name fehlte) wird nachgereicht, sobald ein Name da ist.
+function runPending(then){const send=pendingSend;pendingSend=null;if(send)send();else then?.();}
+function refreshResultName(){if(screen==="result"&&state.phase!=="won"&&testLevel<=1&&board.configured)$("result-title").textContent=t("gameOverName",{name:playerName});}
+// Karte auf der Ergebnis-Seite: zeigt, ob man am Gewinnspiel teilnimmt, und öffnet den Dialog.
+function updateContestCard(){const c=$("contest-card");c.hidden=!board.configured;if(c.hidden)return;
+ const inn=!!playerEmail;c.classList.toggle("joined",inn);$("contest-title").textContent=t(inn?"contestJoined":"contestTitle");
+ $("contest-note").textContent=inn?t("contestJoinedNote",{name:playerName}):t("contestNote");$("contest-open").textContent=t(inn?"contestEdit":"contestJoin");}
+$("contest-open").onclick=()=>askName(null,{fromResult:true});
 function updateNameButton(){$("global-name").textContent=playerName?t("nameChange",{name:playerName}):t("nameSet");}
 function boardRow(e,rank,isMe){const li=document.createElement("li"),n=document.createElement("b"),main=document.createElement("div"),who=document.createElement("strong"),info=document.createElement("small"),tag=document.createElement("span");
  if(isMe)li.className="me";n.innerHTML="";n.textContent=medal(rank)?medal(rank)+" "+rank+".":rank+".";who.textContent=e.name+(isMe?" · "+t("you"):"");info.textContent=t("rankLevel",{n:e.best_level})+" · "+fmt(e.best_score)+" "+t("points");main.append(who,info);tag.className="tags";li.append(n,main,tag);return li;}
@@ -173,7 +207,10 @@ async function reportGlobal(){
    $("global-change").textContent=!before?t("globalNew"):st.rank<before?t(before-st.rank===1?"globalUp1":"globalUp",{n:before-st.rank}):st.rank>before?t(st.rank-before===1?"globalDown1":"globalDown",{n:st.rank-before}):t("globalSame");
    const ol=$("global-around");ol.replaceChildren(...[st.above&&boardRow(st.above,st.rank-1,false),boardRow(st.me,st.rank,true),st.below&&boardRow(st.below,st.rank+1,false)].filter(Boolean));
   }catch(err){$("global-place").textContent=t("globalError");}};
- if(!playerName)askName(send);else send();
+ updateContestCard();
+ // Beim ersten Game Over (oder solange noch keine E-Mail hinterlegt ist, einmal pro Besuch) den Gewinnspiel-Dialog zeigen.
+ pendingSend=send;
+ if(!playerName||(!playerEmail&&!contestAsked))askName(null);else runPending();
 }
 function finish(){if(resultSaved)return;resultSaved=true;audio.setChase(false);audio.setActive(false);addRanking();setTimeout(reportGlobal,0);
  const previous=best(state.route,state.mode);recordInfo={previous,isNew:testLevel<=1&&Math.floor(state.score)>previous&&state.score>0};if(recordInfo.isNew)save(bestKey(state.route,state.mode),Math.floor(state.score));

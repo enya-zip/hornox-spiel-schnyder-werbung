@@ -1229,3 +1229,39 @@ Object.assign(copy.ja,{"glacier":"氷河","music":"音楽","statLevel":"レベ�
 Object.assign(copy.zh,{"glacier":"冰川","music":"音乐","statLevel":"关卡","statDistance":"距离","statBest":"个人最佳","hotelTitle":"Alpen Resort Hotel & Spa","hotel":"了解你的策马特之旅",
  "keysHelp":"键盘：← → 换道 · ↑/空格 跳跃 · ↓ 滑行 · E 冲刺 · Esc/P 暂停 · Enter 再来一局",
  "keyHint":"按键 {k}","gameOver":"GAME OVER","recordBadge":"🏆 新的个人最佳！","recordGap":"距个人最佳还差{n}分","newBestRun":"🏆 新的个人最佳！","testRunNote":"从第{n}关开始的练习 – 不计入个人最佳。"});
+// Gewinnspiel: Name + E-Mail beim Game Over (E-Mail nicht öffentlich, nur für den Admin sichtbar).
+Object.assign(copy.de,{"contestKicker":"🎁 GEWINNSPIEL","nameTitle":"Trag dich ein!","nameNote":"Dein Spielername erscheint in der Rangliste. Mit deiner E-Mail-Adresse nimmst du zusätzlich am Gewinnspiel teil.",
+ "nameLabel":"Spielername","emailLabel":"E-Mail für das Gewinnspiel","optional":"(freiwillig)",
+ "emailPrivate":"Deine E-Mail-Adresse ist nicht öffentlich. Sie erscheint nirgends im Spiel und wird nur vom Veranstalter verwendet, um dich bei einem Gewinn zu benachrichtigen.",
+ "consentText":"Ich möchte am Gewinnspiel teilnehmen und bin einverstanden, dass das Alpen Resort Zermatt meine E-Mail-Adresse dafür speichert und mich im Gewinnfall kontaktiert.","termsLink":"Teilnahmebedingungen",
+ "nameSave":"Speichern","nameMissing":"Bitte gib einen Spielernamen ein.","emailInvalid":"Diese E-Mail-Adresse scheint nicht gültig zu sein.","consentMissing":"Bitte bestätige die Teilnahme am Gewinnspiel – oder lass das E-Mail-Feld leer.",
+ "contestError":"Speichern hat nicht geklappt. Bitte versuche es nochmals.","contestSaved":"🎁 Du nimmst am Gewinnspiel teil!","nameNeeded":"Trag deinen Namen ein, damit dein Ergebnis in der Rangliste erscheint.",
+ "contestTitle":"Gewinnspiel","contestNote":"Mit deiner E-Mail kannst du gewinnen.","contestJoined":"Du nimmst am Gewinnspiel teil ✓","contestJoinedNote":"Als {name} · E-Mail hinterlegt (nicht öffentlich)","contestEdit":"Ändern","contestJoin":"Mitmachen"});
+Object.assign(copy.en,{"contestKicker":"🎁 PRIZE DRAW","nameTitle":"Sign up!","nameNote":"Your player name appears on the leaderboard. Add your email address to also enter the prize draw.",
+ "nameLabel":"Player name","emailLabel":"Email for the prize draw","optional":"(optional)",
+ "emailPrivate":"Your email address is not public. It is never shown in the game and is only used by the organiser to notify you if you win.",
+ "consentText":"I want to enter the prize draw and agree that Alpen Resort Zermatt stores my email address for this purpose and contacts me if I win.","termsLink":"Terms and conditions",
+ "nameSave":"Save","nameMissing":"Please enter a player name.","emailInvalid":"This email address doesn't look valid.","consentMissing":"Please confirm your entry to the prize draw – or leave the email field empty.",
+ "contestError":"Saving didn't work. Please try again.","contestSaved":"🎁 You're in the prize draw!","nameNeeded":"Enter your name so your result appears on the leaderboard.",
+ "contestTitle":"Prize draw","contestNote":"Add your email for a chance to win.","contestJoined":"You're in the prize draw ✓","contestJoinedNote":"As {name} · email saved (not public)","contestEdit":"Edit","contestJoin":"Join"});
+Object.assign(copy.fr,{"contestKicker":"🎁 CONCOURS","nameTitle":"Inscris-toi !","nameNote":"Ton nom de joueur apparaît dans le classement. Avec ton adresse e-mail, tu participes aussi au concours.",
+ "nameLabel":"Nom de joueur","emailLabel":"E-mail pour le concours","optional":"(facultatif)",
+ "emailPrivate":"Ton adresse e-mail n'est pas publique. Elle n'apparaît jamais dans le jeu et sert uniquement à l'organisateur pour te prévenir si tu gagnes.",
+ "consentText":"Je souhaite participer au concours et j'accepte que l'Alpen Resort Zermatt enregistre mon adresse e-mail à cette fin et me contacte si je gagne.","termsLink":"Conditions de participation",
+ "nameSave":"Enregistrer","nameMissing":"Merci d'indiquer un nom de joueur.","emailInvalid":"Cette adresse e-mail ne semble pas valide.","consentMissing":"Merci de confirmer ta participation – ou laisse le champ e-mail vide.",
+ "contestError":"L'enregistrement a échoué. Réessaie.","contestSaved":"🎁 Tu participes au concours !","nameNeeded":"Indique ton nom pour apparaître dans le classement.",
+ "contestTitle":"Concours","contestNote":"Ajoute ton e-mail pour tenter de gagner.","contestJoined":"Tu participes au concours ✓","contestJoinedNote":"En tant que {name} · e-mail enregistré (non public)","contestEdit":"Modifier","contestJoin":"Participer"});
+Object.assign(copy.ja,{"contestKicker":"🎁 プレゼント抽選","nameTitle":"登録しよう！","nameNote":"プレイヤー名はランキングに表示されます。メールアドレスを入力すると抽選にも参加できます。",
+ "nameLabel":"プレイヤー名","emailLabel":"抽選用メールアドレス","optional":"（任意）",
+ "emailPrivate":"メールアドレスは公開されません。ゲーム内には表示されず、当選時の連絡にのみ主催者が使用します。",
+ "consentText":"抽選に参加し、アルペン・リゾート・ツェルマットがこの目的でメールアドレスを保存し、当選時に連絡することに同意します。","termsLink":"参加規約",
+ "nameSave":"保存","nameMissing":"プレイヤー名を入力してください。","emailInvalid":"メールアドレスが正しくないようです。","consentMissing":"抽選への参加に同意するか、メール欄を空にしてください。",
+ "contestError":"保存できませんでした。もう一度お試しください。","contestSaved":"🎁 抽選に参加しました！","nameNeeded":"ランキングに表示するには名前を入力してください。",
+ "contestTitle":"プレゼント抽選","contestNote":"メールアドレスを登録して当選のチャンス。","contestJoined":"抽選に参加中 ✓","contestJoinedNote":"{name} · メール登録済み（非公開）","contestEdit":"変更","contestJoin":"参加する"});
+Object.assign(copy.zh,{"contestKicker":"🎁 抽奖活动","nameTitle":"登记参加！","nameNote":"你的玩家名会显示在排行榜上。填写邮箱即可同时参加抽奖。",
+ "nameLabel":"玩家名","emailLabel":"抽奖邮箱","optional":"（可选）",
+ "emailPrivate":"你的邮箱不会公开，不会在游戏中显示，仅由主办方用于通知中奖。",
+ "consentText":"我希望参加抽奖，并同意策马特阿尔卑斯度假酒店为此保存我的邮箱，并在中奖时与我联系。","termsLink":"参与条款",
+ "nameSave":"保存","nameMissing":"请输入玩家名。","emailInvalid":"该邮箱地址似乎无效。","consentMissing":"请确认参加抽奖，或将邮箱留空。",
+ "contestError":"保存失败，请重试。","contestSaved":"🎁 你已参加抽奖！","nameNeeded":"输入名字后成绩才会显示在排行榜上。",
+ "contestTitle":"抽奖活动","contestNote":"留下邮箱即有机会中奖。","contestJoined":"你已参加抽奖 ✓","contestJoinedNote":"玩家 {name} · 邮箱已保存（不公开）","contestEdit":"修改","contestJoin":"参加"});
