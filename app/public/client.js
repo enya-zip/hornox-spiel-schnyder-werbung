@@ -1,11 +1,11 @@
 import {INTRO_DURATION,COUNTDOWN_DURATION} from './intro.js?v=17';
 import {stages,getStage,DURATION,fogAt,bridgeAt,forestSection,meadowSection,meadowWindows,lakeSection,stoneAt} from "./journey.js?v=25";
-import {createScene} from "./scene3d.js?v=57";
+import {createScene} from "./scene3d.js?v=58";
 import {setup,validateAction,applyAction} from "./rules.js?v=39";
 import {installControls} from "./controls.js?v=17";
-import {createAudio} from "./audio.js?v=22";
-import {getZone} from "./scene3d.js?v=57";
-import {copy} from "./copy.js?v=38";
+import {createAudio} from "./audio.js?v=23";
+import {getZone} from "./scene3d.js?v=58";
+import {copy} from "./copy.js?v=39";
 import {turnDirection} from "./route.js?v=21";
 import {createLeaderboard} from "./leaderboard.js?v=1";
 const $=id=>document.getElementById(id),q=new URLSearchParams(location.search),app=$("app"),canvas=$("world"),player="guest";
@@ -14,14 +14,15 @@ const today=Number(new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Zurich",yea
 const qs=Number(q.get("challenge"));let seed=Number.isInteger(qs)&&qs>0&&qs<2147483648?qs:today;
 let route="summit",mode=q.get("mode")==="relaxed"||read("spa.runner.assist")==="1"?"relaxed":"classic";
 const target=Math.max(0,Math.min(1000000,Number(q.get("target"))||0));
-let lang=Object.hasOwn(copy,read("hornox.language.v5"))?read("hornox.language.v5"):"en",reduced=read("spa.motion")==="1"||matchMedia("(prefers-reduced-motion: reduce)").matches,contrast=read("spa.contrast")==="1",buttons=read("hornox.buttons.v5")===null?matchMedia("(pointer:coarse)").matches:read("hornox.buttons.v5")==="1",sound=read("hornox.sound.v5")!=="0",tilt=false,tiltPending=false,tiltBase=null,tiltValue=1;
+const browserLang=(navigator.languages||[navigator.language||""]).map(l=>String(l).slice(0,2).toLowerCase()).find(l=>Object.hasOwn(copy,l));
+let lang=Object.hasOwn(copy,read("hornox.language.v5"))?read("hornox.language.v5"):browserLang||"de",reduced=read("spa.motion")==="1"||matchMedia("(prefers-reduced-motion: reduce)").matches,contrast=read("spa.contrast")==="1",buttons=read("hornox.buttons.v5")===null?matchMedia("(pointer:coarse)").matches:read("hornox.buttons.v5")==="1",sound=read("hornox.sound.v5")!=="0",music=read("hornox.music.v1")!=="0",tilt=false,tiltPending=false,tiltBase=null,tiltValue=1;
 let state=setup([player]),screen="home",paused=false,loaded=false,scene,last=0,time=0,acc=0,countdown=0,introElapsed=-1,lastCount=-1,renderDistance=0,toastUntil=0,resultSaved=false,fps=60,frames=0,frameTime=0,listening=null;
 const defaults={left:"ArrowLeft",right:"ArrowRight",jump:"ArrowUp",duck:"ArrowDown"};let bindings={...defaults};
 try{const b=JSON.parse(read("spa.runner.keys"));if(b&&Object.keys(defaults).every(k=>/^(ArrowLeft|ArrowRight|ArrowUp|ArrowDown|Space|Key[A-OQ-Z])$/.test(b[k]))&&new Set(Object.values(b)).size===4)bindings=b;}catch{}
 const t=(k,v={})=>{let s=copy[lang][k]||copy.en[k]||k;for(const key in v)s=s.replaceAll("{"+key+"}",v[key]);return s;};
 const fmt=n=>new Intl.NumberFormat(({en:"en-GB",de:"de-CH",fr:"fr-CH",ja:"ja-JP",zh:"zh-CN"})[lang]).format(Math.floor(n));
 const bestKey=(r=route,m=mode)=>"hornox.v17."+r+"."+m,best=(r=route,m=mode)=>Math.max(0,Number(read(bestKey(r,m)))||0);
-const audio=createAudio();audio.setEnabled(sound);
+const audio=createAudio();audio.setEnabled(sound);audio.setMusic(music);
 // Level-Meldung: "Level X geschafft!" + Name und Nummer des nächsten Levels.
 let bannerTimer=0;
 function levelBanner(stage){const b=$("level-banner");$("level-done").textContent=t("levelDone",{done:stage});$("level-name").textContent=t(stages[stage].key);$("level-next").textContent=t("levelNext",{next:stage+1});b.hidden=false;b.classList.add("visible");clearTimeout(bannerTimer);bannerTimer=setTimeout(()=>{b.classList.remove("visible");bannerTimer=setTimeout(()=>{b.hidden=true;},400);},3200);}
@@ -67,7 +68,7 @@ function updateCopy(){
  $("start").querySelector("span").textContent=t(loaded?"start":"loading");$("best-score").textContent=best()?fmt(best()):"—";
  $("challenge").hidden=!q.has("challenge");$("challenge").textContent=t("challenge",{score:fmt(target)});
  document.querySelectorAll("[data-route]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.route===route)));
- $("sound-toggle").checked=sound;$("assist-toggle").checked=mode==="relaxed";$("reduce-toggle").checked=reduced;$("contrast-toggle").checked=contrast;$("buttons-toggle").checked=buttons;
+ $("sound-toggle").checked=sound;$("music-toggle").checked=music;$("music-toggle").disabled=!sound;$("assist-toggle").checked=mode==="relaxed";$("reduce-toggle").checked=reduced;$("contrast-toggle").checked=contrast;$("buttons-toggle").checked=buttons;
  $("tilt-toggle").textContent=t(tilt?"deactivate":"activate");$("tilt-status").textContent=t(tilt?"tiltOn":"tiltHelp");
  app.classList.toggle("reduced",reduced);app.classList.toggle("high-contrast",contrast);
  for(const [key,value]of Object.entries(bindings)){const b=$("bind-"+key);b.textContent=t(key)+" "+value.replace("ArrowLeft","←").replace("ArrowRight","→").replace("ArrowUp","↑").replace("ArrowDown","↓").replace("Key","").replace("Space","␣");b.setAttribute("aria-label",t(key)+": "+value);}
@@ -101,19 +102,30 @@ function skipToLevel(){
   nextRow:distance+30,row:Math.floor(distance/24),checkpoints:Math.floor(elapsed/120),nextHeartAt:elapsed+20,objects:[],events:[]};
  renderDistance=distance;introElapsed=INTRO_DURATION;
 }
+let runBest=0,bestAnnounced=false;
 function start(){
- if(!loaded)return;watchBoard(false);hideLevelBanner();crowsSeen=new Set();forestSec=0;forestSounds.clear();meadowSec=0;meadowSounds.clear();lakeSec=0;lakeSounds.clear();fisherMood=1;fisherEscaped=false;$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;state=setup([player]);dispatch({type:"start",seed,mode,route});setScreen("play");acc=0;renderDistance=0;countdown=0;introElapsed=0;lastCount=-1;resultSaved=false;tiltBase=null;$("countdown").hidden=true;$("countdown").textContent="";
+ if(!loaded)return;runBest=best();bestAnnounced=false;countToken=0;watchBoard(false);hideLevelBanner();crowsSeen=new Set();forestSec=0;forestSounds.clear();meadowSec=0;meadowSounds.clear();lakeSec=0;lakeSounds.clear();fisherMood=1;fisherEscaped=false;$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;state=setup([player]);dispatch({type:"start",seed,mode,route});setScreen("play");acc=0;renderDistance=0;countdown=0;introElapsed=0;lastCount=-1;resultSaved=false;tiltBase=null;$("countdown").hidden=true;$("countdown").textContent="";
  audio.unlock().catch(()=>{});audio.setActive(true);controls.reset();scene?.resetEffects();$("feedback-label").textContent="";skipToLevel();hud();
 }
 function home(){introElapsed=-1;hideLevelBanner();audio.setChase(false);$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;audio.setActive(true);scene?.resetEffects();$("feedback-label").textContent="";state=setup([player]);setScreen("home");selectMenu("run");countdown=0;renderDistance=0;$("countdown").hidden=true;$("turn-cue").hidden=true;$("tutorial").hidden=true;$("powerup").hidden=true;$("resort-arrival").hidden=true;updateCopy();}
 function pause(value=true){if(screen!=="play")return;paused=value;acc=0;$("pause-overlay").hidden=!value;if(value){audio.setActive(false);$("resume").focus();}else {audio.unlock().catch(()=>{});audio.setActive(true);}}
 function openDialog(id){if(screen==="play"&&!paused)pause(true);$(id).showModal();}
+// Ergebnis-Seite: Titel, Punkte, Statistik (Level, Strecke, Münzen, Bestleistung) und Ranglistenplatz.
+let recordInfo={isNew:false,previous:0},countToken=0;
 function resultCopy(){
- $("result-title").textContent=t(state.phase==="won"?"won":"lost");$("result-kicker").textContent=state.phase==="won"?t("wonKicker"):testLevel<=1&&state.score>=best()?t("record"):"HORNOX RUN";
- $("result-score").textContent=fmt(state.score);$("result-details").textContent=fmt(state.distance)+" m · "+fmt(state.coins)+" "+t("coins");
- $("result-note").textContent=t(state.phase==="won"?"wonText":"lostText",{distance:fmt(state.distance),coins:fmt(state.coins)});
- $("result-rank").textContent=lastRankPlace?t(lastRankPlace===1?"rankFirst":"rankPlace",{n:lastRankPlace})+(testLevel>1?" · "+t("rankTest",{n:testLevel}):""):t("rankOut");
+ const won=state.phase==="won",test=testLevel>1,level=Math.min(stages.length,getStage(state.elapsed)+1),top=best();
+ $("result-title").textContent=won?t("won"):playerName&&board.configured&&!test?t("gameOverName",{name:playerName}):t("lost");
+ $("result-kicker").textContent=won?t("wonKicker"):t("gameOver");
+ if(!countToken)$("result-score").textContent=fmt(state.score);
+ const badge=$("result-badge");badge.hidden=!recordInfo.isNew;badge.textContent=t("recordBadge");$("result").classList.toggle("is-record",recordInfo.isNew);
+ $("stat-level").textContent=level+"/"+stages.length+" · "+t(stages[level-1].key).split(" · ")[0];
+ $("stat-distance").textContent=fmt(state.distance)+" m";$("stat-coins").textContent=fmt(state.coins||0);$("stat-best").textContent=top?fmt(top):"—";
+ $("result-note").textContent=won?t("wonText",{coins:fmt(state.coins||0)}):test?t("testRunNote",{n:testLevel}):!recordInfo.isNew&&top>state.score?t("recordGap",{n:fmt(top-Math.floor(state.score))}):t("lostText",{distance:fmt(state.distance),coins:fmt(state.coins||0)});
+ $("result-rank").textContent=lastRankPlace?t(lastRankPlace===1?"rankFirst":"rankPlace",{n:lastRankPlace})+(test?" · "+t("rankTest",{n:testLevel}):""):t("rankOut");
 }
+// Punktestand zählt beim Game Over kurz hoch (ohne Animation bei «Weniger Kamerabewegung»).
+function countUp(){const node=$("result-score"),end=Math.floor(state.score),token=++countToken,t0=performance.now(),dur=reduced?0:900;
+ const step=now=>{if(token!==countToken)return;const u=dur?Math.min(1,(now-t0)/dur):1;node.textContent=fmt(end*(1-Math.pow(1-u,3)));if(u<1)requestAnimationFrame(step);else countToken=0;};requestAnimationFrame(step);}
 // Rangliste: die 10 besten Läufe auf diesem Gerät. Test-Läufe (?level=N) zählen mit und sind markiert,
 // verändern aber den offiziellen Bestwert nicht.
 const rankKey="hornox.ranking.v1";let lastRankId=0,lastRankPlace=0;
@@ -163,7 +175,9 @@ async function reportGlobal(){
   }catch(err){$("global-place").textContent=t("globalError");}};
  if(!playerName)askName(send);else send();
 }
-function finish(){if(resultSaved)return;resultSaved=true;audio.setChase(false);audio.setActive(false);addRanking();setTimeout(reportGlobal,0);if(testLevel<=1&&state.score>best(state.route,state.mode))save(bestKey(state.route,state.mode),state.score);setScreen("result");$("turn-cue").hidden=true;$("tutorial").hidden=true;$("resort-arrival").hidden=true;resultCopy();$("again").focus();}
+function finish(){if(resultSaved)return;resultSaved=true;audio.setChase(false);audio.setActive(false);addRanking();setTimeout(reportGlobal,0);
+ const previous=best(state.route,state.mode);recordInfo={previous,isNew:testLevel<=1&&Math.floor(state.score)>previous&&state.score>0};if(recordInfo.isNew)save(bestKey(state.route,state.mode),Math.floor(state.score));
+ setScreen("result");$("turn-cue").hidden=true;$("tutorial").hidden=true;$("resort-arrival").hidden=true;$("powerup").hidden=true;$("fisher-bubble").hidden=true;countToken=0;resultCopy();countUp();if(recordInfo.isNew)audio.play("pickup",1.7,.8);$("again").focus();}
 function heartFeedback(gained){const node=$('heart-feedback');node.querySelector('span').textContent=t(gained?'heartGain':'heartFull');node.hidden=false;node.getAnimations().forEach(a=>a.cancel());const target=$('lives').getBoundingClientRect(),x=target.left+target.width/2-innerWidth/2,y=target.top+target.height/2-innerHeight*.40;node.animate(reduced?[{opacity:1},{opacity:1,offset:.75},{opacity:0}]:[{opacity:0,transform:'translate(-50%,-50%) scale(.6)'},{opacity:1,transform:'translate(-50%,-50%) scale(1.15)',offset:.18},{opacity:1,transform:'translate(-50%,-50%) scale(1)',offset:.60},{opacity:0,transform:`translate(calc(-50% + ${x}px),calc(-50% + ${y}px)) scale(.22)`}],{duration:reduced?1000:1350,fill:'forwards'});audio.play('pickup',1.6,.85);}
 function processEvents(){
  for(const e of state.events){scene?.emit(e,state);if(["jump","duck","land","pickup","bump"].includes(e.kind))audio.play(e.kind,e.kind==="pickup"?1+(state.chain%8)*.035:1);
@@ -253,7 +267,7 @@ function hud(){if(screen==="play"&&state.phase==="playing")crowWarnings();fisher
 
  $("resort-arrival").hidden=true;
  $("touch-controls").hidden=!active||!buttons||intro||countdown>0;
- const gear=state.climbReady>0||state.climb>0,charged=gear?state.climbReady>0:state.powerCharge>=30,on=gear?state.climb>0:state.powerTicks>0,pb=$("rush-button");pb.classList.toggle('climb',gear);pb.hidden=!active||intro||countdown>0;pb.disabled=paused||!charged||on;pb.classList.toggle('ready',charged&&!on);pb.classList.toggle('running',on);pb.style.setProperty('--charge',(gear?(on?state.climb/200:1):on?state.powerTicks/120:state.powerCharge/30)*100+'%');$('rush-value').textContent=on?Math.ceil((gear?state.climb:state.powerTicks)/20)+'s':charged?t('powerTap'):state.powerCharge+'/30';$('rush-name').textContent=t(gear?'climbName':'powerName');pb.setAttribute('aria-label',on?t('powerActive',{n:Math.ceil(state.powerTicks/20)}):charged?t('powerReady'):t('powerCharge',{n:state.powerCharge}));$('rush-key').textContent=matchMedia('(pointer:coarse)').matches?'':powerKey().replace('Key','');
+ const gear=state.climbReady>0||state.climb>0,charged=gear?state.climbReady>0:state.powerCharge>=30,on=gear?state.climb>0:state.powerTicks>0,pb=$("rush-button");pb.classList.toggle('climb',gear);pb.hidden=!active||intro||countdown>0;pb.disabled=paused||!charged||on;pb.classList.toggle('ready',charged&&!on);pb.classList.toggle('running',on);pb.style.setProperty('--charge',(gear?(on?state.climb/200:1):on?state.powerTicks/120:state.powerCharge/30)*100+'%');$('rush-value').textContent=on?Math.ceil((gear?state.climb:state.powerTicks)/20)+'s':charged?t('powerTap'):state.powerCharge+'/30';$('rush-name').textContent=t(gear?'climbName':'powerName');pb.setAttribute('aria-label',on?t('powerActive',{n:Math.ceil(state.powerTicks/20)}):charged?t('powerReady'):t('powerCharge',{n:state.powerCharge}));$('rush-key').textContent=matchMedia('(pointer:coarse)').matches?'':t('keyHint',{k:powerKey().replace('Key','')});
 }
 function powerKey(){return ["KeyE","KeyQ","KeyF","KeyX","KeyC"].find(k=>!Object.values(bindings).includes(k));}
 let renderScale=1.35,qualityLowTime=0,qualityHighTime=0,qualityCooldown=0;
@@ -265,7 +279,7 @@ function loop(ms){
   if(introElapsed>=0){introElapsed+=dt;if(introElapsed>=INTRO_DURATION){introElapsed=-1;countdown=COUNTDOWN_DURATION;lastCount=3;$("countdown").hidden=false;$("countdown").textContent="3";audio.play('pickup',.9,.55);}}
   else if(countdown>0){countdown=Math.max(0,countdown-dt);const n=Math.ceil(countdown);if(n!==lastCount){lastCount=n;audio.play('pickup',n?1.2-n*.1:1.6,n?.55:.8);}$("countdown").textContent=n||t("go");if(countdown<=0)$("countdown").hidden=true;}
 
-  else{acc+=dt;while(acc>=.05&&state.phase==="playing"){if(tilt)dispatch({type:"steer",lane:tiltValue});dispatch({type:"step"});acc-=.05;}if(state.phase!=="playing")finish();}
+  else{acc+=dt;while(acc>=.05&&state.phase==="playing"){if(tilt)dispatch({type:"steer",lane:tiltValue});dispatch({type:"step"});acc-=.05;}if(!bestAnnounced&&runBest>0&&testLevel<=1&&state.score>runBest&&state.phase==="playing"){bestAnnounced=true;toast(t("newBestRun"),2.4);audio.play("pickup",1.9,.7);}if(state.phase!=="playing")finish();}
  }
  if(loaded&&screen==='play'&&!paused&&introElapsed<0&&countdown<=0){
   qualityCooldown=Math.max(0,qualityCooldown-dt);qualityLowTime=fps<43?qualityLowTime+dt:Math.max(0,qualityLowTime-dt*2);qualityHighTime=fps>56?qualityHighTime+dt:0;
@@ -297,7 +311,8 @@ $("language").onchange=e=>{lang=e.target.value;save("hornox.language.v5",lang);u
 document.querySelectorAll("[data-route]").forEach(b=>b.onclick=()=>{route=b.dataset.route;updateCopy();});
 $("retry-load").onclick=()=>location.reload();
 function toggleSound(value){sound=value;save("hornox.sound.v5",value?1:0);audio.setEnabled(value);if(value)audio.unlock().catch(()=>{});updateCopy();}
-$("sound-toggle").onchange=e=>toggleSound(e.target.checked);$("quick-sound").onclick=()=>toggleSound(!sound);
+$("sound-toggle").onchange=e=>toggleSound(e.target.checked);
+$("music-toggle").onchange=e=>{music=e.target.checked;save("hornox.music.v1",music?1:0);audio.setMusic(music);updateCopy();};$("quick-sound").onclick=()=>toggleSound(!sound);
 $("assist-toggle").onchange=e=>{mode=e.target.checked?"relaxed":"classic";save("spa.runner.assist",mode==="relaxed"?1:0);updateCopy();};
 $("reduce-toggle").onchange=e=>{reduced=e.target.checked;save("spa.motion",reduced?1:0);updateCopy();};
 $("contrast-toggle").onchange=e=>{contrast=e.target.checked;save("spa.contrast",contrast?1:0);updateCopy();};
@@ -313,6 +328,7 @@ window.addEventListener("keydown",e=>{
  if(document.querySelector("dialog[open]"))return;
  if(e.code==="Escape"||e.code==="KeyP"){if(screen==="play"){e.preventDefault();pause(!paused);}return;}
  if(e.code==="Enter"&&screen==="home"){e.preventDefault();if(app.dataset.front==="cover")enterMenu();else if(document.activeElement?.tagName!=="BUTTON")start();else document.activeElement.click();return;}
+ if(e.code==="Enter"&&screen==="result"&&!e.repeat){if(document.activeElement?.tagName!=="BUTTON"&&document.activeElement?.tagName!=="A"){e.preventDefault();start();}return;}
  if(e.repeat)return;
  if(e.code===powerKey()&&screen==="play"){e.preventDefault();input("power");return;}
  const action=Object.keys(bindings).find(k=>bindings[k]===e.code)||({KeyA:"left",KeyD:"right",KeyW:"jump",Space:"jump",KeyS:"duck"})[e.code];

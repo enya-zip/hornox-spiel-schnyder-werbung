@@ -1,6 +1,6 @@
 export function createAudio(){
  const urls={music:"assets/hornox-alpine-party-210s.mp3",jump:"assets/jump-funny.mp3",duck:"assets/slide.mp3",pickup:"assets/cowbell-coin.mp3",land:"assets/land.mp3",bump:"assets/bonk-funny.mp3"};
- let context,master,musicNode,musicGain,enabled=true,active=false,foreground=!document.hidden,readyPromise=null,resuming=null,musicOffset=0,musicStarted=0;
+ let context,master,musicNode,musicGain,enabled=true,musicOn=true,active=false,foreground=!document.hidden,readyPromise=null,resuming=null,musicOffset=0,musicStarted=0;
  const buffers={},stats={played:0,last:"",musicStarts:0};let noiseBuffer=null,chaseOn=false,chaseTimer=null,chaseNext=0,chaseStep=0;
  const files=Promise.all(Object.entries(urls).map(async([k,url])=>{const r=await fetch(url);if(!r.ok)throw Error(url);return[k,await r.arrayBuffer()];})).catch(e=>{console.warn("Audio preload",e.message);return[];});
  const wanted=()=>enabled&&active&&foreground&&!document.hidden;
@@ -11,7 +11,7 @@ export function createAudio(){
   try{old.stop();}catch{}old.disconnect();gain?.disconnect();
  }
  function sync(){
-  if(!wanted()||context?.state!=="running"){stopMusic();return;}
+  if(!wanted()||!musicOn||context?.state!=="running"){stopMusic();return;}
   if(!buffers.music||musicNode)return;
   const node=context.createBufferSource(),gain=context.createGain();
   node.buffer=buffers.music;node.loop=true;gain.gain.value=chaseOn?.2:.60;node.connect(gain).connect(master);
@@ -74,7 +74,9 @@ export function createAudio(){
  }
  return{
   unlock,
-  setChase(on){on=!!on&&enabled;if(on===chaseOn)return;chaseOn=on;if(musicGain&&context)musicGain.gain.setTargetAtTime(on?.2:.6,context.currentTime,.4);clearInterval(chaseTimer);chaseTimer=null;if(on&&context){chaseNext=context.currentTime+.05;chaseStep=0;chaseTimer=setInterval(chaseTick,80);}},setEnabled(value){enabled=!!value;if(master&&context.state!=="closed")master.gain.setTargetAtTime(enabled?.65:0,context.currentTime,.03);sync();if(wanted())wake();},
+  setChase(on){on=!!on&&enabled&&musicOn;if(on===chaseOn)return;chaseOn=on;if(musicGain&&context)musicGain.gain.setTargetAtTime(on?.2:.6,context.currentTime,.4);clearInterval(chaseTimer);chaseTimer=null;if(on&&context){chaseNext=context.currentTime+.05;chaseStep=0;chaseTimer=setInterval(chaseTick,80);}},setEnabled(value){enabled=!!value;if(master&&context.state!=="closed")master.gain.setTargetAtTime(enabled?.65:0,context.currentTime,.03);sync();if(wanted())wake();},
+  /* Musik getrennt von den Soundeffekten ein-/ausschalten. */
+  setMusic(value){musicOn=!!value;if(!musicOn)this.setChase(false);sync();},
   setActive(value){active=!!value;sync();if(wanted()&&context)wake();},
   play(name,rate=1,volume=1){if(!wanted()||context?.state!=="running"||!buffers[name])return;const source=context.createBufferSource();source.buffer=buffers[name];source.playbackRate.value=rate;const gain=context.createGain();gain.gain.value=(name==="pickup"?.48:.8)*volume;source.connect(gain).connect(master);source.onended=()=>{source.disconnect();gain.disconnect();};source.start();stats.played++;stats.last=name;},
   // Level 4: Waldgeräusche direkt im Browser erzeugt (keine Audiodateien nötig).
@@ -101,6 +103,6 @@ export function createAudio(){
    else if(kind==="crack"){for(let i=0;i<2;i++){const st=t+i*.07,nz=noise(st,.1,"highpass",1800);nz.g.gain.setValueAtTime(.55,st);nz.g.gain.exponentialRampToValueAtTime(.0001,st+.09);}}
    setTimeout(()=>out.disconnect(),4500);stats.played++;stats.last=kind;
   },
-  metrics(){return{...stats,audioVersion:18,musicDuration:buffers.music?.duration||0,musicTrack:"alpine-party-210s",enabled,active,ready:!!buffers.music,context:context?.state||"locked",foreground,musicPlaying:!!musicNode&&context?.state==="running"&&wanted(),musicOffset:buffers.music?(musicOffset+(musicNode?Math.max(0,context.currentTime-musicStarted):0))%buffers.music.duration:0};}
+  metrics(){return{...stats,musicOn,audioVersion:18,musicDuration:buffers.music?.duration||0,musicTrack:"alpine-party-210s",enabled,active,ready:!!buffers.music,context:context?.state||"locked",foreground,musicPlaying:!!musicNode&&context?.state==="running"&&wanted()&&musicOn,musicOffset:buffers.music?(musicOffset+(musicNode?Math.max(0,context.currentTime-musicStarted):0))%buffers.music.duration:0};}
  };
 }

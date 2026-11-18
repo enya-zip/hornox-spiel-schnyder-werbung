@@ -70,7 +70,7 @@ export const copy = {
     "checkpoint": "Trail bonus: +150 and a shield",
     "shieldHit": "Your shield saved you.",
     "shieldShort": "Shield ready",
-    "magnet": "Coin magnet: 6 seconds",
+    "magnet": "Coin magnet: 8 seconds",
     "magnetShort": "Magnet {n}s",
     "arrival": "Your adventure starts here.",
     "nextHotel": "To the Matterhorn summit",
@@ -308,7 +308,7 @@ export const copy = {
     "checkpoint": "Streckenbonus: +150 und ein Schutzschild",
     "shieldHit": "Dein Schutzschild hat dich gerettet.",
     "shieldShort": "Schutz aktiv",
-    "magnet": "Münzmagnet: 6 Sekunden",
+    "magnet": "Münzmagnet: 8 Sekunden",
     "magnetShort": "Magnet {n}s",
     "arrival": "Hier startet dein Abenteuer.",
     "nextHotel": "Zum Matterhorn-Gipfel",
@@ -546,7 +546,7 @@ export const copy = {
     "checkpoint": "Bonus : +150 et un bouclier",
     "shieldHit": "Ton bouclier t’a protégé.",
     "shieldShort": "Bouclier actif",
-    "magnet": "Aimant à pièces : 6 secondes",
+    "magnet": "Aimant à pièces : 8 secondes",
     "magnetShort": "Aimant {n}s",
     "arrival": "Ton aventure commence ici.",
     "nextHotel": "Vers le sommet du Cervin",
@@ -784,7 +784,7 @@ export const copy = {
     "checkpoint": "ボーナス：+150とシールド",
     "shieldHit": "シールドが守ってくれた。",
     "shieldShort": "シールド有効",
-    "magnet": "コインマグネット：6秒",
+    "magnet": "コインマグネット：8秒",
     "magnetShort": "マグネット {n}秒",
     "arrival": "ここから冒険が始まる。",
     "nextHotel": "マッターホルンの山頂へ",
@@ -1022,7 +1022,7 @@ export const copy = {
     "checkpoint": "路线奖励：+150及护盾",
     "shieldHit": "护盾保护了你。",
     "shieldShort": "护盾已启用",
-    "magnet": "金币磁铁：6秒",
+    "magnet": "金币磁铁：8秒",
     "magnetShort": "磁铁 {n}秒",
     "arrival": "冒险从这里开始。",
     "nextHotel": "前往马特洪峰顶",
@@ -1202,3 +1202,30 @@ Object.assign(copy.de,{"recordsNote": "Deine 10 besten Läufe werden auf diesem 
 Object.assign(copy.fr,{"recordsNote": "Tes 10 meilleures courses sont enregistrées sur cet appareil. Les courses qui ne commencent pas au niveau 1 sont marquées et ne comptent pas comme record."});
 Object.assign(copy.ja,{"recordsNote": "ベスト10のランはこの端末に保存されます。レベル1以外から始めたランは表示されますが、自己ベストにはなりません。"});
 Object.assign(copy.zh,{"recordsNote": "你最好的10次奔跑保存在本设备上。不是从第1关开始的奔跑会被标记，不计入个人最佳。"});
+// Qualitäts-Überarbeitung: einheitliche Schreibweise der Levelnamen, Musik-Schalter, Game-Over-Statistik
+// und klarere Tastenhilfe. Überschreibt die älteren Fassungen oben.
+Object.assign(copy.en,{"glacier":"Glacier","summit":"Matterhorn","village":"Bahnhofstrasse",
+ "keysHelp":"Keyboard: ← → change lane · ↑ or Space jump · ↓ slide · E Hornox rush · Esc or P pause · Enter play again",
+ "music":"Music","statLevel":"Level","statDistance":"Distance","statBest":"Personal best","hotelTitle":"Alpen Resort Hotel & Spa","hotel":"Discover your stay in Zermatt",
+ "keyHint":"Key {k}","gameOver":"GAME OVER","recordBadge":"🏆 New personal best!","recordGap":"{n} points short of your best","newBestRun":"🏆 New personal best!","testRunNote":"Practice run from level {n} – doesn't count as personal best.",
+ "pickupCharge":"HORN SPARK · +15 rush energy"});
+Object.assign(copy.de,{"glacier":"Gletscher","summit":"Matterhorn","village":"Bahnhofstrasse",
+ "keysHelp":"Tastatur: ← → Spur wechseln · ↑ oder Leertaste springen · ↓ rutschen · E Hornox-Ansturm · Esc oder P Pause · Enter neue Runde",
+ "music":"Musik","statLevel":"Level","statDistance":"Strecke","statBest":"Bestleistung","hotelTitle":"Alpen Resort Hotel & Spa","hotel":"Deinen Aufenthalt in Zermatt entdecken",
+ "keyHint":"Taste {k}","gameOver":"GAME OVER","recordBadge":"🏆 Neue Bestleistung!","recordGap":"Noch {n} Punkte bis zu deiner Bestleistung","newBestRun":"🏆 Neue Bestleistung!","testRunNote":"Trainingslauf ab Level {n} – zählt nicht als Bestleistung.",
+ "pickupCharge":"HORN-FUNKE · +15 Ansturm-Energie",
+ "powerExtras":"Sammle den Magneten für 8 Sekunden Münzsog, den blauen Schild als Schutz vor einem Treffer, Goldrausch für 10 Sekunden doppelte Münzen oder den violetten Horn-Funken für 15 Ansturm-Energie. Die Extras wirken sofort beim Einsammeln.",
+ "helpBody":"Wische nach links oder rechts, um die Spur zu wechseln, nach oben zum Springen und nach unten zum Rutschen. In Kurven folgst du dem Pfeil. Wische in der Luft nochmals nach oben für einen Doppelsprung. Jeder Zusammenstoss kostet ein Leben. Sammle 30 Münzen und tippe auf den Blitz (am Computer: Taste E): Sechs Sekunden lang trägt Hornox ein Superhelden-Cape, läuft bis zu 55 % schneller, schleudert Hindernisse zur Seite, zieht Münzen an und nimmt Kurven automatisch.",
+ "powerHelp":"Sammle 30 Münzen und tippe auf den Blitz (am Computer: Taste E): Sechs Sekunden lang trägt Hornox ein Superhelden-Cape, läuft bis zu 55 % schneller, schleudert Hindernisse zur Seite, zieht Münzen an und nimmt Kurven automatisch.",
+ "lostText":"Das Matterhorn wartet auf dich – versuch es gleich nochmals!"});
+Object.assign(copy.fr,{"glacier":"Glacier","summit":"Cervin","village":"Bahnhofstrasse",
+ "keysHelp":"Clavier : ← → changer de voie · ↑ ou Espace sauter · ↓ glisser · E élan de Hornox · Échap ou P pause · Entrée rejouer",
+ "music":"Musique","statLevel":"Niveau","statDistance":"Distance","statBest":"Record","hotelTitle":"Alpen Resort Hotel & Spa","hotel":"Découvrir ton séjour à Zermatt",
+ "keyHint":"Touche {k}","gameOver":"GAME OVER","recordBadge":"🏆 Nouveau record !","recordGap":"Encore {n} points pour ton record","newBestRun":"🏆 Nouveau record !","testRunNote":"Course d'entraînement dès le niveau {n} – ne compte pas comme record.",
+ "pickupCharge":"ÉTINCELLE DE CORNE · +15 énergie d'élan"});
+Object.assign(copy.ja,{"glacier":"氷河","music":"音楽","statLevel":"レベル","statDistance":"距離","statBest":"自己ベスト","hotelTitle":"Alpen Resort Hotel & Spa","hotel":"ツェルマットでの滞在を見る",
+ "keysHelp":"キーボード：← → レーン変更 · ↑/スペース ジャンプ · ↓ スライド · E ラッシュ · Esc/P 一時停止 · Enter もう一度",
+ "keyHint":"キー {k}","gameOver":"GAME OVER","recordBadge":"🏆 自己ベスト更新！","recordGap":"自己ベストまであと{n}点","newBestRun":"🏆 自己ベスト更新！","testRunNote":"レベル{n}からの練習ラン – 自己ベストには数えません。"});
+Object.assign(copy.zh,{"glacier":"冰川","music":"音乐","statLevel":"关卡","statDistance":"距离","statBest":"个人最佳","hotelTitle":"Alpen Resort Hotel & Spa","hotel":"了解你的策马特之旅",
+ "keysHelp":"键盘：← → 换道 · ↑/空格 跳跃 · ↓ 滑行 · E 冲刺 · Esc/P 暂停 · Enter 再来一局",
+ "keyHint":"按键 {k}","gameOver":"GAME OVER","recordBadge":"🏆 新的个人最佳！","recordGap":"距个人最佳还差{n}分","newBestRun":"🏆 新的个人最佳！","testRunNote":"从第{n}关开始的练习 – 不计入个人最佳。"});

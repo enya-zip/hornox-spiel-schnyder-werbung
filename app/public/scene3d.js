@@ -153,8 +153,8 @@ export function createScene(canvas){
    for(const side of[-1,1]){
     if(w<d+260&&k%2===0){at(w+1,side*(6.5+(k%3)*1.6));blacklake.lily(anim,k);pop();}
     if(k%7===(side>0?2:5)&&w<d+300){at(w,side*(11+(k%4)*2));a('rock',0,.05,0,1.2,.5,1,C.rock,0,k);blacklake.reeds(k);pop();}
-    if(k%3===(side>0?1:0)&&w<d+220){at(w,side*(6+(k%2)*2));blacklake.swarm(anim,k,5,1.4);pop();}
-    if(side>0&&k%2===0&&w>d+8&&w<d+160){at(w,(k%3-1)*2.5);push(0,.3,0);blacklake.swarm(anim,k+50,3,1.1);pop();pop();}
+    if(k%6===(side>0?1:4)&&w<d+150){at(w,side*(6+(k%2)*2));blacklake.swarm(anim,k,4,1.3);pop();}/* weniger Mücken: wirkten sonst wie Schmutz auf dem Bildschirm */
+    if(side>0&&k%4===0&&w>d+8&&w<d+110){at(w,(k%3-1)*2.5);push(0,.3,0);blacklake.swarm(anim,k+50,3,1.1);pop();pop();}
     if(k%11===(side>0?4:9)&&w<d+240){const ph=(anim*.5+k*.37)%1,up=ph>.3;at(w,side*9);if(!up){blacklake.bubbles(anim,k);}else{a('cylinder',0,.03,0,1.1,.03,1.1,[.25,.6,.25]);push(0,.04-(ph<.36?(.36-ph)*8:0),0,0,-side*PI/2,0,1.2);blacklake.frog(anim,k,0,0,ph>.85?Math.sin((ph-.85)/.15*PI)*1.6:0,ph>.92);pop();blacklake.splash((ph-.3)/.12);}pop();}
     if(k%60===(side>0?17:47)){const cp=point(w,side*55);if(clear(cp.x,cp.z,8,w)){at(w,side*55);a('rock',0,-.3,0,9,1.6,7,[.4,.45,.35],0,k);a('sphere',0,.6,0,6,.8,5,[.32,.55,.24]);push(0,1,0,0,-side*PI/2);alpine.chapel();pop();pop();}}
    }
