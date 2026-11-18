@@ -5,7 +5,7 @@ import {setup,validateAction,applyAction} from "./rules.js?v=39";
 import {installControls} from "./controls.js?v=17";
 import {createAudio} from "./audio.js?v=23";
 import {getZone} from "./scene3d.js?v=58";
-import {copy} from "./copy.js?v=40";
+import {copy} from "./copy.js?v=41";
 import {turnDirection} from "./route.js?v=21";
 import {createLeaderboard} from "./leaderboard.js?v=2";
 import {LEADERBOARD} from "./leaderboard-config.js?v=2";
@@ -163,7 +163,7 @@ function askName(then,{fromResult=false}={}){
   const v=$("name-input").value.trim().slice(0,20),mail=$("email-input").value.trim().toLowerCase(),ok=$("consent-input").checked;
   if(!v){fail(t("nameMissing"));$("name-input").focus();return;}
   if(mail&&!validEmail(mail)){fail(t("emailInvalid"));$("email-input").focus();return;}
-  if(mail&&!ok){fail(t("consentMissing"));$("consent-input").focus();return;}
+  if(mail&&!ok){fail(t("agreeMissing"));$("consent-input").focus();return;}
   const renamed=playerName&&playerName!==v,emailChanged=mail!==playerEmail;
   playerName=v;save("hornox.player.name",v);updateNameButton();
   if(emailChanged||mail){const btn=$("name-form").querySelector("button[type=submit]");btn.disabled=true;
