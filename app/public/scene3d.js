@@ -108,7 +108,7 @@ export function createScene(canvas){
   for(let w=Math.floor((d-24)/9)*9;w<d+420;w+=9){const t=Math.max(0,elapsed+(w-d)/speed);if(getZone(t)!==8)continue;const k=Math.round(w/9),sec=forestSection(t),dark=sec===2||sec===4,onBridge=bridgeAt(t);
    for(const side of[-1,1]){
     const near=point(w,side*(7.4+(k%3)*.9));
-    if(!onBridge&&clear(near.x,near.z,1.6,w)){if(k%9===(side>0?4:0)&&sec!==4){at(w,side*(7.6+(k%3)*.9));forest.autumnTree(.9+(k%3)*.15,k);pop();}else tree(near.x,near.z,(dark?1.15:.95)+(k%4)*.12,near.y);}
+    if(!onBridge&&clear(near.x,near.z,1.6,w)){tree(near.x,near.z,(dark?1.15:.95)+(k%4)*.12,near.y);}
     if(w<d+320&&k%2===0){const mid=point(w+4,side*((onBridge?18:14)+(k%4)*1.5));if(clear(mid.x,mid.z,2.5,w))tree(mid.x,mid.z,1.3+(k%3)*.25,mid.y);}
     if(k%3===0){const far=point(w+2,side*(24+(k%5)*2));if(clear(far.x,far.z,3,w))tree(far.x,far.z,1.7+(k%4)*.3,far.y);}
     if(!onBridge&&k%5===(side>0?2:3)){const mr=point(w+3,side*5.6);if(clear(mr.x,mr.z,.8,w)){at(w+3,side*5.6);forest.mossRock(.7+(k%3)*.2,k);pop();}}
@@ -263,7 +263,7 @@ export function createScene(canvas){
    at(od,o.lane<0?0:(o.lane-1)*2.5,rise);if(toss)push(0,0,0,0,toss.spin,toss.lean);forest[o.kind](time);if(toss)pop();pop();return;}
   if(o.kind==='boarCross'){
    // Wildschweine rennen quer über den Weg (Spur kommt aus den Regeln).
-   const q=point(od,(o.lane-1)*2.5);push(q.x,q.y+rise,q.z,0,-q.h);if(toss)push(0,0,0,0,toss.spin,toss.lean);push(0,0,0,0,-(o.dir||1)*PI/2);/* Kopf in Laufrichtung */
+   const q=point(od,(o.lane-1)*2.5);push(q.x,q.y+rise,q.z,0,-q.h);if(toss)push(0,0,0,0,toss.spin,toss.lean);push(0,0,0,0,(o.dir||1)*PI/2);/* Kopf in Laufrichtung (im Spiel geprüft) */
    push(0,0,0,0,0,0,.72);forest.boar(time,o.id);pop();
    pop();if(toss)pop();pop();return;}
   if(o.kind==='fallingBranch'&&!toss){

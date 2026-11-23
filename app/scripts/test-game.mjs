@@ -180,7 +180,7 @@ check('level 3: fish leap from the lake, five caught fish make the fisherman ang
 });
 check('level 3: fish every 10 s, beavers and seagulls, at least 3 s between lake hazards, nothing else on the trail',()=>{for(let seed=1;seed<=12;seed++){let s={...start(seed),tick:3600,elapsed:180,distance:3800,nextRow:3830,nextTurn:999999,row:200};const seen=new Set();let last=-1e9,count=0;
  while(s.phase==='playing'&&s.elapsed<269){s=action({...s,lives:999,invulnerable:1},{type:'step'});for(const o of s.objects){if(o.kind!=='fish'||seen.has(o.id))continue;seen.add(o.id);const t=s.elapsed+(o.d-s.distance)/s.speed;assert(t-last>=9.9,'gap '+(t-last));last=t;count++;}for(const o of s.objects)if(o.biome===7)assert(['fish','beaverLog','gull','coin','fishCatch','heart','magnet','shieldOrb','coinBoost','rushCharge','hook'].includes(o.kind),o.kind);}assert(count>=6&&count<=9,'count '+count);}});
-check('level 4: grunts, boar hunt from the gorge to the end, race mode, bridge, forest obstacles and lucky mushrooms',()=>{
+check('level 4: grunts, boar hunt from the gorge to the end, race mode, bridge, forest obstacles, no mushrooms',()=>{
  let g={...start(),tick:6099,elapsed:304.95,distance:7600,nextRow:1e9,nextTurn:1e9,objects:[]};g=action(g,{type:'step'});assert(g.events.some(e=>e.kind==='boarGrunt'));assert.equal(g.boar,0);
  let s={...start(),tick:6539,elapsed:326.95,distance:8200,nextRow:1e9,nextTurn:1e9,checkpoints:2,objects:[]};s=action(s,{type:'step'});assert.equal(s.boar,660);assert(s.events.some(e=>e.kind==='boarAppear'));
  let clean=s,rams=0;for(let k=0;k<180;k++){clean=action({...clean,nextRow:1e9},{type:'step'});if(clean.events.some(e=>e.kind==='boarRam'))rams++;}assert.equal(rams,0);
@@ -194,7 +194,7 @@ check('level 4: grunts, boar hunt from the gorge to the end, race mode, bridge, 
  assert.equal(collision('trunk',{jump:10}).lives,2);assert.equal(collision('fallingBranch',{jump:10}).lives,2);assert.equal(collision('highLog',{lane:-1,duck:9}).lives,3);assert.equal(collision('highLog',{lane:-1,jump:10}).lives,2);
  assert.equal(collision('stream',{lane:-1,jump:10}).lives,3);assert.equal(collision('roots',{jump:10}).lives,3);assert.equal(collision('boarCross',{lane:0}).lives,3);assert.equal(collision('sign',{jump:10}).lives,2);
  const pick=kind=>action({...start(),distance:100,nextRow:10000,x:1,objects:[{id:1,kind,lane:1,d:100.9}]},{type:'step'});
- assert(pick('mushroom').events.some(e=>e.kind==='mushroom'));
+ for(let seed=1;seed<12;seed++){let s=action({...start(seed),tick:5600,elapsed:280,distance:7000,nextRow:7030,nextTurn:99999,row:30},{type:'step'});for(let i=0;i<600&&s.phase==='playing';i++)s=action({...s,lives:3},{type:'step'});assert(!s.objects.some(o=>o.kind==='mushroom'),'no lucky mushrooms in Furi');}
  // Nur die gewünschten Waldobjekte erscheinen im ganzen Level
  const allowed=['roots','log','highLog','boulder','trunk','stream','sign','boarCross','fallingBranch','plankGap','coin','mushroom','heart','magnet','shieldOrb','coinBoost','rushCharge'];
  for(let seed=1;seed<8;seed++){let r={...start(seed),tick:5400,elapsed:270,distance:6800,nextRow:6830,nextTurn:1e9,row:40};while(r.elapsed<358){r=action({...r,lives:9,invulnerable:1},{type:'step'});for(const o of r.objects)if(o.biome===8)assert(allowed.includes(o.kind),o.kind);}}

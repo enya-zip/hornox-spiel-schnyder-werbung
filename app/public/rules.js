@@ -294,7 +294,6 @@ export function applyAction(s,p,a){
   // Level 3: jede zweite Reihe ein Fisch zum Sammeln, damit der Fischer nach rund 10–15 s wütend wird.
   if(z===7&&row%2===1&&!heartDue)add("fishCatch",safe,22);
   // Level 4: Glückspilze geben Bonuspunkte (Haselnüsse sind die normalen Münzen).
-  if(z===8&&!heartDue&&row%6===4)add("mushroom",safe,22);
   // Level 5: Alpenkräuter (selten), Käse, goldene Kuhglocken, goldenes Edelweiss (sehr selten). Blumen = normale Münzen.
   if(z===1&&!heartDue){const sec=meadowSection(arrivalTime);if(sec>=2&&row%29===14)add("edelweiss",safe,22);else if(row%7===3)add("herb",safe,22);else if(row%11===5)add("cheese",safe,22);else if(row%17===9)add("goldBell",safe,22);}
   if(row>8&&row%17===8&&pattern!==8)add(z===5?['climbGear','snowshoes'][Math.floor(row/17)%2]:['magnet','shieldOrb','coinBoost','rushCharge'][Math.floor(row/17)%4],safe,-8);
