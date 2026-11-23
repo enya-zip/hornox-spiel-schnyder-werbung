@@ -10,8 +10,8 @@ import {createRenderer} from './engine3d.js?v=21';
 import {createActor} from './actor.js?v=23';
 import {createEffects} from './effects.js?v=17';
 import {createPath} from './route.js?v=21';
-import {getZone,bridgeAt,fogAt,forestSection,meadowSection,lakeSection,stoneAt} from './journey.js?v=25';
-import {createBlackLake} from './blacklake.js?v=4';
+import {getZone,bridgeAt,fogAt,forestSection,meadowSection,lakeSection,stoneAt,swampMud} from './journey.js?v=26';
+import {createBlackLake} from './blacklake.js?v=6';
 import {createMeadow} from './meadow.js?v=6';
 import {createForest} from './forest.js?v=5';
 export {getZone};
@@ -141,25 +141,29 @@ export function createScene(canvas){
  // Plattformen und (im Steinpfad) Trittsteinen; rundherum nur Wasser, Seerosen, Schilfinseln, Fliegen und Frösche,
  // in der Ferne eine Kapelleninsel, das Matterhorn und die Berge von Zermatt.
  function lakeScenery9(d,elapsed,speed){
-  const gaps=curObjects.filter(o=>o.kind==='waterGap').map(o=>o.d);
-  for(let w=Math.floor((d-30)/6)*6;w<d+430;w+=6){const t=Math.max(0,elapsed+(w-d)/speed);if(getZone(t)!==9)continue;const k=Math.round(w/6),sec=lakeSection(t),stones=stoneAt(t);
-   // Wasserfläche quer über die ganze Breite (folgt der Geländeneigung, keine Streifen)
-   {const h=path.frame(w).h,sx=grade*(.55*Math.cos(h)-.83*Math.sin(h)),sz=grade*(-.55*Math.sin(h)-.83*Math.cos(h));at(w,0);push(0,0,0,Math.atan(-sz),0,Math.atan(sx));a('box',0,-.1,0,130,.12,6.02,[.08,.3,.42,26]);pop();pop();}
-   // Laufstrecke: schwimmende Elemente im Abstand von 2,4, Lücken nur bei echten Wasserlücken
-   for(let j=0;j<6;j+=2.4){const sw=w+j,n=Math.round(sw/2.4);if(gaps.some(g=>Math.abs(g-sw)<2.6))continue;at(sw,0);
-    if(stones)for(const off of[-2.5,0,2.5]){push(off,0,0);blacklake.stone(Math.abs(n+off|0));pop();}
-    else{const kind=(n+(sec===2?1:0))%5;if(kind===0||kind===3)blacklake.raft(anim,n);else if(kind===1||kind===4)blacklake.logRaft(anim,n);else blacklake.platform(anim,n);}
-    pop();}
+  // Level 6 «Schwarzsee» – Sumpfgebiet: Wasser mit Holzbalken und versunkenen Steinen (alle 5 s Wechsel),
+  // alle 15 s eine Schlammebene. Ufer mit goldenem Schilf, Berge und Kapelle im Hintergrund.
+  const gaps=curObjects.filter(o=>o.kind==='waterGap');
+  for(let w=Math.floor((d-30)/6)*6;w<d+430;w+=6){const t=Math.max(0,elapsed+(w-d)/speed);if(getZone(t)!==9)continue;const k=Math.round(w/6),mud=swampMud(t);
+   const h=path.frame(w).h,sx=grade*(.55*Math.cos(h)-.83*Math.sin(h)),sz=grade*(-.55*Math.sin(h)-.83*Math.cos(h));
+   // Wasserfläche quer über die ganze Breite (folgt der Geländeneigung)
+   at(w,0);push(0,0,0,Math.atan(-sz),0,Math.atan(sx));a('box',0,-.1,0,130,.12,6.02,[.16,.32,.36,26]);if(mud)a('box',0,.04,0,9.4,.2,6.02,[.36,.26,.15]);pop();pop();
+   if(mud){if(k%2===0)for(const x of[-3.4,3.4]){at(w+1.5,x);a('sphere',0,.12,0,.5,.06,.4,[.29,.2,.11]);pop();}}
+   else{
+    // Laufstrecke: je Spur ein Balken oder eine Steinplatte alle 2,4 m – Lücken nur bei echten Wasserlücken
+    const stones=Math.floor((t-450)/5)%2===1;
+    for(let j=0;j<6;j+=2.4){const sw=w+j,n=Math.round(sw/2.4);
+     for(const l of[0,1,2]){if(gaps.some(g=>(g.lane<0||g.lane===l)&&Math.abs(g.d-sw)<3.7))continue;at(sw,(l-1)*2.5);push(0,0,0,0,((n*3+l)%5-2)*.05);if(stones)blacklake.slab(n*3+l);else blacklake.beam(anim,n*3+l);pop();pop();}}
+   }
    for(const side of[-1,1]){
-    if(w<d+260&&k%2===0){at(w+1,side*(6.5+(k%3)*1.6));blacklake.lily(anim,k);pop();}
-    if(k%7===(side>0?2:5)&&w<d+300){at(w,side*(11+(k%4)*2));a('rock',0,.05,0,1.2,.5,1,C.rock,0,k);blacklake.reeds(k);pop();}
-    if(k%6===(side>0?1:4)&&w<d+150){at(w,side*(6+(k%2)*2));blacklake.swarm(anim,k,4,1.3);pop();}/* weniger Mücken: wirkten sonst wie Schmutz auf dem Bildschirm */
-    if(side>0&&k%4===0&&w>d+8&&w<d+110){at(w,(k%3-1)*2.5);push(0,.3,0);blacklake.swarm(anim,k+50,3,1.1);pop();pop();}
-    if(k%11===(side>0?4:9)&&w<d+240){const ph=(anim*.5+k*.37)%1,up=ph>.3;at(w,side*9);if(!up){blacklake.bubbles(anim,k);}else{a('cylinder',0,.03,0,1.1,.03,1.1,[.25,.6,.25]);push(0,.04-(ph<.36?(.36-ph)*8:0),0,0,-side*PI/2,0,1.2);blacklake.frog(anim,k,0,0,ph>.85?Math.sin((ph-.85)/.15*PI)*1.6:0,ph>.92);pop();blacklake.splash((ph-.3)/.12);}pop();}
+    // Goldenes Schilf am Ufer (dicht wie auf dem Foto), dazwischen kleine Wasserläufe
+    if(w<d+320){for(const off of[6.4,8.6,11]){if(k%4===3&&off===8.6)continue;at(w+(off%2),side*off);blacklake.reedBed(anim,k*3+off|0,w<d+120?9:6);pop();}}
+    if(k%9===(side>0?2:6)&&w<d+300){at(w,side*(14+(k%3)*2));a('rock',0,.05,0,1.4,.5,1.1,C.rock,0,k);pop();}
     if(k%60===(side>0?17:47)){const cp=point(w,side*55);if(clear(cp.x,cp.z,8,w)){at(w,side*55);a('rock',0,-.3,0,9,1.6,7,[.4,.45,.35],0,k);a('sphere',0,.6,0,6,.8,5,[.32,.55,.24]);push(0,1,0,0,-side*PI/2);alpine.chapel();pop();pop();}}
    }
   }
  }
+
  function environment(d,elapsed,speed){zone=getZone(elapsed);landscape(d,elapsed);road(d,elapsed,speed);street(d,elapsed,speed);lakeside(d,elapsed,speed);bridge(d,elapsed,speed);forestScenery(d,elapsed,speed);meadowScenery(d,elapsed,speed);lakeScenery9(d,elapsed,speed);
   const start=Math.floor((d-22)/14)*14;
   for(let w=start;w<d+430;w+=14){const z=getZone(Math.max(0,elapsed+(w-d)/speed)),index=Math.floor(w/14),side=index%2?1:-1,off=side*(7.7+(Math.abs(index)%3)*1.4),p=point(w,off);
@@ -227,7 +231,8 @@ export function createScene(canvas){
    // Morsches Brett: hat zuerst Risse, bricht etwa 1 s vor Hornox weg und hinterlässt ein Loch.
    const gapT=(od-d)/Math.max(1,speedNow),brk=Math.max(0,Math.min(1,(1.05-gapT)/.45));at(od,(o.lane-1)*2.5);forest.brokenPlank(brk,time,o.id);pop();return;}
   if(o.kind==='floatLog'){at(od,0,rise);if(toss)push(0,0,0,0,toss.spin,toss.lean);blacklake.floatLog(time,o.id);if(toss)pop();pop();return;}
-  if(o.kind==='waterGap'&&!toss){at(od,0);for(const x of[-2.5,0,2.5])a('ring',x,.04,0,.6+Math.abs(Math.sin(time*2+x+o.id))*.4,.6+Math.abs(Math.sin(time*2+x+o.id))*.4,.03,[.85,.95,1,49],PI/2);pop();return;}
+  if(o.kind==='mudPuddle'){at(od,(o.lane-1)*2.5,0);blacklake.mudPuddle(time,o.id);pop();return;}
+  if(o.kind==='waterGap'&&!toss){at(od,0);for(const x of(o.lane<0?[-2.5,0,2.5]:[(o.lane-1)*2.5])){a('box',x,.0,0,2.45,.03,6.4,[.05,.18,.24,26]);for(const z of[-3.1,3.1])a('box',x,.05,z,2.4,.05,.28,[.9,.97,1,49]);for(let k=0;k<3;k++){const ph=(time*.8+k*.33+o.id*.1)%1;a('ring',x+(k-1)*.6,.04,(k-1)*1.6,.3+ph*.6,.3+ph*.6,.015,[.8,.92,1,49],PI/2);}}pop();return;}
   if(o.kind==='tongue'&&!toss){
    // Frosch sitzt neben der Strecke: Kehlsack bläht sich (Warnung), dann schiesst die Zunge über 1–2 Spuren und zieht sich zurück.
    if(tongueDrawn.has(o.attackId))return;tongueDrawn.add(o.attackId);

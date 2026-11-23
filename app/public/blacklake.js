@@ -44,5 +44,19 @@ export function createBlackLake(r){
  function bubbles(time,k){for(let j=0;j<4;j++){const ph=(time*1.5+j*.25+k)%1;a('sphere',Math.sin(j*2.1+k)*.3,ph*.4,Math.cos(j*1.7)*.3,.06+ph*.04,.06+ph*.04,.06+ph*.04,[.85,.95,1,49]);}a('ring',0,.03,0,.5+((time*.8+k)%1)*.6,.5+((time*.8+k)%1)*.6,.02,[.85,.95,1,49],PI/2);}
  // Spritzer beim Auftauchen.
  function splash(u){if(u<=0||u>=1)return;for(let j=0;j<8;j++){const t=j*PI/4,r=.4+u*1.2,y=Math.sin(u*PI)*1.1;a('sphere',Math.cos(t)*r,y*(.6+(j%3)*.25),Math.sin(t)*r,.12*(1-u)+.03,.16*(1-u)+.03,.12*(1-u)+.03,[.88,.96,1,49]);}a('ring',0,.04,0,.6+u*1.6,.6+u*1.6,.03,[.9,.97,1,49],PI/2);}
- return{frog,fly,swarm,floatLog,stone,lily,reeds,raft,logRaft,platform,bubbles,splash};
+ // ---------- Sumpfgebiet (neu) ----------
+ // Treibende Holzbalken für eine Spur (2,4 m breit): mehrere Stämme, leicht verdreht, mit Wasserkränzen.
+ function beam(time,k){const bob=Math.sin(time*1.7+k)*.04;push(0,bob,0);for(let j=0;j<3;j++){const z=(j-1)*.62,tw=((k*7+j*3)%5-2)*.06,len=2.2+((k+j)%3)*.18,c=[[.62,.48,.32],[.55,.42,.28],[.68,.55,.38]][((k+j)%3+3)%3];
+   a('cylinder',((j+k)%3-1)*.08,.12,z,.24,len,.24,c,0,tw,PI/2);for(const x of[-len/2,len/2])a('cylinder',x+((j+k)%3-1)*.08,.12,z,.21,.03,.21,[.82,.7,.5],0,tw,PI/2);}
+  pop();a('ring',0,.03,0,1.15,.75,.012,[.55,.7,.75,26],PI/2);}
+ // Versunkene Steinplatte für eine Spur: flacher, nasser Fels knapp über dem Wasser.
+ function slab(k){const r=((k*13)%5)*.04;a('cylinder',0,.06,0,1.05+r,.16,.85+r*.6,[.62,.64,.63],0,k*.7);a('cylinder',.15,.15,-.1,.7,.04,.55,[.74,.76,.75],0,k);a('sphere',-.4,.1,.3,.25,.06,.18,[.5,.53,.52]);a('ring',0,.03,0,1.2,.98,.012,[.55,.7,.75,26],PI/2);}
+ // Goldenes Schilf (Sumpf) – dichter Büschel mit wolligen Rispen.
+ function reedBed(time,k,n=9){a('sphere',0,.25,0,1.3,.45,.9,[.6,.48,.26]);a('sphere',.5,.4,.2,.8,.5,.6,[.7,.56,.3]);n=Math.round(n*1.8);for(let j=0;j<n;j++){const x=((j*37+k*11)%19)/19*2.4-1.2,z=((j*53+k*7)%17)/17*1.6-.8,h=1.3+((j+k)%4)*.22,sw=Math.sin(time*1.3+j+k)*.06,c=(j+k)%3?[.78,.6,.32]:[.66,.5,.26];
+   a('cylinder',x,h/2,z,.025,h,.025,c,sw,0,sw*.6);a('sphere',x+sw*h,h+.08,z,.07,.2,.07,[.86,.74,.5],sw);}}
+ // Schlammpfütze für eine Spur: glänzend dunkelbraun mit Blasen.
+ function mudPuddle(time,id){push(0,.14,0);a('cylinder',0,.0,0,1.2,.04,1,[.47,.35,.22]);a('cylinder',0,.03,0,1.05,.04,.86,[.17,.11,.06]);a('cylinder',0,.06,0,.8,.01,.62,[.42,.34,.24,26]);
+  for(let j=0;j<3;j++){const ph=(time*.9+j*.33+id*.17)%1;a('sphere',Math.sin(j*2.3+id)*.45,.07+ph*.08,Math.cos(j*1.7+id)*.35,.05+ph*.07,.04+ph*.05,.05+ph*.07,[.4,.3,.18]);}
+  a('ring',0,.08,0,.5+((time*.6+id)%1)*.4,.42+((time*.6+id)%1)*.3,.015,[.5,.4,.26],PI/2);pop();}
+ return{beam,slab,reedBed,mudPuddle,frog,fly,swarm,floatLog,stone,lily,reeds,raft,logRaft,platform,bubbles,splash};
 }

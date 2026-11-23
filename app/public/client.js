@@ -1,11 +1,11 @@
 import {INTRO_DURATION,COUNTDOWN_DURATION} from './intro.js?v=17';
-import {stages,getStage,DURATION,fogAt,bridgeAt,forestSection,meadowSection,meadowWindows,lakeSection,stoneAt} from "./journey.js?v=25";
-import {createScene} from "./scene3d.js?v=63";
-import {setup,validateAction,applyAction} from "./rules.js?v=41";
+import {stages,getStage,DURATION,fogAt,bridgeAt,forestSection,meadowSection,meadowWindows,lakeSection,stoneAt,swampMud} from "./journey.js?v=26";
+import {createScene} from "./scene3d.js?v=66";
+import {setup,validateAction,applyAction} from "./rules.js?v=42";
 import {installControls} from "./controls.js?v=17";
 import {createAudio} from "./audio.js?v=23";
-import {getZone} from "./scene3d.js?v=63";
-import {copy} from "./copy.js?v=47";
+import {getZone} from "./scene3d.js?v=66";
+import {copy} from "./copy.js?v=48";
 import {turnDirection} from "./route.js?v=21";
 import {createLeaderboard} from "./leaderboard.js?v=7";
 import {LEADERBOARD} from "./leaderboard-config.js?v=3";
@@ -226,7 +226,7 @@ function processEvents(){
  if(e.kind==="powerPickup"){toast(t(e.power),2.5);audio.play("pickup",1.6,.8);}
  if(e.kind==="heart")heartFeedback(e.gained);if(e.kind==="world"&&e.gained)heartFeedback(true);
  if(e.kind==="world")levelBanner(e.stage);
- if(e.kind==="bump")toast(t(e.object==="sheep"?"sheepBump":e.object==="fish"?"fishBump":e.object==="beaverLog"?"beaverBump":e.object==="tongue"?"tongueBump":e.object==="floatLog"?"floatLogBump":e.object==="hook"?"hookBump":e.object==="fenceTall"?"fenceTallBump":e.object==="fence"||e.object==="fenceLow"?"fenceBump":"bump"));else if(e.kind==="checkpoint")toast(t("checkpoint"),2.5);else if(e.kind==="arrival"){$("toast").classList.remove("visible");toastUntil=0;}else if(e.kind==="magnet")toast(t("magnet"),2.3);else if(e.kind==="fishCatch")audio.play("pickup",1.5,.7);else if(e.kind==="fisherNotice"){toast(t("fisherNotice"),3.2);audio.play("pickup",.8,.7);}else if(e.kind==="gull"){toast(t(e.lost>0?"gullSteal":"gullEmpty",{n:e.lost}),2.4);audio.play("bump",1.6,.6);}else if(e.kind==="fisherAngry"){bigAlert(t("fisherAngry"));toast(t("fisherHint"),3);}else if(e.kind==="splash"){toast(t("splash"),2.2);audio.synth("splash",1);}else if(e.kind==="beeBuzz"){toast(t("beeBuzz"),2.6);audio.synth("buzz",1);}else if(e.kind==="beesAppear"){bigAlert(t(e.reason==="hunt"?"beesHuntAlert":"beesAlert"));toast(t(e.reason==="hunt"?"beesHuntHint":"beesHint"),3);audio.synth("buzz",1.2);}else if(e.kind==="beeSting"){const f=$("hit-flash");f.getAnimations().forEach(a=>a.cancel());f.animate([{opacity:.75},{opacity:0}],{duration:650,easing:"ease-out"});toast(t("beeSting"),2.6);audio.synth("buzz",1.4);try{navigator.vibrate?.(160);}catch{}}else if(e.kind==="beesQuit")toast(t("beesQuit"),2.8);else if(e.kind==="meadowPickup"){toast(t("pick_"+e.item,{n:e.points}),1.6);audio.play(e.item==="goldBell"?"pickup":"pickup",e.item==="edelweiss"?2.4:e.item==="goldBell"?1.2:1.7,.9);if(e.item==="goldBell")audio.synth("cowbell",.8);}else if(e.kind==="boarGrunt"){toast(t("boarGrunt"),2.6);audio.synth("grunt",.7);}else if(e.kind==="boarAppear"){bigAlert(t("boarAlert"));toast(t("boarHint"),3);audio.synth("grunt",1.2);}else if(e.kind==="boarRace"){bigAlert(t("boarRaceAlert"));toast(t("boarRaceHint"),3);audio.synth("grunt",1.3);}else if(e.kind==="boarRam"){const f=$("hit-flash");f.getAnimations().forEach(a=>a.cancel());f.animate([{opacity:.75},{opacity:0}],{duration:650,easing:"ease-out"});toast(t("boarRam"),2.4);audio.play("bump",.8,.9);try{navigator.vibrate?.(160);}catch{}}else if(e.kind==="boarQuit")toast(t("boarQuit"),2.6);else if(e.kind==="mushroom"){toast(t("mushroom"),1.6);audio.play("pickup",2,.8);}else if(e.kind==="fisherCast")audio.play("jump",.55,.55);else if(e.kind==="hooked"){const f=$("hit-flash");f.getAnimations().forEach(a=>a.cancel());f.animate([{opacity:.75},{opacity:0}],{duration:650,easing:"ease-out"});try{navigator.vibrate?.(140);}catch{}}else if(e.kind==="fisherQuit"){fisherEscaped=true;toast(t("fisherQuit"),2.6);audio.play("pickup",1.1,.8);}else if(e.kind==="crow"){toast(t(e.lost>0?"crowHit":"crowHitEmpty",{n:e.lost}),2.4);audio.play("bump",1.4,.8);}else if(e.kind==="shieldHit")toast(t("shieldHit"));else if(e.kind==="missedTurn")toast(t("turnMiss"));}
+ if(e.kind==="bump")toast(t(e.object==="sheep"?"sheepBump":e.object==="fish"?"fishBump":e.object==="beaverLog"?"beaverBump":e.object==="tongue"?"tongueBump":e.object==="floatLog"?"floatLogBump":e.object==="hook"?"hookBump":e.object==="fenceTall"?"fenceTallBump":e.object==="fence"||e.object==="fenceLow"?"fenceBump":"bump"));else if(e.kind==="checkpoint")toast(t("checkpoint"),2.5);else if(e.kind==="arrival"){$("toast").classList.remove("visible");toastUntil=0;}else if(e.kind==="magnet")toast(t("magnet"),2.3);else if(e.kind==="fishCatch")audio.play("pickup",1.5,.7);else if(e.kind==="fisherNotice"){toast(t("fisherNotice"),3.2);audio.play("pickup",.8,.7);}else if(e.kind==="gull"){toast(t(e.lost>0?"gullSteal":"gullEmpty",{n:e.lost}),2.4);audio.play("bump",1.6,.6);}else if(e.kind==="fisherAngry"){bigAlert(t("fisherAngry"));toast(t("fisherHint"),3);}else if(e.kind==="splash"){toast(t("splash"),2.2);audio.synth("splash",1);}else if(e.kind==="mudStuck"){toast(t("mudStuck"),2);audio.synth("stream",1);try{navigator.vibrate?.(80);}catch{}}else if(e.kind==="beeBuzz"){toast(t("beeBuzz"),2.6);audio.synth("buzz",1);}else if(e.kind==="beesAppear"){bigAlert(t(e.reason==="hunt"?"beesHuntAlert":"beesAlert"));toast(t(e.reason==="hunt"?"beesHuntHint":"beesHint"),3);audio.synth("buzz",1.2);}else if(e.kind==="beeSting"){const f=$("hit-flash");f.getAnimations().forEach(a=>a.cancel());f.animate([{opacity:.75},{opacity:0}],{duration:650,easing:"ease-out"});toast(t("beeSting"),2.6);audio.synth("buzz",1.4);try{navigator.vibrate?.(160);}catch{}}else if(e.kind==="beesQuit")toast(t("beesQuit"),2.8);else if(e.kind==="meadowPickup"){toast(t("pick_"+e.item,{n:e.points}),1.6);audio.play(e.item==="goldBell"?"pickup":"pickup",e.item==="edelweiss"?2.4:e.item==="goldBell"?1.2:1.7,.9);if(e.item==="goldBell")audio.synth("cowbell",.8);}else if(e.kind==="boarGrunt"){toast(t("boarGrunt"),2.6);audio.synth("grunt",.7);}else if(e.kind==="boarAppear"){bigAlert(t("boarAlert"));toast(t("boarHint"),3);audio.synth("grunt",1.2);}else if(e.kind==="boarRace"){bigAlert(t("boarRaceAlert"));toast(t("boarRaceHint"),3);audio.synth("grunt",1.3);}else if(e.kind==="boarRam"){const f=$("hit-flash");f.getAnimations().forEach(a=>a.cancel());f.animate([{opacity:.75},{opacity:0}],{duration:650,easing:"ease-out"});toast(t("boarRam"),2.4);audio.play("bump",.8,.9);try{navigator.vibrate?.(160);}catch{}}else if(e.kind==="boarQuit")toast(t("boarQuit"),2.6);else if(e.kind==="mushroom"){toast(t("mushroom"),1.6);audio.play("pickup",2,.8);}else if(e.kind==="fisherCast")audio.play("jump",.55,.55);else if(e.kind==="hooked"){const f=$("hit-flash");f.getAnimations().forEach(a=>a.cancel());f.animate([{opacity:.75},{opacity:0}],{duration:650,easing:"ease-out"});try{navigator.vibrate?.(140);}catch{}}else if(e.kind==="fisherQuit"){fisherEscaped=true;toast(t("fisherQuit"),2.6);audio.play("pickup",1.1,.8);}else if(e.kind==="crow"){toast(t(e.lost>0?"crowHit":"crowHitEmpty",{n:e.lost}),2.4);audio.play("bump",1.4,.8);}else if(e.kind==="shieldHit")toast(t("shieldHit"));else if(e.kind==="missedTurn")toast(t("turnMiss"));}
 }
 // Level 4 «Furi · Waldpfad»: Abschnitts-Hinweise, heller/dunkler Wald und Waldgeräusche.
 let forestSec=0,nextChirp=0,nextWind=0,nextGrunt=0,nextHoof=0,nextWater=0;const forestSounds=new Set();
@@ -266,16 +266,15 @@ function meadowAmbience(){
 // Level 6 «Schwarzsee»: Abschnitte, Steinpfad- und Froschwarnungen, Seegeräusche.
 let lakeSec=0,nextLakeWater=0,nextBuzz=0,nextLakeBird=0;const lakeSounds=new Set();
 function lakeAmbience(){
+ // Level 6 Sumpfgebiet: Meldung beim Wechsel Wasser ↔ Schlammebene, Wasser- und Vogelgeräusche.
  const sec=screen==="play"&&state.phase==="playing"?lakeSection(state.elapsed):0,now=performance.now()/1000,el=state.elapsed;
- if(sec!==lakeSec){if(sec>0)toast(t("lakeSec"+sec),3.2);lakeSec=sec;}
+ if(sec!==lakeSec){if(sec===1)toast(t("swampStart"),3.4);lakeSec=sec;}
  if(!sec||paused)return;
- if(stoneAt(el+2)&&!stoneAt(el)&&!lakeSounds.has("stones"+Math.floor(el/20))){lakeSounds.add("stones"+Math.floor(el/20));bigAlert(t("stoneAlert"));toast(t("stoneHint"),3);}
- if(now>nextLakeWater){nextLakeWater=now+3+Math.random()*2;audio.synth("water",.5);}
- if(now>nextBuzz){nextBuzz=now+2.5+Math.random()*3;audio.synth("buzz",.6);}
+ const mudSoon=swampMud(el+1.6)&&!swampMud(el),waterSoon=!swampMud(el+1.2)&&swampMud(el)&&el+1.2<540;
+ if(mudSoon&&!lakeSounds.has("mud"+Math.floor(el/21))){lakeSounds.add("mud"+Math.floor(el/21));bigAlert(t("mudAlert"));toast(t("mudHint"),3);}
+ if(waterSoon&&!lakeSounds.has("water"+Math.floor(el/21))){lakeSounds.add("water"+Math.floor(el/21));toast(t("waterHint"),2.8);}
+ if(now>nextLakeWater){nextLakeWater=now+(swampMud(el)?4:2.6)+Math.random()*2;audio.synth(swampMud(el)?"stream":"water",.5);}
  if(now>nextLakeBird){nextLakeBird=now+4+Math.random()*4;audio.synth("chirp",.5);}
- for(const o of state.objects){if(o.kind!=="tongue")continue;const gap=(o.d-state.distance)/Math.max(1,state.speed),key=o.attackId;
-  if(gap<1.6&&!lakeSounds.has("c"+key)){lakeSounds.add("c"+key);audio.synth("croak",.9);if(!lakeSounds.has("firstFrog")){lakeSounds.add("firstFrog");toast(t("frogHint"),3);}}
-  if(gap<.35&&!lakeSounds.has("t"+key)){lakeSounds.add("t"+key);audio.synth("thwip",1);}}
  if(lakeSounds.size>300)lakeSounds.clear();
 }
 function hud(){if(screen==="play"&&state.phase==="playing")crowWarnings();fisherBubble();forestAmbience();meadowAmbience();lakeAmbience();

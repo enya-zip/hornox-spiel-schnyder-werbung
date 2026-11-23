@@ -38,6 +38,8 @@ const HERD=[388,394],COWS=[398,404],HAY=[409,421];
 // Level 6 «Schwarzsee» (7:30–9:00): Abschnitte und Steinpfad-Fenster (gleich wie in journey.js).
 function lakeSection(t){return t<450||t>=540?0:t<472.5?1:t<495?2:t<517.5?3:4;}
 function stoneAt(t){return t>=474&&t<492||t>=500&&t<508||t>=519&&t<538;}
+// Level 6: alle 21 s ein Wechsel – 15 s auf dem Wasser (Balken und versunkene Steine), danach 6 s Schlammebene.
+function swampMud(t){return t>=450&&t<540&&(t-450)%21>=15;}
 // Level 10: ab summitTurn wechseln die Kurven immer ab (Zickzack zum Gipfel).
 function turnDir(seed,summitTurn,i){const base=k=>((seed+k*13)%5)<2?-1:1;return !summitTurn||i<summitTurn?base(i):base(summitTurn-1)*((i-summitTurn)%2?1:-1);}
 export function applyAction(s,p,a){
@@ -61,7 +63,7 @@ export function applyAction(s,p,a){
  if(!jump&&!duck&&queued&&buffer>0){jump=queued==="jump"?18:0;jumpCount=jump?1:0;jumpBase=0;duck=queued==="duck"?16:0;events.push({kind:queued});queued="";buffer=0;}
  if(!buffer)queued="";
  const rushRamp=s.powerTicks>0?Math.min(1,(121-s.powerTicks)/7,s.powerTicks/12):0;
- const speed=(1+.55*rushRamp)*((s.mode==="relaxed"?14:19)+Math.min(s.mode==="relaxed"?6:8,elapsed/42))*(s.slow>0&&!(s.shoes>0)?.7:1)*(s.shoes>0?1.2:1),distance=s.distance+speed*.05;
+ const speed=(1+.55*rushRamp)*((s.mode==="relaxed"?14:19)+Math.min(s.mode==="relaxed"?6:8,elapsed/42))*(s.slow>20&&!(s.shoes>0)?.35:s.slow>0&&!(s.shoes>0)?.7:1)*(s.shoes>0?1.2:1),distance=s.distance+speed*.05;
  let height=jump?jumpBase*(jump/18)+Math.sin((18-jump)/18*Math.PI)*(jumpCount===2?1.15:1):0;
  let powerCharge=s.powerCharge,powerTicks=Math.max(0,s.powerTicks-1);const powering=s.powerTicks>0;
  let flamingoSpawned=s.flamingoSpawned||false;
@@ -120,6 +122,9 @@ export function applyAction(s,p,a){
    }else if(item.kind==='snowshoes'){
     // Level 10: Schneeschuhe – 10 Sekunden schneller und kein Abbremsen nach Treffern.
     if(aligned){shoes=200;slow=0;events.push({kind:'powerPickup',power:'pickupShoes'});}
+   }else if(item.kind==='mudPuddle'){
+    // Schlammpfütze: drüberspringen oder ausweichen; hineinlaufen = kurz stecken bleiben (stark gebremst), kein Leben weg.
+    if(aligned){if(height>.4||climb||powering||invulnerable){score+=10;events.push({kind:'clear',object:item.kind,points:10});}else{slow=Math.max(slow,36);chain=0;multiplier=1;events.push({kind:'mudStuck'});}}
    }else if(item.kind==='rushCharge'){
     if(aligned){const before=powerCharge;powerCharge=Math.min(30,powerCharge+15);if(before===30)score+=100;events.push({kind:'powerPickup',power:'pickupCharge'});if(before<30&&powerCharge===30)events.push({kind:'powerReady'});}
    }else if(aligned&&powering){score+=25;events.push({kind:"powerClear",object:item.kind,lane:item.lane,d:item.d,id:item.id,points:25});item.powerCleared=true;
@@ -245,20 +250,14 @@ export function applyAction(s,p,a){
    else if(pattern===5){add("pedestrian",one);if(busy)add("cafe",two);}
    else if(pattern===6)add("carriage",(one+two)/2);
   }else if(z===9){
-   // Level 6 «Schwarzsee» – alles auf dem Wasser: 1 treibende Baumstämme, 2 langer Steinpfad, 3 Stämme und Steine im Wechsel, 4 Finale (Stein zu Stein
-   // springen, sonst ins Wasser), 4 Finale. Frösche sitzen links/rechts und schiessen ihre Zunge über 1–2 Spuren
-   // (springen oder ausweichen); eine Spur bleibt immer frei.
-   const sec=lakeSection(arrivalTime),covers=(side,reach)=>Array.from({length:reach},(_,k)=>side<0?k:2-k),tongue=(side,reach)=>{
-    // Frösche zielen nie auf die freie Spur (Münzen/Herzen): notfalls andere Seite oder kürzere Zunge.
-    if(covers(side,reach).includes(safe))side=-side;if(covers(side,reach).includes(safe)){reach=1;side=safe===0?1:-1;}
-    if(covers(side,reach).some(l=>objects.some(o=>o.kind==="tongue"&&o.rowId===row&&o.lane===l)))return;
-    const id=row*10+(side>0?2:1);for(const l of covers(side,reach))add("tongue",l,0,{side,reach,attackId:id});};
-   // Hauptaufgaben: über treibende Baumstämme springen und auf dem Steinpfad von Stein zu Stein springen.
-   // Frösche sind nur eine Zusatz-Erschwernis: höchstens alle 5–7 s einer, Zunge über eine Spur.
-   const frog=()=>{if(arrivalTime>=nextFrogAt){tongue((rng&4096)?1:-1,1);nextFrogAt=arrivalTime+5+((rng>>>18)%3);}};
+   // Level 6 «Schwarzsee» – Sumpfgebiet. Auf dem Wasser springt man von Holzbalken zu versunkenen Steinen:
+   // jede zweite Reihe eine Wasserlücke über die ganze Breite (springen), dazwischen manchmal Lücken in zwei
+   // Spuren (springen oder in die freie Spur wechseln). Alle 15 s folgt eine Schlammebene mit Schlammpfützen –
+   // wer hineinläuft, bleibt kurz stecken (kein Lebensverlust); ausweichen oder drüberspringen.
    if(pattern===8){}
-   else if(stoneAt(arrivalTime)){if(row%2===0)add("waterGap",-1);else if(sec>=3&&pattern%2)frog();}
-   else{if(row%2===0)add("floatLog",-1);else if(pattern===3||pattern===6||sec===4&&pattern%2)frog();}
+   else if(swampMud(arrivalTime)){if(row%2===0||pattern%3===1){add("mudPuddle",one);if(busy&&pattern%2===0)add("mudPuddle",two);}}
+   else if(row%2===0)add("waterGap",-1);
+   else if(pattern%3===1&&busy){add("waterGap",one);add("waterGap",two);}
   }else if([4,10].includes(z)){
    if(pattern===0){add("hiker",one);if(busy)add("lowRock",two);}
    else if(pattern===1)add("ridgeGap",-1);

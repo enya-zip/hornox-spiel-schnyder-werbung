@@ -17,7 +17,7 @@ check('environment-specific hazards remain appropriate and every variant is reac
  const profiles={
   3:['snowman','luggage','trolley','planter','electric','photographers','manhole','carriage','scooter','skiers','snowboarders','influencer','lostTourists','pedestrian','bike'],
   6:['hiker','marmot','sheep','log','branch','bike'],7:['fish','beaverLog','gull'],8:['roots','log','boulder','sign','trunk'],1:['fence','fenceLow'],
-  9:['floatLog','tongue'],4:['hiker','lowRock','ridgeGap','rope','rockfall','boulder'],10:['hiker','lowRock','ridgeGap','rope','rockfall','boulder'],0:['iceBlock','crevasse','iceArch'],5:['iceBlock','crevasse','iceArch','crow','ibex']};
+  9:['waterGap'],4:['hiker','lowRock','ridgeGap','rope','rockfall','boulder'],10:['hiker','lowRock','ridgeGap','rope','rockfall','boulder'],0:['iceBlock','crevasse','iceArch'],5:['iceBlock','crevasse','iceArch','crow','ibex']};
  for(const [elapsed,z]of [[30,3],[110,6],[200,7],[276,8],[364,1],[455,9],[570,4],[660,0],[750,10],[840,5]]){const found=new Set();for(let seed=1;seed<90;seed++){
   const state={...start(seed),flamingoSpawned:true,tick:elapsed*20,elapsed,distance:1000,nextRow:1030,nextTurn:99999,row:20,nextFishAt:seed%3===0?0:9999};
   for(const o of action(state,{type:'step'}).objects){if(['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom','herb','cheese','goldBell','edelweiss'].includes(o.kind))continue;assert.equal(o.biome,z);assert(profiles[z].includes(o.kind),'wrong biome: '+o.kind);found.add(o.kind);}
@@ -218,21 +218,22 @@ check('level 5 Alpweiden: only wooden fences (jump or find the passage), bees ch
  let f={...start(),tick:8549,elapsed:427.45,distance:10600,checkpoints:3,nextRow:1e9,nextTurn:1e9,objects:[]};f=action(f,{type:'step'});assert(f.dog>400);assert.equal(f.dogMode,2);
  const drift=(st,n)=>{let x={...st,dogGap:12,dogBump:st.tick};for(let k=0;k<n;k++)x=action({...x,nextRow:1e9},{type:'step'});return x.dogGap;};assert(drift(f,40)<drift({...d,dogMode:1},40));
 });
-check('level 6 Schwarzsee: floating logs, stepping stones over the water and frog tongues',()=>{
- const allowed=['floatLog','tongue','waterGap','coin','heart','magnet','shieldOrb','coinBoost','rushCharge'];const seen=new Set();
+check('level 6 Schwarzsee: swamp – jump between beams and sunken stones, every 15 s a mud plain with puddles',()=>{
+ const allowed=['waterGap','mudPuddle','coin','heart','magnet','shieldOrb','coinBoost','rushCharge'];const seen=new Set();
  for(let seed=1;seed<10;seed++){let r={...start(seed),tick:9000,elapsed:450,distance:11500,nextRow:11530,nextTurn:1e9,row:70};while(r.elapsed<538){r=action({...r,lives:9,invulnerable:1},{type:'step'});for(const o of r.objects)if(o.biome===9){assert(allowed.includes(o.kind),o.kind);seen.add(o.kind);
-  if(o.kind==='tongue'){const same=r.objects.filter(q=>q.kind==='tongue'&&q.rowId===o.rowId);assert(new Set(same.map(q=>q.lane)).size<3,'Zungen sperren alle Spuren');}}}}
- for(const k of['floatLog','tongue','waterGap'])assert(seen.has(k),'fehlt: '+k);
- // Wasserlücken nur auf dem Steinpfad
- for(const t of[455,495,511]){const r=action({...start(4),tick:t*20,elapsed:t,distance:12000,nextRow:12030,nextTurn:1e9,row:80},{type:'step'});assert(!r.objects.some(o=>o.kind==='waterGap'&&t+(o.encounter-12000)/r.speed<t+3),'Lücke ausserhalb des Steinpfads bei '+t);}
- // Hauptaufgaben dominieren: viel mehr Baumstämme und Wasserlücken als Froschzungen, Frösche mindestens 5 s auseinander
- let main=0,frogs=0;for(let seed=1;seed<10;seed++){let r={...start(seed),tick:9000,elapsed:450,distance:11500,nextRow:11530,nextTurn:1e9,row:70};const seen2=new Set();let last=-99;while(r.elapsed<538){r=action({...r,lives:9,invulnerable:1},{type:'step'});for(const o of r.objects){if(o.biome!==9||seen2.has(o.id))continue;seen2.add(o.id);if(o.kind==='floatLog'||o.kind==='waterGap')main++;if(o.kind==='tongue'){frogs++;const at=r.elapsed+(o.d-r.distance)/r.speed;assert(at-last>=4.9,'Frösche zu dicht');last=at;}}}}
- assert(main>frogs*4,'main '+main+' frogs '+frogs);
- // Ins Wasser fallen kostet ein Leben (mit Sturz), springen rettet
+  const t=450+(o.encounter!==undefined?0:0);
+  if(o.kind==='waterGap'&&o.lane>=0){const same=r.objects.filter(q=>q.kind==='waterGap'&&q.rowId===o.rowId&&q.lane>=0);assert(new Set(same.map(q=>q.lane)).size<3,'Lücken sperren alle Spuren');}}}}
+ for(const k of['waterGap','mudPuddle'])assert(seen.has(k),'fehlt: '+k);
+ // Zeitplan: 15 s Wasser, dann 6 s Schlamm – auf dem Wasser keine Pfützen, im Schlamm keine Wasserlücken
+ const kindsAt=t=>{const r=action({...start(4),tick:t*20,elapsed:t,distance:12000,nextRow:12030,nextTurn:1e9,row:80},{type:'step'});return r.objects.filter(o=>o.biome===9&&t+(o.encounter-12000)/r.speed<t+1.2).map(o=>o.kind);};
+ for(const t of[452,475,495])assert(!kindsAt(t).includes('mudPuddle'),'Pfütze auf dem Wasser bei '+t);
+ let mudRows=0;for(const t of[466,487,508,529]){const k=kindsAt(t);assert(!k.includes('waterGap'),'Wasserlücke im Schlamm bei '+t);if(k.includes('mudPuddle'))mudRows++;}assert(mudRows>=2);
+ // Ins Wasser fallen kostet ein Leben (mit Sturz), springen rettet; Lücke in einer Spur: Spur wechseln rettet
  const fall=collision('waterGap',{lane:-1});assert.equal(fall.lives,2);assert(fall.fallTicks>0);assert(fall.events.some(e=>e.kind==='splash'));assert.equal(collision('waterGap',{lane:-1,jump:10}).lives,3);
- // Froschzunge: springen oder Spur wechseln; Treffer = ein Leben, zwei Zungen-Spuren treffen nur einmal
- assert.equal(collision('tongue').lives,2);assert.equal(collision('tongue',{jump:10}).lives,3);assert.equal(collision('tongue',{lane:0}).lives,3);
- const two=action({...start(),distance:100,nextRow:1e4,x:1,target:1,objects:[{id:1,kind:'tongue',lane:1,side:-1,reach:2,attackId:9,d:100.9},{id:2,kind:'tongue',lane:1,side:-1,reach:2,attackId:9,d:100.95}]},{type:'step'});assert.equal(two.lives,2);
- assert.equal(collision('floatLog',{lane:-1,jump:10}).lives,3);assert.equal(collision('floatLog',{lane:-1}).lives,2);
+ assert.equal(collision('waterGap',{lane:0}).lives,3);
+ // Schlammpfütze: hineinlaufen = stecken bleiben (stark gebremst), aber kein Leben weg; springen = frei
+ const stuck=collision('mudPuddle');assert.equal(stuck.lives,3);assert(stuck.events.some(e=>e.kind==='mudStuck'));assert(stuck.slow>20);
+ const slowRun=action({...stuck,objects:[],nextRow:1e9},{type:'step'}),normal=action({...start(),distance:100,nextRow:1e9,objects:[]},{type:'step'});assert(slowRun.speed<normal.speed*.5,'stark gebremst');
+ const free=collision('mudPuddle',{jump:10});assert.equal(free.lives,3);assert(!free.events.some(e=>e.kind==='mudStuck'));
 });
 console.log(`${checks} rule checks passed`);
