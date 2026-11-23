@@ -5,7 +5,7 @@ import {setup,validateAction,applyAction} from "./rules.js?v=39";
 import {installControls} from "./controls.js?v=17";
 import {createAudio} from "./audio.js?v=23";
 import {getZone} from "./scene3d.js?v=59";
-import {copy} from "./copy.js?v=45";
+import {copy} from "./copy.js?v=46";
 import {turnDirection} from "./route.js?v=21";
 import {createLeaderboard} from "./leaderboard.js?v=7";
 import {LEADERBOARD} from "./leaderboard-config.js?v=3";
@@ -123,26 +123,13 @@ function resultCopy(){
  $("stat-level").textContent=t("levelsOf",{n:level,total:stages.length})+" · "+t(stages[level-1].key).split(" · ")[0];
  $("stat-distance").textContent=fmt(state.distance)+" m";$("stat-coins").textContent=fmt(state.coins||0);$("stat-best").textContent=top?fmt(top):"—";
  $("result-note").textContent=won?t("wonText",{coins:fmt(state.coins||0)}):test?t("testRunNote",{n:testLevel}):!recordInfo.isNew&&top>state.score?t("recordGap",{n:fmt(top-Math.floor(state.score))}):t("lostText",{distance:fmt(state.distance),coins:fmt(state.coins||0)});
- $("result-rank").textContent=lastRankPlace?t(lastRankPlace===1?"rankFirst":"rankPlace",{n:lastRankPlace})+(test?" · "+t("rankTest",{n:testLevel}):""):t("rankOut");
+
 }
 // Punktestand zählt beim Game Over kurz hoch (ohne Animation bei «Weniger Kamerabewegung»).
 function countUp(){const node=$("result-score"),end=Math.floor(state.score),token=++countToken,t0=performance.now(),dur=reduced?0:900;
  const step=now=>{if(token!==countToken)return;const u=dur?Math.min(1,(now-t0)/dur):1;node.textContent=fmt(end*(1-Math.pow(1-u,3)));if(u<1)requestAnimationFrame(step);else countToken=0;};requestAnimationFrame(step);}
 // Rangliste: die 10 besten Läufe auf diesem Gerät. Test-Läufe (?level=N) zählen mit und sind markiert,
 // verändern aber den offiziellen Bestwert nicht.
-const rankKey="hornox.ranking.v1";let lastRankId=0,lastRankPlace=0;
-function ranking(){try{const r=JSON.parse(read(rankKey)||"[]");return Array.isArray(r)?r.filter(e=>e&&Number.isFinite(e.score)):[];}catch{return[];}}
-function addRanking(){const list=ranking(),entry={id:Date.now(),score:Math.floor(state.score),coins:state.coins||0,level:Math.min(10,getStage(state.elapsed)+1),won:state.phase==="won",mode:state.mode,test:testLevel>1?testLevel:0,date:new Date().toISOString().slice(0,10)};
- list.push(entry);list.sort((a,b)=>b.score-a.score||a.id-b.id);const top=list.slice(0,10);save(rankKey,JSON.stringify(top));lastRankId=entry.id;lastRankPlace=top.findIndex(e=>e.id===entry.id)+1;}
-function renderRanking(){const list=ranking(),ol=$("ranking-list"),locale=({en:"en-GB",de:"de-CH",fr:"fr-CH",ja:"ja-JP",zh:"zh-CN"})[lang];
- if(!list.length){const li=document.createElement("li");li.className="empty";li.textContent=t("rankEmpty");ol.replaceChildren(li);return;}
- ol.replaceChildren(...list.map((e,i)=>{const li=document.createElement("li"),n=document.createElement("b"),main=document.createElement("div"),score=document.createElement("strong"),info=document.createElement("small");
-  if(e.id===lastRankId)li.className="latest";n.textContent=String(i+1);score.textContent=fmt(e.score);
-  let date="";try{date=new Date(e.date+"T12:00:00").toLocaleDateString(locale,{day:"2-digit",month:"2-digit",year:"2-digit"});}catch{}
-  info.textContent=[t("rankLevel",{n:e.level}),"🪙 "+fmt(e.coins),date].filter(Boolean).join(" · ");main.append(score,info);
-  const tags=document.createElement("span");tags.className="tags";const tag=(txt,cls)=>{const x=document.createElement("em");x.textContent=txt;if(cls)x.className=cls;tags.append(x);};
-  if(e.won)tag("🏔️ "+t("rankSummit"),"won");if(e.mode==="relaxed")tag(t("relaxedMode"));if(e.test)tag(t("rankTest",{n:e.test}),"test");
-  li.append(n,main,tags);return li;}));}
 // ---------- Globale Rangliste (für alle Spieler gleich, online gespeichert) ----------
 // Ablauf: Game Over → «Weiter zur Rangliste» → Name + E-Mail → speichern → Rangliste mit eigenem Platz.
 const board=createLeaderboard();
@@ -163,10 +150,10 @@ const boardError=err=>err?.offline?t("globalOffline"):err?.network?t("globalNetw
 // Rekorde-Tab im Startmenü: Top 10 + eigener Platz (mit Nachbarn), aktualisiert sich alle 8 Sekunden.
 async function refreshBoard(){
  if(!board.configured){$("global-status").textContent=t("globalOffline");$("global-list").replaceChildren();$("global-me").hidden=true;return;}
- try{const [top,me]=await Promise.all([board.top(10,0,playerId),board.standing(playerId)]);
+ try{const [top,me]=await Promise.all([board.top(50,0,playerId),board.standing(playerId)]);
   $("global-status").textContent=me?.total||top.length?t("globalCount",{n:fmt(me?.total||top.length)}):"";
   $("global-list").replaceChildren(...(top.length?top.map(e=>boardRow(e,e.is_me)):[emptyRow(t("globalEmpty"))]));
-  const box=$("global-me");if(me?.rank>10){const around=await board.top(3,me.rank-2,playerId),ol=document.createElement("ol");ol.append(...around.map(e=>boardRow(e,e.is_me)));box.replaceChildren(Object.assign(document.createElement("p"),{className:"sep",textContent:"⋯"}),ol);box.hidden=false;}else box.hidden=true;
+  const box=$("global-me");if(me?.rank>50){const around=await board.top(3,me.rank-2,playerId),ol=document.createElement("ol");ol.append(...around.map(e=>boardRow(e,e.is_me)));box.replaceChildren(Object.assign(document.createElement("p"),{className:"sep",textContent:"⋯"}),ol);box.hidden=false;}else box.hidden=true;
  }catch(err){$("global-status").textContent=boardError(err);}
 }
 function watchBoard(on){clearInterval(boardTimer);boardTimer=0;if(on){refreshBoard();boardTimer=setInterval(()=>{if(!document.hidden)refreshBoard();},8000);}}
@@ -223,7 +210,7 @@ $("board-back").onclick=()=>{hideBoard();$("to-board").focus();};
 $("board-again").onclick=()=>start();
 // «Weiter zur Rangliste»: einmal speichern, danach direkt zur Rangliste. Trainingsläufe (Start ab Level 2+) zählen nicht.
 $("to-board").onclick=()=>{if(run.saving)return;if(run.saved||testLevel>1)showBoard();else openSave();};
-function finish(){if(resultSaved)return;resultSaved=true;run={id:newId(),saved:null,saving:false};audio.setChase(false);audio.setActive(false);addRanking();
+function finish(){if(resultSaved)return;resultSaved=true;run={id:newId(),saved:null,saving:false};audio.setChase(false);audio.setActive(false);
  const previous=best(state.route,state.mode);recordInfo={previous,isNew:testLevel<=1&&Math.floor(state.score)>previous&&state.score>0};if(recordInfo.isNew)save(bestKey(state.route,state.mode),Math.floor(state.score));
  setScreen("result");$("turn-cue").hidden=true;$("tutorial").hidden=true;$("resort-arrival").hidden=true;$("powerup").hidden=true;$("fisher-bubble").hidden=true;countToken=0;resultCopy();countUp();if(recordInfo.isNew)audio.play("pickup",1.7,.8);$("again").focus();}
 function heartFeedback(gained){const node=$('heart-feedback');node.querySelector('span').textContent=t(gained?'heartGain':'heartFull');node.hidden=false;node.getAnimations().forEach(a=>a.cancel());const target=$('lives').getBoundingClientRect(),x=target.left+target.width/2-innerWidth/2,y=target.top+target.height/2-innerHeight*.40;node.animate(reduced?[{opacity:1},{opacity:1,offset:.75},{opacity:0}]:[{opacity:0,transform:'translate(-50%,-50%) scale(.6)'},{opacity:1,transform:'translate(-50%,-50%) scale(1.15)',offset:.18},{opacity:1,transform:'translate(-50%,-50%) scale(1)',offset:.60},{opacity:0,transform:`translate(calc(-50% + ${x}px),calc(-50% + ${y}px)) scale(.22)`}],{duration:reduced?1000:1350,fill:'forwards'});audio.play('pickup',1.6,.85);}
@@ -344,7 +331,7 @@ let menuTab="run";
 function selectMenu(tab){menuTab=tab;watchBoard(tab==="records");for(const name of ["run","route","records"]){$("menu-"+name).hidden=name!==tab;const button=document.querySelector('[data-menu="'+name+'"]');if(name===tab)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');}app.dataset.menuTab=tab;updateMenu();}
 function updateMenu(){
  document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode)));
- renderRanking();$('record-classic').textContent=best('summit','classic')?fmt(best('summit','classic')):'—';$('record-relaxed').textContent=best('summit','relaxed')?fmt(best('summit','relaxed')):'—';
+ 
  const key=lang;if($('route-stages').dataset.lang!==key){$('route-stages').dataset.lang=key;$('route-stages').replaceChildren(...stages.map((stage,i)=>{const li=document.createElement('li'),n=document.createElement('b'),label=document.createElement('span'),time=document.createElement('small');n.textContent=String(i+1).padStart(2,'0');label.textContent=t(stage.key).split(' · ')[0];time.textContent=Math.floor(stage.start/60)+':'+String(stage.start%60).padStart(2,'0');const go=document.createElement('button');go.type='button';go.className='stage-go';go.textContent='▶';go.setAttribute('aria-label',t('playLevel',{n:i+1}));go.onclick=()=>{if(!adminPw)return;testLevel=i+1;start();};li.append(n,label,time,go);return li}));}
 }
 function enterMenu(){app.dataset.front="menu";$('splash').hidden=true;selectMenu('run');audio.unlock().catch(()=>{});audio.setActive(true);$('start').disabled?$('how').focus():$('start').focus();}

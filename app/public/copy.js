@@ -1313,3 +1313,8 @@ Object.assign(copy.en,{"buttonsShown":"Control buttons shown","buttonsHidden":"C
 Object.assign(copy.fr,{"buttonsShown":"Boutons de contrôle affichés","buttonsHidden":"Boutons masqués – glisse avec le pouce pour diriger"});
 Object.assign(copy.ja,{"buttonsShown":"操作ボタンを表示","buttonsHidden":"操作ボタンを非表示 – 親指でスワイプして操作"});
 Object.assign(copy.zh,{"buttonsShown":"已显示控制按钮","buttonsHidden":"已隐藏控制按钮 – 用拇指滑动操作"});
+Object.assign(copy.de,{"boardHint":"Speichere deine Punkte nach dem Game Over («Weiter zur Rangliste»), um hier zu erscheinen."});
+Object.assign(copy.en,{"boardHint":"Save your score after game over («Continue to leaderboard») to appear here."});
+Object.assign(copy.fr,{"boardHint":"Enregistre ton score après le game over («Voir le classement») pour apparaître ici."});
+Object.assign(copy.ja,{"boardHint":"ゲームオーバー後にスコアを保存（「ランキングへ進む」）すると、ここに表示されます。"});
+Object.assign(copy.zh,{"boardHint":"游戏结束后保存分数（“查看排行榜”）即可出现在这里。"});
