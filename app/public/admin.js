@@ -1,15 +1,14 @@
 // Admin-Seite des Gewinnspiels: Login über Supabase Auth, danach Teilnehmerliste mit E-Mail-Adressen.
 // Die Daten kommen ausschliesslich aus der Datenbankfunktion admin_entries, die nur für Admins antwortet.
-// Die Anmeldung gilt nur in diesem Browser-Tab (sessionStorage) und läuft nach spätestens einer Stunde ab.
-import {createLeaderboard} from "./leaderboard.js?v=5";
-const $=id=>document.getElementById(id),board=createLeaderboard(),KEY="hornox.admin.session";
+// Zugang nur mit dem Admin-Passwort (geprüft in der Datenbank). Es wird nur im Speicher dieses Tabs gehalten.
+import {createLeaderboard} from "./leaderboard.js?v=7";
+const $=id=>document.getElementById(id),board=createLeaderboard();
 let session=null,entries=[];
-try{const s=JSON.parse(sessionStorage.getItem(KEY));if(s&&s.token&&s.expires>Date.now()+30000)session=s;}catch{}
 
 const dt=v=>{try{return new Date(v).toLocaleString("de-CH",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});}catch{return v||"";}};
 const num=n=>new Intl.NumberFormat("de-CH").format(n||0);
-function show(view){for(const v of["login","offline","list"])$(v).hidden=v!==view;if(view==="login")$("login-email").focus();}
-function logout(msg){session=null;entries=[];try{sessionStorage.removeItem(KEY);}catch{}$("rows").replaceChildren();show("login");if(msg){$("login-error").textContent=msg;$("login-error").hidden=false;}}
+function show(view){for(const v of["login","offline","list"])$(v).hidden=v!==view;if(view==="login")$("login-password").focus();}
+function logout(msg){session=null;entries=[];$("rows").replaceChildren();show("login");if(msg){$("login-error").textContent=msg;$("login-error").hidden=false;}}
 
 function render(){
  const q=$("search").value.trim().toLowerCase(),list=q?entries.filter(e=>(e.name+" "+e.email).toLowerCase().includes(q)):entries;
@@ -21,8 +20,8 @@ function render(){
 }
 async function load(){
  $("list-error").hidden=true;$("refresh").disabled=true;
- try{entries=await board.adminEntries(session.token);$("updated").textContent=new Date().toLocaleTimeString("de-CH",{hour:"2-digit",minute:"2-digit"});show("list");render();}
- catch(e){if(e.status===401||e.status===403)logout(e.status===403?"Dieses Konto ist nicht als Admin freigeschaltet.":"Die Anmeldung ist abgelaufen. Bitte erneut anmelden.");else{show("list");$("list-error").textContent="Die Liste konnte nicht geladen werden. Bitte später nochmals versuchen.";$("list-error").hidden=false;}}
+ try{entries=await board.adminEntries(session.password);$("updated").textContent=new Date().toLocaleTimeString("de-CH",{hour:"2-digit",minute:"2-digit"});show("list");render();}
+ catch(e){if(e.status===401||e.status===403)logout("Falsches Passwort.");else{show("list");$("list-error").textContent="Die Liste konnte nicht geladen werden. Bitte später nochmals versuchen.";$("list-error").hidden=false;}}
  finally{$("refresh").disabled=false;}
 }
 // CSV mit Semikolon (öffnet in Excel CH/DE direkt richtig) und BOM für Umlaute.
@@ -33,12 +32,11 @@ function download(name,head,rows){
 }
 
 $("login-form").onsubmit=async e=>{e.preventDefault();const btn=e.submitter||$("login-form").querySelector("button");btn.disabled=true;$("login-error").hidden=true;
- try{session=await board.login($("login-email").value.trim(),$("login-password").value);try{sessionStorage.setItem(KEY,JSON.stringify(session));}catch{}$("login-password").value="";await load();}
- catch(err){$("login-error").textContent=err.status===400||err.status===401?"E-Mail oder Passwort ist falsch.":"Anmeldung zurzeit nicht möglich. Bitte später nochmals versuchen.";$("login-error").hidden=false;}
+ try{const pw=$("login-password").value;if(!await board.adminCheck(pw)){$("login-error").textContent="Falsches Passwort.";$("login-error").hidden=false;$("login-password").select();return;}session={password:pw};$("login-password").value="";await load();}
+ catch(err){$("login-error").textContent="Anmeldung zurzeit nicht möglich. Bitte später nochmals versuchen.";$("login-error").hidden=false;}
  finally{btn.disabled=false;}};
 const csv=()=>download("hornox-rangliste",["Platz","Name","E-Mail","Punkte","Level","Läufe","Bestleistung am","Letztes Spiel"],entries.map(e=>[e.rank,e.name,e.email||"",e.best_score,e.best_level,e.runs,dt(e.last_record),dt(e.last_played)]));
-async function csvRuns(){$("csv-runs").disabled=true;try{const runs=await board.adminRuns(session.token);download("hornox-alle-laeufe",["Datum und Uhrzeit","Name","E-Mail","Punkte","Level","Münzen"],runs.map(r=>[dt(r.played_at),r.name,r.email||"",r.score,r.level,r.coins]));}catch(e){$("list-error").textContent="Die Läufe konnten nicht geladen werden.";$("list-error").hidden=false;}finally{$("csv-runs").disabled=false;}}
+async function csvRuns(){$("csv-runs").disabled=true;try{const runs=await board.adminRuns(session.password);download("hornox-alle-laeufe",["Datum und Uhrzeit","Name","E-Mail","Punkte","Level","Münzen"],runs.map(r=>[dt(r.played_at),r.name,r.email||"",r.score,r.level,r.coins]));}catch(e){$("list-error").textContent="Die Läufe konnten nicht geladen werden.";$("list-error").hidden=false;}finally{$("csv-runs").disabled=false;}}
 $("search").oninput=render;$("refresh").onclick=load;$("csv").onclick=csv;$("csv-runs").onclick=csvRuns;$("logout").onclick=()=>logout();
-setInterval(()=>{if(session&&session.expires<Date.now())logout("Die Anmeldung ist abgelaufen. Bitte erneut anmelden.");},30000);
 
 if(!board.configured)show("offline");else if(session)load();else show("login");

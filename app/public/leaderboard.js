@@ -26,9 +26,9 @@ export function createLeaderboard(config=LEADERBOARD){
   async top(limit=50,offset=0,me=null){return(await rpc("leaderboard_top",{p_limit:limit,p_offset:offset,p_me:me}))||[];},
   async standing(id){return one(await rpc("player_standing",{p_id:id}));},
   async rename(id,name){await rpc("rename_player",{p_id:id,p_name:name});},
-  // Admin: Anmeldung über Supabase Auth (E-Mail + Passwort) und Listen mit E-Mail-Adressen.
-  async login(email,password){if(!configured)throw Error("offline");const r=await fetch(url+"/auth/v1/token?grant_type=password",{method:"POST",headers:{apikey:key,"Content-Type":"application/json"},body:JSON.stringify({email,password})});const j=await r.json().catch(()=>({}));if(!r.ok||!j.access_token){const e=Error("login");e.status=r.status;throw e;}return{token:j.access_token,email:j.user?.email||email,expires:Date.now()+(j.expires_in||3600)*1000};},
-  async adminEntries(token){return(await rpc("admin_entries",{},token))||[];},
-  async adminRuns(token){return(await rpc("admin_runs",{},token))||[];}
+  // Admin: Zugang nur mit dem Admin-Passwort; geprüft wird es in der Datenbank (admin_check).
+  async adminCheck(password){const r=await rpc("admin_check",{p_password:password});return r===true||(Array.isArray(r)&&r[0]?.admin_check===true);},
+  async adminEntries(password){return(await rpc("admin_entries",{p_password:password}))||[];},
+  async adminRuns(password){return(await rpc("admin_runs",{p_password:password}))||[];}
  };
 }

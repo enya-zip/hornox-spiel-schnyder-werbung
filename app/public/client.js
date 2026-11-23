@@ -5,9 +5,9 @@ import {setup,validateAction,applyAction} from "./rules.js?v=39";
 import {installControls} from "./controls.js?v=17";
 import {createAudio} from "./audio.js?v=23";
 import {getZone} from "./scene3d.js?v=59";
-import {copy} from "./copy.js?v=43";
+import {copy} from "./copy.js?v=44";
 import {turnDirection} from "./route.js?v=21";
-import {createLeaderboard} from "./leaderboard.js?v=5";
+import {createLeaderboard} from "./leaderboard.js?v=7";
 import {LEADERBOARD} from "./leaderboard-config.js?v=3";
 const $=id=>document.getElementById(id),q=new URLSearchParams(location.search),app=$("app"),canvas=$("world"),player="guest";
 const read=k=>{try{return localStorage.getItem(k);}catch{return null;}},save=(k,v)=>{try{localStorage.setItem(k,String(v));}catch{}};
@@ -91,7 +91,8 @@ function input(kind){
 }
 // TEST-CHEAT: ?level=N in der Adresse startet direkt im Level N (1–10).
 // Beispiel: https://…/?level=7 – Bestwerte werden dabei nicht gespeichert.
-const urlLevel=Math.max(1,Math.min(stages.length,Math.floor(Number(q.get("level"))||1)));let testLevel=urlLevel;
+// Level direkt wählen kann nur der Admin (Einstellungen → Admin-Zugang). «?level=» in der Adresse gilt nicht mehr.
+const urlLevel=1;let testLevel=1;
 function skipToLevel(){
  if(testLevel<=1||state.phase!=="playing")return;
  const tick=stages[testLevel-1].start*20,relaxed=state.mode==="relaxed";let distance=0;
@@ -344,14 +345,41 @@ function selectMenu(tab){menuTab=tab;watchBoard(tab==="records");for(const name 
 function updateMenu(){
  document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode)));
  renderRanking();$('record-classic').textContent=best('summit','classic')?fmt(best('summit','classic')):'—';$('record-relaxed').textContent=best('summit','relaxed')?fmt(best('summit','relaxed')):'—';
- const key=lang;if($('route-stages').dataset.lang!==key){$('route-stages').dataset.lang=key;$('route-stages').replaceChildren(...stages.map((stage,i)=>{const li=document.createElement('li'),n=document.createElement('b'),label=document.createElement('span'),time=document.createElement('small');n.textContent=String(i+1).padStart(2,'0');label.textContent=t(stage.key).split(' · ')[0];time.textContent=Math.floor(stage.start/60)+':'+String(stage.start%60).padStart(2,'0');const go=document.createElement('button');go.type='button';go.className='stage-go';go.textContent='▶';go.setAttribute('aria-label',t('playLevel',{n:i+1}));go.onclick=()=>{testLevel=i+1;start();};li.append(n,label,time,go);return li}));}
+ const key=lang;if($('route-stages').dataset.lang!==key){$('route-stages').dataset.lang=key;$('route-stages').replaceChildren(...stages.map((stage,i)=>{const li=document.createElement('li'),n=document.createElement('b'),label=document.createElement('span'),time=document.createElement('small');n.textContent=String(i+1).padStart(2,'0');label.textContent=t(stage.key).split(' · ')[0];time.textContent=Math.floor(stage.start/60)+':'+String(stage.start%60).padStart(2,'0');const go=document.createElement('button');go.type='button';go.className='stage-go';go.textContent='▶';go.setAttribute('aria-label',t('playLevel',{n:i+1}));go.onclick=()=>{if(!adminPw)return;testLevel=i+1;start();};li.append(n,label,time,go);return li}));}
 }
 function enterMenu(){app.dataset.front="menu";$('splash').hidden=true;selectMenu('run');audio.unlock().catch(()=>{});audio.setActive(true);$('start').disabled?$('how').focus():$('start').focus();}
 $('enter-game').onclick=enterMenu;document.querySelectorAll('[data-menu]').forEach(b=>b.onclick=()=>selectMenu(b.dataset.menu));
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;save('spa.runner.assist',mode==='relaxed'?1:0);updateCopy();});
 
 $("rush-button").onpointerdown=e=>{e.preventDefault();input("power");};$("rush-button").onclick=e=>{if(e.detail===0)input("power");};
-$("start").onclick=()=>{testLevel=urlLevel;start();};
+$("start").onclick=()=>{testLevel=1;start();};
+// ---------- Admin-Zugang (Passwort wird in der Datenbank geprüft, nur im Speicher dieses Tabs gehalten) ----------
+let adminPw="",adminEntries=[];
+const adminFmtDate=v=>{try{return v?new Date(v).toLocaleString("de-CH",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}):"";}catch{return v||"";}};
+function setAdmin(pw){adminPw=pw;app.classList.toggle("is-admin",!!pw);}
+$("admin-open").onclick=()=>{$("settings-dialog").close();if(adminPw){openAdminPanel();return;}$("admin-password").value="";$("admin-error").hidden=true;$("admin-login").showModal();$("admin-password").focus();};
+$("admin-form").onsubmit=async e=>{e.preventDefault();const pw=$("admin-password").value,btn=$("admin-submit"),err=$("admin-error");if(!pw){err.textContent=t("adminWrong");err.hidden=false;return;}
+ btn.disabled=true;err.hidden=true;btn.querySelector("span").textContent=t("adminChecking");
+ try{if(await board.adminCheck(pw)){setAdmin(pw);$("admin-password").value="";$("admin-login").close();openAdminPanel();}else{err.textContent=t("adminWrong");err.hidden=false;$("admin-password").select();}}
+ catch(x){err.textContent=boardError(x);err.hidden=false;}
+ finally{btn.disabled=false;btn.querySelector("span").textContent=t("adminLogin");}};
+function adminTab(tab){document.querySelectorAll("[data-admin-tab]").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.adminTab===tab)));$("admin-board").hidden=tab!=="board";$("admin-levels").hidden=tab!=="levels";}
+document.querySelectorAll("[data-admin-tab]").forEach(b=>b.onclick=()=>adminTab(b.dataset.adminTab));
+function openAdminPanel(){if(screen==="play"&&!paused)pause(true);adminTab("board");renderAdminLevels();if(!$("admin-panel").open)$("admin-panel").showModal();loadAdmin();}
+async function loadAdmin(){$("admin-status").textContent=t("boardLoading");$("admin-refresh").disabled=true;
+ try{adminEntries=await board.adminEntries(adminPw);$("admin-count").textContent=t("adminCount",{n:fmt(adminEntries.length)});$("admin-status").textContent="";
+  $("admin-list").replaceChildren(...(adminEntries.length?adminEntries.map(e=>{const li=document.createElement("li"),n=document.createElement("b"),main=document.createElement("div"),who=document.createElement("strong"),mail=document.createElement("span"),info=document.createElement("small"),pts=document.createElement("span");
+   n.textContent=(medal(Number(e.rank))?medal(Number(e.rank))+" ":"")+e.rank+".";who.textContent=e.name;mail.className="mail";mail.textContent=e.email||"—";info.textContent=t("levelsReached",{n:e.best_level,total:stages.length})+" · "+t("adminRuns",{n:e.runs})+" · "+adminFmtDate(e.last_played||e.last_record);pts.className="pts";pts.textContent=fmt(e.best_score);main.append(who,mail,info);li.append(n,main,pts);return li;}):[emptyRow(t("globalEmpty"))]));}
+ catch(x){if(x?.status===401||x?.status===403){setAdmin("");$("admin-panel").close();$("admin-error").textContent=t("adminWrong");$("admin-error").hidden=false;$("admin-login").showModal();}else $("admin-status").textContent=boardError(x);}
+ finally{$("admin-refresh").disabled=false;}}
+function renderAdminLevels(){$("admin-level-grid").replaceChildren(...stages.map((stage,i)=>{const li=document.createElement("li"),b=document.createElement("button");b.type="button";b.className="admin-level";const n=document.createElement("b");n.textContent=String(i+1).padStart(2,"0");const name=document.createElement("span");name.textContent=t(stage.key).split(" · ")[0];b.append(n,name);
+ b.onclick=()=>{if(!adminPw)return;$("admin-panel").close();testLevel=i+1;start();};li.append(b);return li;}));}
+function adminCsv(name,head,rows){const esc=v=>{const x=String(v??"");return /[";\n\r]/.test(x)||/^[=+\-@]/.test(x)?'"'+(/^[=+\-@]/.test(x)?"'":"")+x.replace(/"/g,'""')+'"':x;};
+ const blob=new Blob(["\ufeff"+[head,...rows].map(r=>r.map(esc).join(";")).join("\r\n")],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name+"-"+new Date().toISOString().slice(0,10)+".csv";document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+$("admin-refresh").onclick=loadAdmin;
+$("admin-csv").onclick=()=>adminCsv("hornox-rangliste",["Platz","Name","E-Mail","Punkte","Level","Läufe","Bestleistung am","Letztes Spiel"],adminEntries.map(e=>[e.rank,e.name,e.email||"",e.best_score,e.best_level,e.runs,adminFmtDate(e.last_record),adminFmtDate(e.last_played)]));
+$("admin-csv-runs").onclick=async()=>{const b=$("admin-csv-runs");b.disabled=true;try{const runs=await board.adminRuns(adminPw);adminCsv("hornox-alle-laeufe",["Datum und Uhrzeit","Name","E-Mail","Punkte","Level","Münzen"],runs.map(r=>[adminFmtDate(r.played_at),r.name,r.email||"",r.score,r.level,r.coins]));}catch(x){$("admin-status").textContent=boardError(x);}finally{b.disabled=false;}};
+$("admin-logout").onclick=()=>{setAdmin("");adminEntries=[];$("admin-list").replaceChildren();$("admin-panel").close();};
 $("again").onclick=start;$("restart").onclick=start;$("resume").onclick=()=>pause(false);$("pause-button").onclick=()=>pause(true);document.querySelectorAll(".go-home").forEach(b=>b.onclick=home);
 $("settings").onclick=()=>openDialog("settings-dialog");$("pause-settings").onclick=()=>openDialog("settings-dialog");$("how").onclick=()=>openDialog("help-dialog");document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>b.closest("dialog").close());
 $("language").onchange=e=>{lang=e.target.value;save("hornox.language.v5",lang);updateCopy();};

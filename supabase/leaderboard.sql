@@ -10,7 +10,7 @@
 -- Datenschutz:
 --  * Die Rangliste zeigt nur Name, Punkte, Level und Platz.
 --  * E-Mail-Adressen liegen in einer gesperrten Tabelle. Das Spiel kann sie nur speichern,
---    nie lesen. Lesen kann nur ein eingeloggter Admin (admin_entries / admin_runs).
+--    nie lesen. Lesen kann nur der Admin mit dem Admin-Passwort (admin_entries / admin_runs).
 --  * Alle Tabellen sind für die Öffentlichkeit gesperrt; gelesen wird nur über die Funktionen.
 -- =====================================================================================
 
@@ -150,14 +150,45 @@ returns void language sql security definer set search_path = public as $$
   update public.leaderboard set name = left(trim(p_name), 20) where player_id = p_id and char_length(trim(p_name)) between 1 and 20;
 $$;
 
--- 9) Admin: Teilnehmerliste (bester Lauf je Spieler mit E-Mail) und alle einzelnen Läufe
+-- 9) Admin-Zugang mit Passwort. Das Passwort liegt nur als verschlüsselter Hash (bcrypt) in der
+--    gesperrten Tabelle admin_secret und wird ausschliesslich in der Datenbank geprüft.
+--    Passwort setzen/ändern: nur hier im SQL Editor (siehe Abschnitt 12) – nie aus dem Spiel.
+create extension if not exists pgcrypto with schema extensions;
+create table if not exists public.admin_secret (
+  id         integer primary key default 1 check (id = 1),
+  pw_hash    text not null,
+  updated_at timestamptz not null default now()
+);
+alter table public.admin_secret enable row level security;
+revoke all on public.admin_secret from anon, authenticated;
+
+create or replace function public.set_admin_password(p_password text)
+returns void language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if char_length(coalesce(p_password, '')) < 8 then raise exception 'Das Passwort muss mindestens 8 Zeichen lang sein.'; end if;
+  insert into public.admin_secret (id, pw_hash, updated_at) values (1, extensions.crypt(p_password, extensions.gen_salt('bf', 10)), now())
+  on conflict (id) do update set pw_hash = excluded.pw_hash, updated_at = now();
+end $$;
+
+-- Prüft das Admin-Passwort. Falsche Versuche werden absichtlich verzögert (erschwert Durchprobieren).
+create or replace function public.admin_check(p_password text)
+returns boolean language plpgsql security definer set search_path = public, extensions as $$
+declare ok boolean;
+begin
+  select exists (select 1 from public.admin_secret a where a.pw_hash = extensions.crypt(coalesce(p_password, ''), a.pw_hash)) into ok;
+  if not ok then perform pg_sleep(1); end if;
+  return ok;
+end $$;
+
+-- Admin: Rangliste mit E-Mail-Adressen (bester Lauf je Spieler) und alle einzelnen Läufe
 drop function if exists public.admin_entries();
-create or replace function public.admin_entries()
+drop function if exists public.admin_runs();
+create or replace function public.admin_entries(p_password text)
 returns table (rank bigint, name text, email text, best_level smallint, best_score integer, coins integer, runs integer, last_record timestamptz, last_played timestamptz, joined timestamptz)
-language plpgsql stable security definer set search_path = public as $$
+language plpgsql security definer set search_path = public as $$
 #variable_conflict use_column
 begin
-  if not public.is_admin() then raise exception 'not allowed' using errcode = '42501'; end if;
+  if not public.admin_check(p_password) then raise exception 'not allowed' using errcode = '42501'; end if;
   return query
     select l.rk, l.name, c.email, l.best_level, l.best_score, l.coins, l.runs, l.updated_at,
            (select max(r.played_at) from public.runs r where r.player_id = l.player_id), c.consent_at
@@ -166,12 +197,12 @@ begin
     order by l.rk;
 end $$;
 
-create or replace function public.admin_runs()
+create or replace function public.admin_runs(p_password text)
 returns table (played_at timestamptz, name text, email text, score integer, level smallint, coins integer)
-language plpgsql stable security definer set search_path = public as $$
+language plpgsql security definer set search_path = public as $$
 #variable_conflict use_column
 begin
-  if not public.is_admin() then raise exception 'not allowed' using errcode = '42501'; end if;
+  if not public.admin_check(p_password) then raise exception 'not allowed' using errcode = '42501'; end if;
   return query
     select r.played_at, r.name, c.email, r.score, r.level, r.coins
     from public.runs r left join public.player_contacts c on c.player_id = r.player_id
@@ -182,21 +213,23 @@ end $$;
 drop function if exists public.submit_score(uuid, text, integer, integer, integer);
 drop function if exists public.save_contact(uuid, text, text, boolean);
 
--- 11) Rechte: Spieler (anon) dürfen nur speichern und die Rangliste lesen; Admin-Funktionen nur nach Login.
+-- 11) Rechte: Spieler dürfen speichern und die Rangliste lesen; Admin-Funktionen liefern nur mit richtigem Passwort Daten.
 revoke execute on function public.player_standing(uuid) from public;
 revoke execute on function public.save_run(uuid, uuid, text, text, integer, integer, integer) from public;
 revoke execute on function public.leaderboard_top(integer, integer, uuid) from public;
 revoke execute on function public.rename_player(uuid, text) from public;
-revoke execute on function public.admin_entries() from public, anon;
-revoke execute on function public.admin_runs() from public, anon;
+revoke execute on function public.admin_entries(text) from public;
+revoke execute on function public.admin_runs(text) from public;
+revoke execute on function public.admin_check(text) from public;
+revoke execute on function public.set_admin_password(text) from public, anon, authenticated;
 grant execute on function public.player_standing(uuid) to anon, authenticated;
 grant execute on function public.save_run(uuid, uuid, text, text, integer, integer, integer) to anon, authenticated;
 grant execute on function public.leaderboard_top(integer, integer, uuid) to anon, authenticated;
 grant execute on function public.rename_player(uuid, text) to anon, authenticated;
-grant execute on function public.admin_entries() to authenticated;
-grant execute on function public.admin_runs() to authenticated;
+grant execute on function public.admin_entries(text) to anon, authenticated;
+grant execute on function public.admin_runs(text) to anon, authenticated;
+grant execute on function public.admin_check(text) to anon, authenticated;
 
--- 12) ADMIN FESTLEGEN (einmalig, E-Mail anpassen):
---    a) Supabase → Authentication → Users → «Add user» → E-Mail + Passwort, «Auto Confirm User» anhaken
---    b) Danach hier die gleiche E-Mail eintragen und nur diese Zeile ausführen:
--- insert into public.admins (email) values ('admin@firma.ch') on conflict do nothing;
+-- 12) ADMIN-PASSWORT FESTLEGEN (einmalig, und jederzeit zum Ändern):
+--    Passwort anpassen (mind. 8 Zeichen), nur diese Zeile markieren und ausführen:
+-- select public.set_admin_password('MeinSicheresPasswort');
