@@ -209,6 +209,18 @@ begin
     order by r.played_at desc;
 end $$;
 
+-- 9b) Übersicht für das Supabase-Dashboard (Table Editor → «rangliste»): fertige Rangliste mit E-Mail.
+--     Nur im Dashboard sichtbar – für das Spiel und die Öffentlichkeit gesperrt.
+drop view if exists public.rangliste;
+create view public.rangliste as
+  select row_number() over (order by l.best_score desc, l.updated_at asc) as platz,
+         l.name, c.email, l.best_score as punkte, l.best_level as level, l.runs as laeufe,
+         l.updated_at as bestleistung_am,
+         (select max(r.played_at) from public.runs r where r.player_id = l.player_id) as letztes_spiel
+  from public.leaderboard l left join public.player_contacts c on c.player_id = l.player_id
+  order by platz;
+revoke all on public.rangliste from anon, authenticated;
+
 -- 10) Alte Funktionen der ersten Version entfernen (werden nicht mehr verwendet)
 drop function if exists public.submit_score(uuid, text, integer, integer, integer);
 drop function if exists public.save_contact(uuid, text, text, boolean);
