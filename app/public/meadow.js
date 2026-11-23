@@ -117,5 +117,18 @@ export function createMeadow(r){
  function fenceTall(k=0){for(const x of[-1.2,1.2])a('cylinder',x,1.25,0,.12,2.5,.12,woodDark,0,0,((k+x*3)%3)*.02);for(let j=0;j<7;j++){const x=-.95+j*.32,h=1.85+((j*7+k)%4)*.12;a('cylinder',x,h/2+.05,0,.055,h,.055,j%2?wood:[.62,.5,.36],0,0,((j+k)%3-1)*.05);}for(const y of[.55,1.55])a('box',0,y,.08,2.55,.1,.08,woodDark);a('box',0,1.05,.1,2.4,.08,.06,wood,0,0,.55);}
  // Biene: gelb-schwarz gestreift mit flatternden Flügeln (Kopf in +z).
  function bee(time,id=0){const f=Math.sin(time*70+id)*.7;a('sphere',0,0,0,.13,.12,.18,[1,.78,.12]);for(const z of[-.06,.05])a('sphere',0,0,z,.135,.125,.035,[.08,.07,.06]);a('sphere',0,.01,.17,.08,.08,.08,[.1,.09,.08]);a('cone',0,0,-.2,.03,.08,.03,[.1,.09,.08],-PI/2);for(const s of[-1,1])a('box',s*.12,.1,0,.2,.01,.11,[.92,.97,1,49],0,0,s*f);}
- return{fenceLow,fenceTall,bee,fence,gate,hayBale,haystack,trough,ditch,woodstack,cow,goat,chicken,dog,flower,herb,cheese,goldBell,edelweiss,flowerPatch,dew,sideFence,brook,footbridge};
+ // Baum mit hängendem Bienennest an einem Ast und kleinem Bienenhäuschen am Stamm.
+ // Das Nest-Loch liegt bei (1.15, 2.55, 0) – dort fliegen die Bienen heraus.
+ function nestTree(time,k=0){
+  const leaf=[[.24,.5,.2],[.3,.56,.22],[.2,.44,.17]][((k%3)+3)%3];
+  a('cylinder',0,1.6,0,.26,3.2,.26,[.42,.3,.2]);
+  for(const [x,y,z,r] of[[0,3.6,0,1.6],[-.8,3.1,.4,1.1],[.7,3.3,-.5,1.2],[.2,4.4,.2,1.1]])a('sphere',x,y,z,r,r*.85,r,leaf);
+  a('cylinder',.55,2.95,0,.07,1.2,.07,[.42,.3,.2],0,0,-1.1);              // Ast
+  a('cylinder',1.15,2.98,0,.015,.2,.015,[.3,.22,.14]);                     // Aufhängung
+  for(let j=0;j<4;j++){const y=2.85-j*.16,r=.34-Math.abs(j-1.4)*.07;a('sphere',1.15,y,0,r,.11,r,j%2?[.8,.62,.32]:[.7,.52,.26]);}
+  a('sphere',1.15,2.55,.27,.08,.08,.04,[.12,.08,.05]);                     // Flugloch
+  push(-.75,0,.35,0,.4);a('box',0,.42,0,.5,.5,.45,[.72,.5,.26]);a('box',0,.74,0,.62,.08,.56,[.55,.25,.15],0,0,.35);a('box',0,.74,0,.62,.08,.56,[.55,.25,.15],0,0,-.35);a('box',0,.3,.23,.22,.04,.02,[.15,.1,.06]);pop();
+  for(let j=0;j<3;j++){const t=time*(1.6+j*.4)+j*2+k;push(1.15+Math.sin(t)*.55,2.55+Math.sin(t*1.7)*.3,Math.cos(t)*.55,0,t*2,0,.7);bee(time,j+k);pop();}
+ }
+ return{nestTree,fenceLow,fenceTall,bee,fence,gate,hayBale,haystack,trough,ditch,woodstack,cow,goat,chicken,dog,flower,herb,cheese,goldBell,edelweiss,flowerPatch,dew,sideFence,brook,footbridge};
 }

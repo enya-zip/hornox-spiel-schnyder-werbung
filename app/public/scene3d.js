@@ -12,7 +12,7 @@ import {createEffects} from './effects.js?v=17';
 import {createPath} from './route.js?v=21';
 import {getZone,bridgeAt,fogAt,forestSection,meadowSection,lakeSection,stoneAt} from './journey.js?v=25';
 import {createBlackLake} from './blacklake.js?v=4';
-import {createMeadow} from './meadow.js?v=5';
+import {createMeadow} from './meadow.js?v=6';
 import {createForest} from './forest.js?v=5';
 export {getZone};
 const PI=Math.PI,C={ice:[.74,.87,.9,10],grass:[.44,.58,.30,11],gravel:[.7,.63,.48,12],cobble:[.65,.66,.61,13],snow:[.86,.92,.94,2],rock:[.48,.52,.53,1],wood:[.32,.22,.15,4],gold:[1,.74,.24,9],dark:[.12,.2,.23],fir:[1,1,1,7],red:[.85,.16,.19],flower:[.97,.85,.40]};
@@ -130,6 +130,7 @@ export function createScene(canvas){
     if(w<d+80&&sec<=2&&k%2===0){const dw=point(w+2,side*5);push(dw.x,dw.y,dw.z);meadow.dew(anim,k);pop();}
     const fp=point(w,side*6.4);if(clear(fp.x,fp.z,.6,w)){at(w,side*6.4);meadow.sideFence();pop();}
     /* Alpweiden: keine Schafe und keine Kühe (Wunsch Kunde) – nur Wiese, Blumen, Zäune und Hütten */
+    if(sec>=2&&k%19===(side>0?6:13)&&w<d+300){const np=point(w,side*8.4);if(clear(np.x,np.z,2.4,w)){at(w,side*8.4);push(0,0,0,0,side>0?PI:0);meadow.nestTree(anim,k);pop();pop();}}
     if(k%23===(side>0?7:18)){const hp=point(w,side*19);if(clear(hp.x,hp.z,6,w)){at(w,side*19);push(0,0,0,0,side<0?PI/2:-PI/2,0,.85);alpine.chalet(k%3);pop();pop();}}
     if(k%17===(side>0?11:3)){const tp=point(w,side*34);if(clear(tp.x,tp.z,3,w))tree(tp.x,tp.z,1.1,tp.y);}
     if(k%31<5&&side>0){const bp=point(w,side*22);if(clear(bp.x,bp.z,2,w)){at(w,side*22);meadow.brook(anim);pop();}}
@@ -188,7 +189,7 @@ export function createScene(canvas){
    push(x,y,z,0,-h,(toss?.lean||0)+sway,style===4?.83:scale);encounters.accessory(poseStyle,variant,pace);pop();
   }
  }
- let stingT=-99,curObjects=[],tongueDrawn=new Set(),dogVis=40,dogLane=1,speedNow=16,flyingFish=[],tickNow=0,chaser=null,chaseVis=40,chaseLane=1,reelT=-9,fogNow=0,boarVis=40,boarLane=1,rammed=new Set();
+ let stingT=-99,beeNest=null,curObjects=[],tongueDrawn=new Set(),dogVis=40,dogLane=1,speedNow=16,flyingFish=[],tickNow=0,chaser=null,chaseVis=40,chaseLane=1,reelT=-9,fogNow=0,boarVis=40,boarLane=1,rammed=new Set();
  function obstacle(o,d,time,toss=null){if(!toss&&(rammed.has(o.id)||fogNow>0&&o.d-d>180-140*fogNow))return;const od=o.d-(toss?0:(o.approach||0)*visualSubtick);if(!toss&&(od<d-8||od>d+180||(o.resolved&&['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom','herb','cheese','goldBell','edelweiss'].includes(o.kind))))return;const off=(o.lane<0?0:(o.lane-1)*2.5)+(toss?.side||0),p=point(od,off),rise=toss?.y||0;
   if(['pedestrian','hiker','photographers','influencer','lostTourists','scooter','skiers','snowboarders'].includes(o.kind)){visitors(o,p,time,toss);if(o.kind!=='scooter')return;}
   if(o.kind==='ibex'&&!toss){
@@ -309,11 +310,11 @@ export function createScene(canvas){
   else if(o.kind==='planter'){a('cylinder',0,.46,0,.67,.9,.67,[.55,.36,.24]);a('sphere',0,1.02,0,.65,.4,.65,[.22,.38,.18]);for(let i=0;i<7;i++)a('sphere',Math.sin(i*7)*.5,1.2,Math.cos(i*7)*.5,.13,.11,.13,C.red);}
   if(toss)pop();pop();
  }
- return{ready,resize:r.resize,emit(e,s){if(!path)path=createPath(s.seed);fx.emit(e,s,path);if(e.kind==='fishCatch')flyingFish.push(anim);if(e.kind==='hooked')reelT=anim;if(e.kind==='beeSting')stingT=anim;
+ return{ready,resize:r.resize,emit(e,s){if(!path)path=createPath(s.seed);fx.emit(e,s,path);if(e.kind==='fishCatch')flyingFish.push(anim);if(e.kind==='hooked')reelT=anim;if(e.kind==='beeSting')stingT=anim;if(e.kind==='beesAppear')beeNest={d:s.distance+24,side:s.x>1.2?-1:1,t:anim};
   if(e.kind==='powerClear'&&!['crevasse','ridgeGap','manhole','rope','branch','iceArch'].includes(e.object)){
    if(tossed.length>=12)tossed.shift();tossed.push({o:{id:e.id||0,kind:e.object,lane:e.lane,d:e.d??s.distance},time:anim,side:e.lane===0?-1:e.lane===2?1:(e.id%2?-1:1)});
   }
- },resetEffects(){fx.reset();tossed=[];rushFov=0;flyingFish=[];chaseVis=40;chaser=null;reelT=-9;boarVis=40;dogVis=40;stingT=-99;rammed=new Set();},
+ },resetEffects(){fx.reset();tossed=[];rushFov=0;flyingFish=[];chaseVis=40;chaser=null;reelT=-9;boarVis=40;dogVis=40;stingT=-99;beeNest=null;rammed=new Set();},
  render(s,{distance,time,delta,active,paused,reduced,screen,introTime=null,waiting=false}){if(!actor)return;const d=active?distance:0,newKey=s.seed+':summit';if(key!==newKey){key=newKey;placementCache.clear();clearCache.clear();path=createPath(s.seed,'summit');cam=0;}
   const mobile=canvas.width/canvas.height<.9;cinematic=introTime===null?null:introFrame(introTime,mobile,reduced);cinematicMetrics=cinematic?{time:introTime,heroZ:cinematic.z,doorOpen:cinematic.doorOpen,orbitDegrees:cinematic.orbitDegrees,eye:cinematic.eye,target:cinematic.target}:null;
   trackD=d;speedNow=s.speed||16;const stage=getZone(active?s.elapsed:0);const phase=active?s.elapsed:0,ease=(a,b)=>{const t=Math.max(0,Math.min(1,(phase-a)/(b-a)));return t*t*(3-2*t);};grade=.025*ease(90,110)+.015*ease(180,200)+.015*ease(360,380)+.035*ease(540,560)-.015*ease(630,650)+.035*ease(720,740)-.11*ease(785,812);visualSubtick=active&&!paused?Math.max(0,Math.min(.05,(d-s.distance)/Math.max(1,s.speed))):0;
@@ -343,11 +344,17 @@ export function createScene(canvas){
     if(reel){const u=(anim-reelT)/.6,hx=Math.cos(cam)*(lane-1)*2.5,hz=Math.sin(cam)*(lane-1)*2.5,ex=hx+(chaser.tip[0]-hx)*u,ey=1.5+(chaser.tip[1]-1.5)*u,ez=hz+(chaser.tip[2]-hz)*u;lake.line(...chaser.tip,ex,ey,ez,.3);push(ex,ey,ez);lake.hook(anim,1);pop();}
    }
   }
+  // Level 5: Beim Angriff steht vorne am Weg ein Baum mit Bienennest; der Schwarm fliegt aus dem Nest
+  // heraus und folgt dann Hornox. Je näher er ist, desto enger schwirren die Bienen um seinen Kopf.
+  if(active&&beeNest&&d<beeNest.d+25){at(beeNest.d,beeNest.side*7.5);push(0,0,0,0,beeNest.side>0?PI:0);meadow.nestTree(anim,7);pop();pop();}else if(beeNest&&d>=beeNest.d+25)beeNest=null;
   if(active&&(s.dog>0||dogVis<30)){
-   // Level 5: Bienenschwarm folgt Hornox; je näher, desto enger schwirren die Bienen um seinen Kopf.
    const goal=s.dog>0?(s.dogGap||14):40;dogVis+=(goal-dogVis)*Math.min(1,delta*(goal>dogVis?.8:2.5));dogLane+=(lane-dogLane)*Math.min(1,delta*3.2);
-   if(dogVis<30){const back=Math.max(.6,(dogVis-3)*.55),spread=.5+Math.min(1.4,back*.12),q=point(d-back,(dogLane-1)*2.5);push(q.x,q.y+1.9,q.z,0,PI-q.h);
-    for(let j=0;j<9;j++){const t=anim*(2.2+j*.31)+j*1.9;push(Math.sin(t*1.7+j)*spread,Math.sin(t*2.6+j*.7)*.45,Math.cos(t*1.3+j)*spread*.8,0,t*2.4,0,.8);meadow.bee(anim,j);pop();}pop();}
+   const fly=beeNest?Math.min(1,Math.max(0,(anim-beeNest.t)/2.4)):1,emerging=s.dog>0&&fly<1;
+   if(dogVis<30||emerging){const back=Math.max(.6,(Math.min(dogVis,30)-3)*.55),spread=.5+Math.min(1.4,back*.12),q=point(d-back,(dogLane-1)*2.5);
+    let cx=q.x,cy=q.y+1.9,cz=q.z;
+    if(emerging){const h=point(beeNest.d,beeNest.side*7.5),hx=h.x+Math.cos(h.h)*0,e=fly*fly*(3-2*fly),hive=[h.x-Math.sin(-h.h)*0,h.y+2.55,h.z];cx=hive[0]+(cx-hive[0])*e;cy=hive[1]+(cy-hive[1])*e+Math.sin(fly*PI)*1.2;cz=hive[2]+(cz-hive[2])*e;}
+    const sp=emerging?.25+fly*spread:spread;push(cx,cy,cz,0,PI-q.h);
+    for(let j=0;j<9;j++){const t=anim*(2.2+j*.31)+j*1.9;push(Math.sin(t*1.7+j)*sp,Math.sin(t*2.6+j*.7)*.45*(emerging?fly:1),Math.cos(t*1.3+j)*sp*.8,0,t*2.4,0,.8);meadow.bee(anim,j);pop();}pop();}
   }
   // Nach einem Bienenstich wird Hornox für drei Sekunden rot (pulsierend, dann verblassend).
   if(actor){const age=anim-stingT;actor.setRed(age>=0&&age<3?(1-age/3)*(.75+.25*Math.sin(age*14)):0);}
