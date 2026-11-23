@@ -5,7 +5,7 @@ import {setup,validateAction,applyAction} from "./rules.js?v=39";
 import {installControls} from "./controls.js?v=17";
 import {createAudio} from "./audio.js?v=23";
 import {getZone} from "./scene3d.js?v=59";
-import {copy} from "./copy.js?v=44";
+import {copy} from "./copy.js?v=45";
 import {turnDirection} from "./route.js?v=21";
 import {createLeaderboard} from "./leaderboard.js?v=7";
 import {LEADERBOARD} from "./leaderboard-config.js?v=3";
@@ -65,7 +65,7 @@ function hideLevelBanner(){clearTimeout(bannerTimer);$("level-banner").classList
 function toast(value,seconds=1.8){$("toast").textContent=value;$("toast").classList.add("visible");toastUntil=time+seconds;}
 function updateCopy(){
  document.documentElement.lang=lang;document.querySelectorAll("[data-i18n]").forEach(e=>e.textContent=t(e.dataset.i18n));document.querySelectorAll("[data-label]").forEach(e=>e.setAttribute("aria-label",t(e.dataset.label)));
- $("language").value=lang;$("quick-sound").classList.toggle("muted",!sound);$("quick-sound").setAttribute("aria-label",t(sound?"soundOn":"soundOff"));$("quick-sound").setAttribute("aria-pressed",String(sound));
+ $("language").value=lang;$("quick-buttons").classList.toggle("off",!buttons);$("quick-buttons").setAttribute("aria-pressed",String(buttons));$("quick-sound").classList.toggle("muted",!sound);$("quick-sound").setAttribute("aria-label",t(sound?"soundOn":"soundOff"));$("quick-sound").setAttribute("aria-pressed",String(sound));
  $("start").querySelector("span").textContent=t(loaded?"start":"loading");$("best-score").textContent=best()?fmt(best()):"—";
  $("challenge").hidden=!q.has("challenge");$("challenge").textContent=t("challenge",{score:fmt(target)});
  document.querySelectorAll("[data-route]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.route===route)));
@@ -388,6 +388,8 @@ $("retry-load").onclick=()=>location.reload();
 function toggleSound(value){sound=value;save("hornox.sound.v5",value?1:0);audio.setEnabled(value);if(value)audio.unlock().catch(()=>{});updateCopy();}
 $("sound-toggle").onchange=e=>toggleSound(e.target.checked);
 $("music-toggle").onchange=e=>{music=e.target.checked;save("hornox.music.v1",music?1:0);audio.setMusic(music);updateCopy();};$("quick-sound").onclick=()=>toggleSound(!sound);
+// Steuerknöpfe (← ↑ ↓ →) direkt im Spiel ein-/ausblenden – wischen funktioniert immer.
+$("quick-buttons").onclick=()=>{buttons=!buttons;save("hornox.buttons.v5",buttons?1:0);updateCopy();toast(t(buttons?"buttonsShown":"buttonsHidden"),2.2);};
 $("assist-toggle").onchange=e=>{mode=e.target.checked?"relaxed":"classic";save("spa.runner.assist",mode==="relaxed"?1:0);updateCopy();};
 $("reduce-toggle").onchange=e=>{reduced=e.target.checked;save("spa.motion",reduced?1:0);updateCopy();};
 $("contrast-toggle").onchange=e=>{contrast=e.target.checked;save("spa.contrast",contrast?1:0);updateCopy();};
