@@ -9,7 +9,11 @@ export function createLeaderboard(config=LEADERBOARD){
  async function rpc(fn,body={},token){
   if(!configured){const e=Error("offline");e.offline=true;throw e;}
   let r;
-  try{r=await fetch(url+"/rest/v1/rpc/"+fn,{method:"POST",headers:{apikey:key,Authorization:"Bearer "+(token||key),"Content-Type":"application/json"},body:JSON.stringify(body)});}
+  // Neue Supabase-Schlüssel (sb_publishable_…) gehören nur in «apikey»; alte anon-Schlüssel (eyJ…) sind JWTs
+  // und dürfen zusätzlich als Bearer gesendet werden. Ein Admin-Login sendet sein eigenes Token.
+  const bearer=token||(key.startsWith("eyJ")?key:null);
+  const headers={apikey:key,"Content-Type":"application/json"};if(bearer)headers.Authorization="Bearer "+bearer;
+  try{r=await fetch(url+"/rest/v1/rpc/"+fn,{method:"POST",headers,body:JSON.stringify(body)});}
   catch(x){const e=Error("network");e.network=true;throw e;}
   if(!r.ok){const e=Error("Rangliste "+r.status);e.status=r.status;try{const j=await r.json();e.detail=j.message||"";}catch{}throw e;}
   const text=await r.text();return text?JSON.parse(text):null;

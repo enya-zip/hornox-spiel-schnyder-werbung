@@ -1,7 +1,7 @@
 // Admin-Seite des Gewinnspiels: Login über Supabase Auth, danach Teilnehmerliste mit E-Mail-Adressen.
 // Die Daten kommen ausschliesslich aus der Datenbankfunktion admin_entries, die nur für Admins antwortet.
 // Die Anmeldung gilt nur in diesem Browser-Tab (sessionStorage) und läuft nach spätestens einer Stunde ab.
-import {createLeaderboard} from "./leaderboard.js?v=3";
+import {createLeaderboard} from "./leaderboard.js?v=4";
 const $=id=>document.getElementById(id),board=createLeaderboard(),KEY="hornox.admin.session";
 let session=null,entries=[];
 try{const s=JSON.parse(sessionStorage.getItem(KEY));if(s&&s.token&&s.expires>Date.now()+30000)session=s;}catch{}
