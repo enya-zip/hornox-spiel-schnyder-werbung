@@ -75,7 +75,7 @@ float spec=pow(max(0.,dot(n,h)),mix(55.,8.,roughness))*.12;float rim=pow(1.-max(
 vec3 lit=tex.rgb*(vec3(.50,.55,.62)+vec3(1.,.87,.68)*ndl*.62*shade)+vec3(1.,.87,.65)*spec+vec3(.42,.59,.66)*rim;
 float haze=smoothstep(650.,3500.,length(eye-vWorld))*.26;colour=vec4(mix(lit,vec3(.50,.67,.76),haze),1.);}`;
 const depthFS="#version 300 es\nprecision highp float;void main(){}";
-export async function createActor(gl,url,jumpUrl=null,options={}){
+export async function createActor(gl,url,jumpUrl=null,options={}){let red=0;
  const asset=await parse(url),{json,bin,accessor}=asset;
  if((json.extensionsRequired||[]).some(x=>x.includes("draco")))throw Error("Compressed model requires conversion");
  const program=link(gl,VS,FS),depth=link(gl,VS,depthFS),boneBuffer=gl.createBuffer();gl.bindBuffer(gl.UNIFORM_BUFFER,boneBuffer);gl.bufferData(gl.UNIFORM_BUFFER,128*64,gl.DYNAMIC_DRAW);for(const p of[program,depth]){const i=gl.getUniformBlockIndex(p,"Skin");if(i!==gl.INVALID_INDEX)gl.uniformBlockBinding(p,i,1);}
@@ -137,7 +137,7 @@ export async function createActor(gl,url,jumpUrl=null,options={}){
   if(!shadow){gl.uniform1i(u.tourist,!!options.walk);gl.uniform3fv(u.jacketTint,jacketTint);gl.uniform3fv(u.hairTint,hairTint);gl.uniform3fv(u.trouserTint,trouserTint);gl.uniform3fv(u.eye,context.eye);gl.uniform3fv(u.fog,context.fog);gl.uniform1i(u.shadowed,!context.software);gl.uniform1i(u.shadowMap,0);gl.uniform1i(u.baseMap,3);gl.uniform1i(u.normalMap,4);gl.uniform1i(u.logoMap,7);gl.activeTexture(gl.TEXTURE7);gl.bindTexture(gl.TEXTURE_2D,logo);gl.uniform1i(u.branded,!!options.brand);gl.uniform4f(u.restBounds,centerX,baseY,centerZ,bounds.max[1]-bounds.min[1]);}
   for(const prim of primitives){const sk=skins[prim.skin];if(sk){gl.bindBuffer(gl.UNIFORM_BUFFER,boneBuffer);gl.bufferSubData(gl.UNIFORM_BUFFER,0,sk.palette);model.set(placement);}else multiply(model,placement,nodes[prim.node].world);
    gl.uniformMatrix4fv(uniform.model,false,model);gl.uniform1i(uniform.skinned,!!sk);
-   if(!shadow){gl.activeTexture(gl.TEXTURE3);gl.bindTexture(gl.TEXTURE_2D,prim.base);gl.activeTexture(gl.TEXTURE4);gl.bindTexture(gl.TEXTURE_2D,prim.normal);gl.uniform4fv(u.baseFactor,prim.factor);gl.uniform1i(u.hasNormal,prim.hasNormal&&!context.software);gl.uniform1f(u.roughness,prim.roughness);}
+   if(!shadow){gl.activeTexture(gl.TEXTURE3);gl.bindTexture(gl.TEXTURE_2D,prim.base);gl.activeTexture(gl.TEXTURE4);gl.bindTexture(gl.TEXTURE_2D,prim.normal);gl.uniform4fv(u.baseFactor,red>0?[prim.factor[0]*(1+.5*red),prim.factor[1]*(1-.62*red),prim.factor[2]*(1-.62*red),prim.factor[3]]:prim.factor);gl.uniform1i(u.hasNormal,prim.hasNormal&&!context.software);gl.uniform1f(u.roughness,prim.roughness);}
    gl.bindVertexArray(prim.vao);if(prim.indexType)gl.drawElements(gl.TRIANGLES,prim.count,prim.indexType,prim.offset);else gl.drawArrays(gl.TRIANGLES,0,prim.count);
   }
   if(gear.length){
@@ -146,13 +146,14 @@ export async function createActor(gl,url,jumpUrl=null,options={}){
    if(skins.length){gearBase.set(skins[0].palette.subarray(16,32));multiply(gearModel,placement,gearBase);}else gearModel.set(placement);
    multiply(model,gearModel,gearPose);gl.uniformMatrix4fv(uniform.model,false,model);gl.uniform1i(uniform.skinned,false);
    if(!shadow){gl.uniform1i(u.branded,false);gl.uniform1i(u.hasNormal,false);gl.uniform1f(u.roughness,.4);}
-   for(const g of gear){if(!shadow){gl.activeTexture(gl.TEXTURE3);gl.bindTexture(gl.TEXTURE_2D,g.texture);gl.uniform4fv(u.baseFactor,g.colour);}gl.bindVertexArray(g.vao);gl.drawArrays(gl.TRIANGLES,0,g.count);}
+   for(const g of gear){if(!shadow){gl.activeTexture(gl.TEXTURE3);gl.bindTexture(gl.TEXTURE_2D,g.texture);gl.uniform4fv(u.baseFactor,red>0?[g.colour[0]*(1+.5*red),g.colour[1]*(1-.62*red),g.colour[2]*(1-.62*red),g.colour[3]]:g.colour);}gl.bindVertexArray(g.vao);gl.drawArrays(gl.TRIANGLES,0,g.count);}
    if(!shadow&&brandLabel){compose(gearPose,centerX,baseY+.89*unit,centerZ-.405*unit,.34*unit,.40*unit,1);multiply(model,gearModel,gearPose);gl.uniformMatrix4fv(uniform.model,false,model);gl.activeTexture(gl.TEXTURE3);gl.bindTexture(gl.TEXTURE_2D,logo);gl.uniform4fv(u.baseFactor,new Float32Array([1,1,1,1]));gl.bindVertexArray(brandLabel);gl.drawArrays(gl.TRIANGLES,0,6);}
   }
  }
  update({});
  // Weltposition eines Knochens (z. B. für Schneeschuhe an den Füssen).
   const jointTemp=new Float32Array(16);function joint(name){const n=nodes.find(q=>q.name===name);if(!n)return null;multiply(jointTemp,placement,n.world);return[jointTemp[12],jointTemp[13],jointTemp[14]];}
-  return{update,draw,joint,metrics:()=>({heroTriangles:triangleCount,dynamicSkeleton,joints:skins.reduce((n,s)=>n+s.joints.length,0),clips:Object.keys(clips).filter(k=>clips[k]),animation:animationName,poseJump,poseDuck,primitives:primitives.length,gearParts:gear.length,brandLabel:!!brandLabel,gearSwing}),bounds,names:nodes.map(n=>n.name)};
+  // setRed(0..1): färbt die Figur rot (z. B. nach einem Bienenstich).
+  return{setRed(v){red=Math.max(0,Math.min(1,v||0));},update,draw,joint,metrics:()=>({heroTriangles:triangleCount,dynamicSkeleton,joints:skins.reduce((n,s)=>n+s.joints.length,0),clips:Object.keys(clips).filter(k=>clips[k]),animation:animationName,poseJump,poseDuck,primitives:primitives.length,gearParts:gear.length,brandLabel:!!brandLabel,gearSwing}),bounds,names:nodes.map(n=>n.name)};
 }
 

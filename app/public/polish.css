@@ -247,3 +247,7 @@ dialog .dialog-close{border-radius:var(--radius-s)}
 @media(max-width:600px){#quick-buttons{right:16px;top:156px;width:38px;height:38px}#quick-buttons svg{width:21px;height:21px}}
 @media(orientation:landscape) and (max-height:560px){#quick-buttons{top:146px;right:24px}}
 @media(max-width:600px){#tutorial{bottom:calc(max(24px,env(safe-area-inset-bottom)) + 190px)}}
+/* Bienen-Bubble (Level 5) */
+#fisher-bubble .bee-face{display:none}
+#fisher-bubble[data-who="bees"] .bee-face{display:block}
+#fisher-bubble[data-who="bees"] .fisher-face,#fisher-bubble[data-who="bees"] .dog-face,#fisher-bubble[data-who="bees"] .boar-face{display:none}

@@ -124,7 +124,7 @@ export function applyAction(s,p,a){
     if(aligned){const before=powerCharge;powerCharge=Math.min(30,powerCharge+15);if(before===30)score+=100;events.push({kind:'powerPickup',power:'pickupCharge'});if(before<30&&powerCharge===30)events.push({kind:'powerReady'});}
    }else if(aligned&&powering){score+=25;events.push({kind:"powerClear",object:item.kind,lane:item.lane,d:item.d,id:item.id,points:25});item.powerCleared=true;
    }else if(aligned){
-    const safe=["trunk","fallingBranch","sign","hayBale","haystack","cow","cowWalk","hayRoll"].includes(item.kind)?false:item.kind==="hook"?(item.attack==="high"?duck>0:height>.4):item.kind==="gull"?false:item.kind==="crow"?(item.attack==="snatch"&&height>.4):["iceArch","branch","awning","rope","highLog","gate"].includes(item.kind)?duck>0:["crevasse","ridgeGap","manhole","plankGap","stream","ditch","waterGap"].includes(item.kind)?height>.5:height>.4;
+    const safe=["trunk","fallingBranch","sign","hayBale","haystack","cow","cowWalk","hayRoll","fenceTall"].includes(item.kind)?false:item.kind==="hook"?(item.attack==="high"?duck>0:height>.4):item.kind==="gull"?false:item.kind==="crow"?(item.attack==="snatch"&&height>.4):["iceArch","branch","awning","rope","highLog","gate"].includes(item.kind)?duck>0:["crevasse","ridgeGap","manhole","plankGap","stream","ditch","waterGap"].includes(item.kind)?height>.5:height>.4;
     if(!safe&&!invulnerable&&!climb){
      // Möwe: kostet kein Leben, stiehlt aber bis zu 3 Fische aus dem Rucksack.
      if(item.kind==='gull'){const lost=Math.min(fish,3);fish-=lost;invulnerable=15;events.push({kind:'gull',lost,fish});}
@@ -216,27 +216,16 @@ export function applyAction(s,p,a){
     else if(pattern===6){add("trunk",one);add("sign",two);}else{cross("boarCross",one);add("fallingBranch",two);}
    }
   }else if(z===1){
-   // Level 5 «Alpweiden» in vier Abschnitten: 1 sonniger Blumenweg, 2 grosse Schafweide (Schafherde, Kühe, Ziegen),
-   // 3 steile Alp (rollende Heuballen, Gräben), 4 wilde Weide (Schäferhund-Jagd, viele Tiere, Kombinationen).
-   const sec=meadowSection(arrivalTime),side=(rng&2048)?1:-1,mover=(kind,lane,v,stop=false)=>add(kind,lane,0,{target:lane,dir:side,v,stop,lane:side>0?-2.6:4.6}),bell=()=>{if(row%3===0)add("goldBell",safe,0,{high:true});};
-   const inW=w=>arrivalTime>=w[0]&&arrivalTime<w[1];
+   // Level 5 «Alpweiden»: nur Holzzäune als Hindernisse.
+   //  fence     niedriger Zaun über den ganzen Weg → drüberspringen
+   //  fenceTall hoher Zaun in einer Spur → zu hoch, den offenen Durchgang (sichere Spur) nehmen
+   //  fenceLow  niedriges Zaunstück in einer Spur → drüberspringen oder durch die Lücke
+   // Je weiter das Level, desto mehr Durchgänge muss man suchen. Bienen verfolgen Hornox (siehe unten).
+   const sec=meadowSection(arrivalTime),bell=()=>{if(row%3===0)add("goldBell",safe,0,{high:true});};
    if(pattern===8){}
-   else if(inW(HERD)){mover("sheepCross",one,2.2,pattern%3===0);mover("sheepCross",two,2.2,pattern%3===1);}       // Challenge A: Schafherde
-   else if(inW(COWS)){add("cow",one);if(pattern%2)mover("cowWalk",two,.9);}                                        // Challenge B: Kuhweide
-   else if(inW(HAY)){mover("hayRoll",one,1.4+2.2*(arrivalTime-HAY[0])/(HAY[1]-HAY[0]));}                          // Challenge C: Heuballen
-   else if(sec===1){const k=["fence","hayBale","trough","boulder","woodstack","log","sheepCross","fence"][pattern];if(k==="sheepCross")mover(k,one,2.2);else add(k,k==="fence"||k==="log"?-1:one);if(k==="fence")bell();}
-   else if(sec===2){
-    if(pattern===0){mover("sheepCross",one,2.2);if(busy)mover("sheepCross",two,2.2);}else if(pattern===1)mover("goat",one,3,true);else if(pattern===2){add("cow",one);if(busy)add("trough",two);}
-    else if(pattern===3)mover("chicken",one,4.2);else if(pattern===4)add("gate",-1);else if(pattern===5){add("haystack",one);if(busy)add("trough",two);}
-    else if(pattern===6){add("ditch",-1);bell();}else mover("sheepStop",one,2.2,true);
-   }else if(sec===3){
-    if(pattern===0||pattern===4){add("ditch",-1);bell();}else if(pattern===1){add("hayBale",one);add("trough",two);}else if(pattern===2){add("log",-1);bell();}
-    else if(pattern===3)add("gate",-1);else if(pattern===5){add("woodstack",one);add("boulder",two);}else if(pattern===6)mover("goat",one,3,true);else{add("fence",-1);bell();}
-   }else{
-    if(pattern===0){mover("sheepCross",one,2.4);add("cow",two);}else if(pattern===1){mover("chicken",one,4.5);add("hayBale",two);}else if(pattern===2){add("fence",-1);bell();}
-    else if(pattern===3){mover("goat",one,3.2,true);add("haystack",two);}else if(pattern===4)add("ditch",-1);else if(pattern===5){mover("cowWalk",one,1);add("boulder",two);}
-    else if(pattern===6)add("gate",-1);else{mover("sheepStop",one,2.4,true);add("trough",two);}
-   }
+   else if(sec===1){if(pattern===0||pattern===4||pattern===6){add("fence",-1);bell();}else if(pattern===2){add("fenceLow",one);if(busy)add("fenceLow",two);}}
+   else if(sec===2){if(pattern===0||pattern===4){add("fence",-1);bell();}else if(pattern===1||pattern===5){add("fenceTall",one);add("fenceTall",two);}else if(pattern===2||pattern===6){add("fenceLow",one);add("fenceLow",two);}}
+   else{if(pattern===0||pattern===5){add("fence",-1);bell();}else if(pattern===1||pattern===3||pattern===6){add("fenceTall",one);add("fenceTall",two);}else if(pattern===2){add("fenceLow",one);add("fenceTall",two);}else if(pattern===4)add("fenceLow",one);}
   }else if([6].includes(z)){
    if(pattern===0){add("hiker",one);if(busy)add("sheep",two);}
    else if(pattern===1)add("log",-1);
@@ -334,22 +323,21 @@ export function applyAction(s,p,a){
   if(boarGap<=3){boarGap=12;if(!invulnerable&&!climb){if(shield){shield=0;events.push({kind:'shieldHit'});}else{lives--;chain=0;multiplier=1;failReason='boar';}invulnerable=50;}events.push({kind:'boarRam'});}
   if(boar===1)events.push({kind:'boarQuit'});
  }else boarGap=0;
- // Level 5: Schäferhund. Zuerst nur Bellen (6:28 und 6:36). Er jagt Hornox, sobald 5 Schafe erschreckt wurden
- // (angerempelt, übersprungen oder knapp passiert) – frühestens ab 6:24 –, spätestens aber ab 7:07,5 in der
- // «wilden Schäferhund-Jagd» bis zum Levelende. Nahe dran wird er schneller. Erwischen kostet genau ein Leben.
+ // Level 5: Bienenschwarm (nutzt die Zustandsfelder dog/dogGap/dogMode). Zuerst Summen (6:26 und 6:30),
+ // ab 6:32 verfolgen die Bienen Hornox bis 7:01, ab 7:07,5 nochmals schneller bis zum Levelende.
+ // Sauber über Zäune springen hält sie auf Abstand, Anstossen lässt sie aufholen. Ein Stich kostet genau ein Leben.
  if(meadowSection(elapsed)>0){
-  const sheepKinds=['sheepCross','sheepStop'];scared+=events.filter(e=>(e.kind==='bump'||e.kind==='clear'||e.kind==='nearMiss')&&sheepKinds.includes(e.object)).length;
-  for(const t of[388,396])if(s.elapsed<t&&elapsed>=t)events.push({kind:'dogBark'});
-  if(!dog&&dogMode<1&&scared>=5&&elapsed>=384&&elapsed<425){dog=320;dogGap=14;dogBump=tick;dogMode=1;events.push({kind:'dogAppear',reason:'sheep'});}
-  if(dogMode<2&&s.elapsed<427.5&&elapsed>=427.5){dog=Math.max(dog,(450-427.5)*20);dogGap=dog&&dogMode===1&&s.dog>0?dogGap:14;dogBump=tick;dogMode=2;events.push({kind:'dogAppear',reason:'hunt'});}
+  for(const t of[386,390])if(s.elapsed<t&&elapsed>=t)events.push({kind:'beeBuzz'});
+  if(!dog&&dogMode<1&&elapsed>=392&&elapsed<420){dog=(421-392)*20;dogGap=14;dogBump=tick;dogMode=1;events.push({kind:'beesAppear',reason:'swarm'});}
+  if(dogMode<2&&s.elapsed<427.5&&elapsed>=427.5){dog=Math.max(dog,(450-427.5)*20);dogGap=dog&&dogMode===1&&s.dog>0?dogGap:14;dogBump=tick;dogMode=2;events.push({kind:'beesAppear',reason:'hunt'});}
  }
  if(dog>0){
   if(events.some(e=>e.kind==='bump'||e.kind==='shieldHit')){dogGap-=3.5;dogBump=tick;}
   else{dogGap+=events.filter(e=>e.kind==='clear').length*.9+events.filter(e=>e.kind==='nearMiss').length*.35;if(tick-dogBump>60)dogGap+=.012;}
   const hunt=dogMode===2?.03+.02*Math.min(1,(elapsed-427.5)/20):.02;
   dogGap+=powering?.06:-hunt*(dogGap<7?1.3:1)*(s.mode==='relaxed'?.55:1);dogGap=Math.min(16,dogGap);
-  if(dogGap<=3){dogGap=12;if(!invulnerable&&!climb){if(shield){shield=0;events.push({kind:'shieldHit'});}else{lives--;chain=0;multiplier=1;failReason='dog';}invulnerable=50;}events.push({kind:'dogCatch'});}
-  if(dog===1)events.push({kind:'dogQuit'});
+  if(dogGap<=3){dogGap=12;if(!invulnerable&&!climb){if(shield){shield=0;events.push({kind:'shieldHit'});}else{lives--;chain=0;multiplier=1;failReason='bees';events.push({kind:'beeSting'});}invulnerable=50;}}
+  if(dog===1)events.push({kind:'beesQuit'});
  }else dogGap=0;
  if(!summitTurn&&elapsed>=785)summitTurn=Math.floor((distance+440)/680)+1;
  if(distance>=nextTurn&&elapsed<892){

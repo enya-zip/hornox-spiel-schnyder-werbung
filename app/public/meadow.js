@@ -111,5 +111,11 @@ export function createMeadow(r){
  function brook(time,len=8){a('box',0,-.08,0,2.2,.06,len,[.2,.48,.55,26]);for(let k=0;k<3;k++){const ph=(time*.9+k*.33)%1;a('box',(k-1)*.5,-.03,-len/2+ph*len,.08,.02,.6,[.85,.95,1,49]);}for(const [x,z] of[[-1.2,-2],[1.25,1.5],[-1.1,3]])a('rock',x,0,z,.4,.18,.35,[.55,.57,.55],0,x+z);}
  // Kleine Holzbrücke über einen Bach (quer zum Weg, rein dekorativ).
  function footbridge(time){a('box',0,-.1,0,30,.05,3,[.2,.48,.55,26]);for(let k=-2;k<=2;k++)a('box',0,.08,k*.55,8.6,.12,.5,k%2?wood:[.55,.4,.24]);for(const x of[-4.4,4.4]){a('box',x,.7,0,.12,1.1,2.8,woodDark);a('box',x,1.25,0,.08,.08,2.8,wood);}for(let k=0;k<4;k++){const ph=(time*1.1+k*.25)%1;a('box',-14+ph*28,-.05,(k%2?.6:-.6),.8,.02,.08,[.85,.95,1,49]);}}
- return{fence,gate,hayBale,haystack,trough,ditch,woodstack,cow,goat,chicken,dog,flower,herb,cheese,goldBell,edelweiss,flowerPatch,dew,sideFence,brook,footbridge};
+ // Niedriges Zaunstück für eine Spur (drüberspringen oder durch die Lücke daneben).
+ function fenceLow(k=0){const lean=((k%3)-1)*.04;for(const x of[-1.15,1.15])a('cylinder',x,.6,0,.09,1.2,.09,woodDark,0,0,lean);for(const y of[.5,.95])a('box',0,y,0,2.5,.11,.09,wood,0,0,lean*.5);a('box',0,.72,.05,2.3,.08,.06,[.58,.42,.26],0,0,-.32);}
+ // Hoher Zaun für eine Spur aus senkrechten Ästen (zu hoch zum Springen – Durchgang suchen).
+ function fenceTall(k=0){for(const x of[-1.2,1.2])a('cylinder',x,1.25,0,.12,2.5,.12,woodDark,0,0,((k+x*3)%3)*.02);for(let j=0;j<7;j++){const x=-.95+j*.32,h=1.85+((j*7+k)%4)*.12;a('cylinder',x,h/2+.05,0,.055,h,.055,j%2?wood:[.62,.5,.36],0,0,((j+k)%3-1)*.05);}for(const y of[.55,1.55])a('box',0,y,.08,2.55,.1,.08,woodDark);a('box',0,1.05,.1,2.4,.08,.06,wood,0,0,.55);}
+ // Biene: gelb-schwarz gestreift mit flatternden Flügeln (Kopf in +z).
+ function bee(time,id=0){const f=Math.sin(time*70+id)*.7;a('sphere',0,0,0,.13,.12,.18,[1,.78,.12]);for(const z of[-.06,.05])a('sphere',0,0,z,.135,.125,.035,[.08,.07,.06]);a('sphere',0,.01,.17,.08,.08,.08,[.1,.09,.08]);a('cone',0,0,-.2,.03,.08,.03,[.1,.09,.08],-PI/2);for(const s of[-1,1])a('box',s*.12,.1,0,.2,.01,.11,[.92,.97,1,49],0,0,s*f);}
+ return{fenceLow,fenceTall,bee,fence,gate,hayBale,haystack,trough,ditch,woodstack,cow,goat,chicken,dog,flower,herb,cheese,goldBell,edelweiss,flowerPatch,dew,sideFence,brook,footbridge};
 }

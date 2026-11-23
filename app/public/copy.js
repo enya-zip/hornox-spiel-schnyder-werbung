@@ -1318,3 +1318,29 @@ Object.assign(copy.en,{"boardHint":"Save your score after game over («Continue 
 Object.assign(copy.fr,{"boardHint":"Enregistre ton score après le game over («Voir le classement») pour apparaître ici."});
 Object.assign(copy.ja,{"boardHint":"ゲームオーバー後にスコアを保存（「ランキングへ進む」）すると、ここに表示されます。"});
 Object.assign(copy.zh,{"boardHint":"游戏结束后保存分数（“查看排行榜”）即可出现在这里。"});
+// Alpweiden neu: nur Holzzäune als Hindernisse, Bienenschwarm statt Schafe/Kühe/Schäferhund.
+Object.assign(copy.de,{"meadowSec1":"🌼 Abschnitt 1: Der sonnige Blumenweg","meadowSec2":"🪵 Abschnitt 2: Zäune und Durchgänge","meadowSec3":"⛰️ Abschnitt 3: Die steile Alp","meadowSec4":"🐝 Abschnitt 4: Der wilde Bienenschwarm",
+ "meadowHelp":"Alpweiden: Spring über die Holzzäune. Hohe Zäune sind zu hoch – such den offenen Durchgang. Ein Bienenschwarm verfolgt dich: Springst du sauber, bleibt er zurück.",
+ "beeBuzz":"🐝 Summen über der Wiese … da kommt etwas!","beesAlert":"🐝 BIENEN! LAUF!","beesHint":"Spring sauber über die Zäune – sonst holen dich die Bienen ein!","beesHuntAlert":"🐝 WILDER BIENENSCHWARM!","beesHuntHint":"Sie werden immer schneller – kein Zaun darf dich bremsen!",
+ "beeSting":"Autsch! Eine Biene hat dich gestochen! −1 Leben","beesQuit":"Puh! Die Bienen fliegen zurück zu ihren Blumen.","beesChase":"Bienen · verfolgen dich","beesClose":"Bienen · ganz nah!","beesHunt":"Wilder Bienenschwarm!","beesNote":"Spring sauber über die Zäune! {s}s",
+ "fenceTallBump":"Der Zaun ist zu hoch – nimm den Durchgang!","fenceBump":"Autsch, am Zaun hängen geblieben!","fenceTallHint":"🚪 Hoher Zaun – such den offenen Durchgang!"});
+Object.assign(copy.en,{"meadowSec1":"🌼 Section 1: The sunny flower path","meadowSec2":"🪵 Section 2: Fences and gateways","meadowSec3":"⛰️ Section 3: The steep alp","meadowSec4":"🐝 Section 4: The wild bee swarm",
+ "meadowHelp":"Alpine meadows: jump over the wooden fences. Tall fences are too high – find the open gateway. A bee swarm chases you: clean jumps keep it behind.",
+ "beeBuzz":"🐝 Buzzing over the meadow … something's coming!","beesAlert":"🐝 BEES! RUN!","beesHint":"Jump the fences cleanly – or the bees will catch up!","beesHuntAlert":"🐝 WILD BEE SWARM!","beesHuntHint":"They keep getting faster – don't let a fence slow you down!",
+ "beeSting":"Ouch! A bee stung you! −1 life","beesQuit":"Phew! The bees fly back to their flowers.","beesChase":"Bees · chasing you","beesClose":"Bees · very close!","beesHunt":"Wild bee swarm!","beesNote":"Jump the fences cleanly! {s}s",
+ "fenceTallBump":"That fence is too high – take the gateway!","fenceBump":"Ouch, caught on the fence!","fenceTallHint":"🚪 Tall fence – find the open gateway!"});
+Object.assign(copy.fr,{"meadowSec1":"🌼 Partie 1 : Le chemin fleuri","meadowSec2":"🪵 Partie 2 : Clôtures et passages","meadowSec3":"⛰️ Partie 3 : L'alpage escarpé","meadowSec4":"🐝 Partie 4 : L'essaim d'abeilles",
+ "meadowHelp":"Alpages : saute par-dessus les clôtures en bois. Les hautes clôtures sont trop hautes – trouve le passage ouvert. Un essaim d'abeilles te poursuit : des sauts nets le tiennent à distance.",
+ "beeBuzz":"🐝 Ça bourdonne sur la prairie … quelque chose arrive !","beesAlert":"🐝 DES ABEILLES ! COURS !","beesHint":"Saute proprement les clôtures – sinon les abeilles te rattrapent !","beesHuntAlert":"🐝 ESSAIM SAUVAGE !","beesHuntHint":"Elles vont de plus en plus vite – ne te laisse freiner par aucune clôture !",
+ "beeSting":"Aïe ! Une abeille t'a piqué ! −1 vie","beesQuit":"Ouf ! Les abeilles retournent à leurs fleurs.","beesChase":"Abeilles · te poursuivent","beesClose":"Abeilles · tout près !","beesHunt":"Essaim sauvage !","beesNote":"Saute proprement les clôtures ! {s}s",
+ "fenceTallBump":"Cette clôture est trop haute – prends le passage !","fenceBump":"Aïe, accroché à la clôture !","fenceTallHint":"🚪 Haute clôture – trouve le passage ouvert !"});
+Object.assign(copy.ja,{"meadowSec1":"🌼 セクション1：日当たりの花の道","meadowSec2":"🪵 セクション2：柵と通り道","meadowSec3":"⛰️ セクション3：急な牧草地","meadowSec4":"🐝 セクション4：ハチの大群",
+ "meadowHelp":"牧草地：木の柵を飛び越えよう。高い柵は越えられないので、開いた通り道を探そう。ハチの群れが追ってくる。きれいに跳べば引き離せる。",
+ "beeBuzz":"🐝 牧草地にブンブン音 … 何か来る！","beesAlert":"🐝 ハチだ！走れ！","beesHint":"柵をきれいに越えよう。ぶつかるとハチに追いつかれる！","beesHuntAlert":"🐝 ハチの大群！","beesHuntHint":"どんどん速くなる – 柵で止まらないで！",
+ "beeSting":"いたっ！ハチに刺された！ライフ−1","beesQuit":"ふう！ハチは花へ帰っていった。","beesChase":"ハチ · 追跡中","beesClose":"ハチ · すぐ後ろ！","beesHunt":"ハチの大群！","beesNote":"柵をきれいに越えよう！ {s}秒",
+ "fenceTallBump":"柵が高すぎる – 通り道を使おう！","fenceBump":"いたっ、柵に引っかかった！","fenceTallHint":"🚪 高い柵 – 開いた通り道を探そう！"});
+Object.assign(copy.zh,{"meadowSec1":"🌼 第1段：阳光花径","meadowSec2":"🪵 第2段：栅栏与通道","meadowSec3":"⛰️ 第3段：陡峭的高山牧场","meadowSec4":"🐝 第4段：狂野蜂群",
+ "meadowHelp":"高山牧场：跳过木栅栏。高栅栏跳不过去 – 找到敞开的通道。蜂群在追你：干净利落地跳跃就能甩开它们。",
+ "beeBuzz":"🐝 草地上嗡嗡作响……有东西来了！","beesAlert":"🐝 蜜蜂！快跑！","beesHint":"干净地跳过栅栏，否则蜜蜂会追上你！","beesHuntAlert":"🐝 狂野蜂群！","beesHuntHint":"它们越来越快 – 别让栅栏拖慢你！",
+ "beeSting":"哎哟！被蜜蜂蜇了！生命 −1","beesQuit":"呼！蜜蜂飞回花丛了。","beesChase":"蜜蜂 · 正在追你","beesClose":"蜜蜂 · 非常近！","beesHunt":"狂野蜂群！","beesNote":"干净地跳过栅栏！{s}秒",
+ "fenceTallBump":"栅栏太高了 – 走通道！","fenceBump":"哎哟，被栅栏绊住了！","fenceTallHint":"🚪 高栅栏 – 找到敞开的通道！"});
