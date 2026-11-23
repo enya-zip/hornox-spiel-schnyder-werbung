@@ -11,7 +11,7 @@ import {createActor} from './actor.js?v=23';
 import {createEffects} from './effects.js?v=17';
 import {createPath} from './route.js?v=21';
 import {getZone,bridgeAt,fogAt,forestSection,meadowSection,lakeSection,stoneAt,swampMud} from './journey.js?v=26';
-import {createBlackLake} from './blacklake.js?v=6';
+import {createBlackLake} from './blacklake.js?v=8';
 import {createMeadow} from './meadow.js?v=6';
 import {createForest} from './forest.js?v=5';
 export {getZone};
@@ -152,12 +152,12 @@ export function createScene(canvas){
    else{
     // Laufstrecke: je Spur ein Balken oder eine Steinplatte alle 2,4 m – Lücken nur bei echten Wasserlücken
     const stones=Math.floor((t-450)/5)%2===1;
-    for(let j=0;j<6;j+=2.4){const sw=w+j,n=Math.round(sw/2.4);
+    if(w<d+190)for(let j=0;j<6;j+=2.4){const sw=w+j,n=Math.round(sw/2.4);
      for(const l of[0,1,2]){if(gaps.some(g=>(g.lane<0||g.lane===l)&&Math.abs(g.d-sw)<3.7))continue;at(sw,(l-1)*2.5);push(0,0,0,0,((n*3+l)%5-2)*.05);if(stones)blacklake.slab(n*3+l);else blacklake.beam(anim,n*3+l);pop();pop();}}
    }
    for(const side of[-1,1]){
     // Goldenes Schilf am Ufer (dicht wie auf dem Foto), dazwischen kleine Wasserläufe
-    if(w<d+320){for(const off of[6.4,8.6,11]){if(k%4===3&&off===8.6)continue;at(w+(off%2),side*off);blacklake.reedBed(anim,k*3+off|0,w<d+120?9:6);pop();}}
+    if(w<d+260){for(const off of[6.4,8.6,11]){if((k%4===3&&off===8.6)||(w>d+150&&off===11))continue;at(w+(off%2),side*off);blacklake.reedBed(anim,k*3+off|0,w<d+100?9:5);pop();}}
     if(k%9===(side>0?2:6)&&w<d+300){at(w,side*(14+(k%3)*2));a('rock',0,.05,0,1.4,.5,1.1,C.rock,0,k);pop();}
     if(k%60===(side>0?17:47)){const cp=point(w,side*55);if(clear(cp.x,cp.z,8,w)){at(w,side*55);a('rock',0,-.3,0,9,1.6,7,[.4,.45,.35],0,k);a('sphere',0,.6,0,6,.8,5,[.32,.55,.24]);push(0,1,0,0,-side*PI/2);alpine.chapel();pop();pop();}}
    }
