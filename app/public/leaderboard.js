@@ -3,7 +3,7 @@
 //  leaderboard_top  Rangliste lesen (Platz, Name, Punkte, Level) – sortiert nach Punkten
 //  player_standing  eigener Platz
 // E-Mail-Adressen können damit nicht gelesen werden; das geht nur für eingeloggte Admins.
-import {LEADERBOARD} from "./leaderboard-config.js?v=2";
+import {LEADERBOARD} from "./leaderboard-config.js?v=3";
 export function createLeaderboard(config=LEADERBOARD){
  const url=(config.url||"").replace(/\/$/,""),key=config.anonKey||"",configured=!!(url&&key);
  async function rpc(fn,body={},token){
