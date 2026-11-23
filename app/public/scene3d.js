@@ -12,8 +12,8 @@ import {createEffects} from './effects.js?v=17';
 import {createPath} from './route.js?v=21';
 import {getZone,bridgeAt,fogAt,forestSection,meadowSection,lakeSection,stoneAt} from './journey.js?v=25';
 import {createBlackLake} from './blacklake.js?v=4';
-import {createMeadow} from './meadow.js?v=3';
-import {createForest} from './forest.js?v=4';
+import {createMeadow} from './meadow.js?v=4';
+import {createForest} from './forest.js?v=5';
 export {getZone};
 const PI=Math.PI,C={ice:[.74,.87,.9,10],grass:[.44,.58,.30,11],gravel:[.7,.63,.48,12],cobble:[.65,.66,.61,13],snow:[.86,.92,.94,2],rock:[.48,.52,.53,1],wood:[.32,.22,.15,4],gold:[1,.74,.24,9],dark:[.12,.2,.23],fir:[1,1,1,7],red:[.85,.16,.19],flower:[.97,.85,.40]};
 export function createScene(canvas){

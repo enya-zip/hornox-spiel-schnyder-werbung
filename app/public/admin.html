@@ -61,14 +61,15 @@ tbody tr.top td:first-child{color:var(--gold);font-weight:700}
   <div class="toolbar">
    <input id="search" type="search" placeholder="Suchen nach Name oder E-Mail …" aria-label="Suchen">
    <button id="refresh" class="ghost" type="button">↻ Aktualisieren</button>
-   <button id="csv" class="ghost" type="button">⬇ CSV herunterladen</button>
+   <button id="csv" class="ghost" type="button">⬇ CSV Rangliste</button>
+   <button id="csv-runs" class="ghost" type="button">⬇ CSV alle Läufe</button>
    <button id="logout" class="ghost" type="button">Abmelden</button>
   </div>
-  <div class="stats"><div class="stat"><b id="count">0</b><span>Teilnehmende mit E-Mail</span></div><div class="stat"><b id="leader">—</b><span>Aktuell auf Platz 1</span></div><div class="stat"><b id="updated">—</b><span>Stand</span></div></div>
-  <div class="table-wrap"><table><thead><tr><th>Platz</th><th>Name</th><th>E-Mail</th><th class="num">Level</th><th class="num">Punkte</th><th class="num">Läufe</th><th>Bestleistung am</th><th>Angemeldet am</th></tr></thead><tbody id="rows"></tbody></table></div>
-  <p class="note">«Platz» ist der Rang in der öffentlichen Rangliste (Level, dann Punkte, bei Gleichstand wer früher dort war). Es erscheinen nur Spieler, die beim Game Over ihre E-Mail angegeben und der Teilnahme zugestimmt haben.</p>
+  <div class="stats"><div class="stat"><b id="count">0</b><span>Spieler in der Rangliste</span></div><div class="stat"><b id="leader">—</b><span>Aktuell auf Platz 1</span></div><div class="stat"><b id="updated">—</b><span>Stand</span></div></div>
+  <div class="table-wrap"><table><thead><tr><th>Platz</th><th>Name</th><th>E-Mail</th><th class="num">Punkte</th><th class="num">Level</th><th class="num">Läufe</th><th>Bestleistung am</th><th>Letztes Spiel</th></tr></thead><tbody id="rows"></tbody></table></div>
+  <p class="note">«Platz» ist der Rang in der öffentlichen Rangliste: nach Punkten, bei Gleichstand zählt, wer die Punktzahl früher erreicht hat. Pro Spieler zählt der beste Lauf. «CSV alle Läufe» enthält jeden gespeicherten Lauf mit Datum und Uhrzeit.</p>
   <p id="list-error" class="error" role="alert" hidden></p>
  </section>
 </main>
-<script type="module" src="admin.js?v=1"></script>
+<script type="module" src="admin.js?v=2"></script>
 </body></html>

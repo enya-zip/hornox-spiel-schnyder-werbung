@@ -102,7 +102,7 @@ export function createMeadow(r){
 
  // ---------- Wiesenkulisse ----------
  // Bunte Wildblumen (gelb, weiss, blau, violett) mit leichtem Wiegen im Wind.
- function flowerPatch(time,k,n=7){for(let j=0;j<n;j++){const x=Math.sin(k*1.7+j*2.3)*1.3,z=Math.cos(k*.9+j*1.9)*1.1,h=.18+(j%3)*.08,sway=Math.sin(time*1.6+j+k)*.06;a('cylinder',x,h/2,z,.015,h,.015,[.32,.55,.22],0,0,sway);a('sphere',x+sway*h,h,z,.08,.05,.08,petals[(j+k)%4]);}}
+ function flowerPatch(time,k,n=7){for(let j=0;j<n;j++){const x=Math.sin(k*1.7+j*2.3)*1.3,z=Math.cos(k*.9+j*1.9)*1.1,h=.18+(j%3)*.08,sway=Math.sin(time*1.6+j+k)*.06;a('cylinder',x,h/2,z,.015,h,.015,[.32,.55,.22],0,0,sway);a('sphere',x+sway*h,h,z,.08,.05,.08,petals[(((j+k)%4)+4)%4]);}}/* k kann negativ sein → Index immer 0..3 */
  // Morgentau: kleine glitzernde Tropfen im Gras.
  function dew(time,k){for(let j=0;j<5;j++){const tw=.5+.5*Math.sin(time*4+j*1.7+k);a('sphere',Math.sin(k+j*2.1)*1.4,.12,Math.cos(k*1.3+j)*1.1,.03*tw+.01,.03*tw+.01,.03*tw+.01,[1,1,1,49]);}}
  // Zaun entlang der Wiese (ein Feld von 8 Einheiten).

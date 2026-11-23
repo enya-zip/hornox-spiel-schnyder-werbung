@@ -1265,3 +1265,40 @@ Object.assign(copy.zh,{"contestKicker":"🎁 抽奖活动","nameTitle":"登记�
  "nameSave":"保存","nameMissing":"请输入玩家名。","emailInvalid":"该邮箱地址似乎无效。","agreeMissing":"请确认参加抽奖，或将邮箱留空。",
  "contestError":"保存失败，请重试。","contestSaved":"🎁 你已参加抽奖！","nameNeeded":"输入名字后成绩才会显示在排行榜上。",
  "contestTitle":"抽奖活动","contestNote":"留下邮箱即有机会中奖。","contestJoined":"你已参加抽奖 ✓","contestJoinedNote":"玩家 {name} · 邮箱已保存（不公开）","contestEdit":"修改","contestJoin":"参加"});
+// Game Over → Rangliste: Eingabe von Name + E-Mail (Pflicht), Speichern, Ranglisten-Ansicht.
+Object.assign(copy.de,{"gameOver":"GAME OVER","totalScore":"Gesamtpunktzahl","statLevels":"Erreichte Levels","levelsOf":"{n} von {total}","levelsReached":"Level {n} von {total} erreicht",
+ "toBoard":"Weiter zur Rangliste","saveTitle":"Punkte speichern","saveSummary":"{score} Punkte · Level {n} von {total}","nameLabel":"Name","emailLabel":"E-Mail-Adresse",
+ "emailPrivate":"Deine E-Mail-Adresse ist nicht öffentlich und erscheint nicht in der Rangliste. Sie wird nur verwendet, um dich bei einem Gewinn zu benachrichtigen.",
+ "saveButton":"Punkte speichern und Rangliste ansehen","saving":"Wird gespeichert …","nameMissing":"Bitte gib deinen Namen ein.","emailMissing":"Bitte gib deine E-Mail-Adresse ein.","emailInvalid":"Bitte gib eine gültige E-Mail-Adresse ein (z. B. name@beispiel.ch).",
+ "saveError":"Deine Punkte konnten nicht gespeichert werden.","globalNetwork":"Keine Internetverbindung – bitte prüfe deine Verbindung und versuche es nochmals.","globalError":"Die Rangliste ist gerade nicht erreichbar – bitte versuche es in einem Moment nochmals.","globalOffline":"Die globale Rangliste ist noch nicht mit der Datenbank verbunden.",
+ "globalTitleShort":"Rangliste","boardPlace":"Du bist auf Platz {n}!","boardFirst":"👑 Du bist auf Platz 1!","boardOf":"von {total} Spielern","boardSaved":"Gespeichert: {score} Punkte · Level {n} von {total} · {date}",
+ "boardLoading":"Rangliste wird geladen …","boardLive":"Aktualisiert sich automatisch","boardMore":"Weitere Spieler anzeigen","boardBack":"Zurück zum Ergebnis","globalTestRun":"Trainingslauf (Start ab Level 2 oder höher) – wird nicht in der Rangliste gespeichert."});
+Object.assign(copy.en,{"gameOver":"GAME OVER","totalScore":"Total score","statLevels":"Levels reached","levelsOf":"{n} of {total}","levelsReached":"Reached level {n} of {total}",
+ "toBoard":"Continue to leaderboard","saveTitle":"Save your score","saveSummary":"{score} points · level {n} of {total}","nameLabel":"Name","emailLabel":"Email address",
+ "emailPrivate":"Your email address is not public and never appears on the leaderboard. It is only used to notify you if you win.",
+ "saveButton":"Save score and view leaderboard","saving":"Saving …","nameMissing":"Please enter your name.","emailMissing":"Please enter your email address.","emailInvalid":"Please enter a valid email address (e.g. name@example.com).",
+ "saveError":"Your score could not be saved.","globalNetwork":"No internet connection – please check your connection and try again.","globalError":"The leaderboard is unavailable right now – please try again in a moment.","globalOffline":"The global leaderboard is not connected to the database yet.",
+ "globalTitleShort":"Leaderboard","boardPlace":"You're in place {n}!","boardFirst":"👑 You're in first place!","boardOf":"out of {total} players","boardSaved":"Saved: {score} points · level {n} of {total} · {date}",
+ "boardLoading":"Loading leaderboard …","boardLive":"Updates automatically","boardMore":"Show more players","boardBack":"Back to result","globalTestRun":"Practice run (started at level 2 or higher) – not saved to the leaderboard."});
+Object.assign(copy.fr,{"gameOver":"GAME OVER","totalScore":"Score total","statLevels":"Niveaux atteints","levelsOf":"{n} sur {total}","levelsReached":"Niveau {n} sur {total} atteint",
+ "toBoard":"Voir le classement","saveTitle":"Enregistrer ton score","saveSummary":"{score} points · niveau {n} sur {total}","nameLabel":"Nom","emailLabel":"Adresse e-mail",
+ "emailPrivate":"Ton adresse e-mail n'est pas publique et n'apparaît pas dans le classement. Elle sert uniquement à te prévenir si tu gagnes.",
+ "saveButton":"Enregistrer et voir le classement","saving":"Enregistrement …","nameMissing":"Merci d'indiquer ton nom.","emailMissing":"Merci d'indiquer ton adresse e-mail.","emailInvalid":"Merci d'indiquer une adresse e-mail valide (p. ex. nom@exemple.ch).",
+ "saveError":"Ton score n'a pas pu être enregistré.","globalNetwork":"Pas de connexion internet – vérifie ta connexion et réessaie.","globalError":"Le classement est indisponible pour le moment – réessaie dans un instant.","globalOffline":"Le classement global n'est pas encore relié à la base de données.",
+ "globalTitleShort":"Classement","boardPlace":"Tu es à la {n}e place !","boardFirst":"👑 Tu es à la 1re place !","boardOf":"sur {total} joueurs","boardSaved":"Enregistré : {score} points · niveau {n} sur {total} · {date}",
+ "boardLoading":"Chargement du classement …","boardLive":"Mise à jour automatique","boardMore":"Afficher plus de joueurs","boardBack":"Retour au résultat","globalTestRun":"Course d'entraînement (départ au niveau 2 ou plus) – non enregistrée dans le classement."});
+Object.assign(copy.ja,{"gameOver":"GAME OVER","totalScore":"合計スコア","statLevels":"到達レベル","levelsOf":"{total}中{n}","levelsReached":"レベル{n}/{total}に到達",
+ "toBoard":"ランキングへ進む","saveTitle":"スコアを保存","saveSummary":"{score}点 · レベル{n}/{total}","nameLabel":"名前","emailLabel":"メールアドレス",
+ "emailPrivate":"メールアドレスは公開されず、ランキングにも表示されません。当選時の連絡にのみ使用します。",
+ "saveButton":"スコアを保存してランキングを見る","saving":"保存中 …","nameMissing":"名前を入力してください。","emailMissing":"メールアドレスを入力してください。","emailInvalid":"有効なメールアドレスを入力してください（例：name@example.com）。",
+ "saveError":"スコアを保存できませんでした。","globalNetwork":"インターネットに接続されていません。接続を確認してもう一度お試しください。","globalError":"ランキングに接続できません。しばらくしてからもう一度お試しください。","globalOffline":"グローバルランキングはまだデータベースに接続されていません。",
+ "globalTitleShort":"ランキング","boardPlace":"{n}位です！","boardFirst":"👑 1位です！","boardOf":"{total}人中","boardSaved":"保存済み：{score}点 · レベル{n}/{total} · {date}",
+ "boardLoading":"ランキングを読み込み中 …","boardLive":"自動で更新されます","boardMore":"さらに表示","boardBack":"結果に戻る","globalTestRun":"練習ラン（レベル2以降から開始）– ランキングには保存されません。"});
+Object.assign(copy.zh,{"gameOver":"GAME OVER","totalScore":"总分","statLevels":"到达关卡","levelsOf":"{n} / {total}","levelsReached":"到达第{n}关（共{total}关）",
+ "toBoard":"查看排行榜","saveTitle":"保存分数","saveSummary":"{score}分 · 第{n}关（共{total}关）","nameLabel":"名字","emailLabel":"邮箱地址",
+ "emailPrivate":"你的邮箱不会公开，也不会显示在排行榜上，仅用于中奖通知。",
+ "saveButton":"保存分数并查看排行榜","saving":"正在保存 …","nameMissing":"请输入你的名字。","emailMissing":"请输入你的邮箱地址。","emailInvalid":"请输入有效的邮箱地址（例如 name@example.com）。",
+ "saveError":"分数未能保存。","globalNetwork":"没有网络连接，请检查后重试。","globalError":"排行榜暂时无法访问，请稍后重试。","globalOffline":"全球排行榜尚未连接数据库。",
+ "globalTitleShort":"排行榜","boardPlace":"你排在第{n}名！","boardFirst":"👑 你排在第1名！","boardOf":"共{total}名玩家","boardSaved":"已保存：{score}分 · 第{n}关（共{total}关）· {date}",
+ "boardLoading":"正在加载排行榜 …","boardLive":"自动更新","boardMore":"显示更多玩家","boardBack":"返回结果","globalTestRun":"练习局（从第2关或更高开始）– 不会保存到排行榜。"});
+Object.assign(copy.de,{"boardOf1":"von 1 Spieler"});Object.assign(copy.en,{"boardOf1":"out of 1 player"});Object.assign(copy.fr,{"boardOf1":"sur 1 joueur"});Object.assign(copy.ja,{"boardOf1":"1人中"});Object.assign(copy.zh,{"boardOf1":"共1名玩家"});

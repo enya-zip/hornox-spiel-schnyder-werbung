@@ -1,13 +1,13 @@
 import {INTRO_DURATION,COUNTDOWN_DURATION} from './intro.js?v=17';
 import {stages,getStage,DURATION,fogAt,bridgeAt,forestSection,meadowSection,meadowWindows,lakeSection,stoneAt} from "./journey.js?v=25";
-import {createScene} from "./scene3d.js?v=58";
+import {createScene} from "./scene3d.js?v=59";
 import {setup,validateAction,applyAction} from "./rules.js?v=39";
 import {installControls} from "./controls.js?v=17";
 import {createAudio} from "./audio.js?v=23";
-import {getZone} from "./scene3d.js?v=58";
-import {copy} from "./copy.js?v=41";
+import {getZone} from "./scene3d.js?v=59";
+import {copy} from "./copy.js?v=43";
 import {turnDirection} from "./route.js?v=21";
-import {createLeaderboard} from "./leaderboard.js?v=2";
+import {createLeaderboard} from "./leaderboard.js?v=3";
 import {LEADERBOARD} from "./leaderboard-config.js?v=2";
 const $=id=>document.getElementById(id),q=new URLSearchParams(location.search),app=$("app"),canvas=$("world"),player="guest";
 const read=k=>{try{return localStorage.getItem(k);}catch{return null;}},save=(k,v)=>{try{localStorage.setItem(k,String(v));}catch{}};
@@ -75,7 +75,7 @@ function updateCopy(){
  for(const [key,value]of Object.entries(bindings)){const b=$("bind-"+key);b.textContent=t(key)+" "+value.replace("ArrowLeft","←").replace("ArrowRight","→").replace("ArrowUp","↑").replace("ArrowDown","↓").replace("Key","").replace("Space","␣");b.setAttribute("aria-label",t(key)+": "+value);}
  updateMenu();if(screen==="result")resultCopy();hud();
 }
-function setScreen(next){$("splash").hidden=true;app.dataset.front="menu";screen=next;app.dataset.screen=next;$("home").hidden=next!=="home";$("hud").hidden=next==="home";$("result").hidden=next!=="result";$("pause-overlay").hidden=true;$("touch-controls").hidden=next!=="play"||!buttons;paused=false;}
+function setScreen(next){if(next!=="result"){hideBoard();if($("name-dialog").open&&!run.saving)$("name-dialog").close();}$("splash").hidden=true;app.dataset.front="menu";screen=next;app.dataset.screen=next;$("home").hidden=next!=="home";$("hud").hidden=next==="home";$("result").hidden=next!=="result";$("pause-overlay").hidden=true;$("touch-controls").hidden=next!=="play"||!buttons;paused=false;}
 function dispatch(action){if(!validateAction(state,player,action).ok)return false;state=applyAction(state,player,action);processEvents();return true;}
 function inTurn(){return state.nextTurn>0&&state.nextTurn-state.distance<=state.speed*1.6&&state.nextTurn>state.distance;}
 function input(kind){
@@ -105,21 +105,21 @@ function skipToLevel(){
 }
 let runBest=0,bestAnnounced=false;
 function start(){
- if(!loaded)return;pendingSend=null;$("name-dialog").open&&$("name-dialog").close();runBest=best();bestAnnounced=false;countToken=0;watchBoard(false);hideLevelBanner();crowsSeen=new Set();forestSec=0;forestSounds.clear();meadowSec=0;meadowSounds.clear();lakeSec=0;lakeSounds.clear();fisherMood=1;fisherEscaped=false;$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;state=setup([player]);dispatch({type:"start",seed,mode,route});setScreen("play");acc=0;renderDistance=0;countdown=0;introElapsed=0;lastCount=-1;resultSaved=false;tiltBase=null;$("countdown").hidden=true;$("countdown").textContent="";
+ if(!loaded)return;if(run.saving)return;$("name-dialog").open&&$("name-dialog").close();hideBoard();runBest=best();bestAnnounced=false;countToken=0;watchBoard(false);hideLevelBanner();crowsSeen=new Set();forestSec=0;forestSounds.clear();meadowSec=0;meadowSounds.clear();lakeSec=0;lakeSounds.clear();fisherMood=1;fisherEscaped=false;$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;state=setup([player]);dispatch({type:"start",seed,mode,route});setScreen("play");acc=0;renderDistance=0;countdown=0;introElapsed=0;lastCount=-1;resultSaved=false;tiltBase=null;$("countdown").hidden=true;$("countdown").textContent="";
  audio.unlock().catch(()=>{});audio.setActive(true);controls.reset();scene?.resetEffects();$("feedback-label").textContent="";skipToLevel();hud();
 }
-function home(){introElapsed=-1;hideLevelBanner();audio.setChase(false);$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;audio.setActive(true);scene?.resetEffects();$("feedback-label").textContent="";state=setup([player]);setScreen("home");selectMenu("run");countdown=0;renderDistance=0;$("countdown").hidden=true;$("turn-cue").hidden=true;$("tutorial").hidden=true;$("powerup").hidden=true;$("resort-arrival").hidden=true;updateCopy();}
+function home(){if(run.saving)return;introElapsed=-1;hideLevelBanner();audio.setChase(false);$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;audio.setActive(true);scene?.resetEffects();$("feedback-label").textContent="";state=setup([player]);setScreen("home");selectMenu("run");countdown=0;renderDistance=0;$("countdown").hidden=true;$("turn-cue").hidden=true;$("tutorial").hidden=true;$("powerup").hidden=true;$("resort-arrival").hidden=true;updateCopy();}
 function pause(value=true){if(screen!=="play")return;paused=value;acc=0;$("pause-overlay").hidden=!value;if(value){audio.setActive(false);$("resume").focus();}else {audio.unlock().catch(()=>{});audio.setActive(true);}}
 function openDialog(id){if(screen==="play"&&!paused)pause(true);$(id).showModal();}
 // Ergebnis-Seite: Titel, Punkte, Statistik (Level, Strecke, Münzen, Bestleistung) und Ranglistenplatz.
 let recordInfo={isNew:false,previous:0},countToken=0;
 function resultCopy(){
  const won=state.phase==="won",test=testLevel>1,level=Math.min(stages.length,getStage(state.elapsed)+1),top=best();
- $("result-title").textContent=won?t("won"):playerName&&board.configured&&!test?t("gameOverName",{name:playerName}):t("lost");
- $("result-kicker").textContent=won?t("wonKicker"):t("gameOver");
+ $("result-title").textContent=won?t("won"):t("gameOver");
+ $("result-kicker").textContent=won?t("wonKicker"):"HORNOX RUN";
  if(!countToken)$("result-score").textContent=fmt(state.score);
  const badge=$("result-badge");badge.hidden=!recordInfo.isNew;badge.textContent=t("recordBadge");$("result").classList.toggle("is-record",recordInfo.isNew);
- $("stat-level").textContent=level+"/"+stages.length+" · "+t(stages[level-1].key).split(" · ")[0];
+ $("stat-level").textContent=t("levelsOf",{n:level,total:stages.length})+" · "+t(stages[level-1].key).split(" · ")[0];
  $("stat-distance").textContent=fmt(state.distance)+" m";$("stat-coins").textContent=fmt(state.coins||0);$("stat-best").textContent=top?fmt(top):"—";
  $("result-note").textContent=won?t("wonText",{coins:fmt(state.coins||0)}):test?t("testRunNote",{n:testLevel}):!recordInfo.isNew&&top>state.score?t("recordGap",{n:fmt(top-Math.floor(state.score))}):t("lostText",{distance:fmt(state.distance),coins:fmt(state.coins||0)});
  $("result-rank").textContent=lastRankPlace?t(lastRankPlace===1?"rankFirst":"rankPlace",{n:lastRankPlace})+(test?" · "+t("rankTest",{n:testLevel}):""):t("rankOut");
@@ -143,76 +143,86 @@ function renderRanking(){const list=ranking(),ol=$("ranking-list"),locale=({en:"
   if(e.won)tag("🏔️ "+t("rankSummit"),"won");if(e.mode==="relaxed")tag(t("relaxedMode"));if(e.test)tag(t("rankTest",{n:e.test}),"test");
   li.append(n,main,tags);return li;}));}
 // ---------- Globale Rangliste (für alle Spieler gleich, online gespeichert) ----------
+// Ablauf: Game Over → «Weiter zur Rangliste» → Name + E-Mail → speichern → Rangliste mit eigenem Platz.
 const board=createLeaderboard();
-const playerId=(()=>{let id=read("hornox.player.id");if(!id){id=(crypto.randomUUID?crypto.randomUUID():"10000000-1000-4000-8000-100000000000".replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16)));save("hornox.player.id",id);}return id;})();
-let playerName=read("hornox.player.name")||"",boardTimer=0,lastGlobal=null;
+const newId=()=>crypto.randomUUID?crypto.randomUUID():"10000000-1000-4000-8000-100000000000".replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+let playerId=(()=>{let id=read("hornox.player.id");if(!id){id=newId();save("hornox.player.id",id);}return id;})();
+let playerName=read("hornox.player.name")||"",playerEmail=read("hornox.player.email")||"",boardTimer=0,viewTimer=0;
+// Pro Lauf eine eigene ID: wird derselbe Lauf mehrmals gesendet (Doppelklick, Netzwerk), speichert die Datenbank ihn nur einmal.
+let run={id:null,saved:null,saving:false},viewLimit=50;
 const medal=r=>r===1?"🥇":r===2?"🥈":r===3?"🥉":"";
-// Gewinnspiel-Dialog: Spielername (Pflicht) + E-Mail (freiwillig, nur mit Einwilligung).
-// Die E-Mail wird nur auf diesem Gerät (zum Vorausfüllen) und in der gesperrten Kontakt-Tabelle gespeichert.
-let playerEmail=read("hornox.player.email")||"",contestAsked=false,pendingSend=null;
 const validEmail=v=>/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)&&v.length<=254;
-function askName(then,{fromResult=false}={}){
- const d=$("name-dialog"),err=$("name-error");contestAsked=true;
- $("name-input").value=playerName;$("email-input").value=playerEmail;$("consent-input").checked=!!playerEmail;err.hidden=true;
- const terms=$("terms-link");terms.hidden=!LEADERBOARD.termsUrl;if(LEADERBOARD.termsUrl)terms.href=LEADERBOARD.termsUrl;
- let saved=false;d.showModal();(playerName?$("email-input"):$("name-input")).focus();
- const fail=msg=>{err.textContent=msg;err.hidden=false;};
- $("name-later").onclick=()=>d.close();
- d.onclose=()=>{d.onclose=null;if(!saved){if(playerName)runPending(fromResult?null:then);else if(pendingSend){$("result-global").hidden=false;$("global-place").textContent=t("nameNeeded");$("global-change").textContent="";$("global-around").replaceChildren();}}updateContestCard();};
- $("name-form").onsubmit=async e=>{e.preventDefault();
-  const v=$("name-input").value.trim().slice(0,20),mail=$("email-input").value.trim().toLowerCase(),ok=$("consent-input").checked;
-  if(!v){fail(t("nameMissing"));$("name-input").focus();return;}
-  if(mail&&!validEmail(mail)){fail(t("emailInvalid"));$("email-input").focus();return;}
-  if(mail&&!ok){fail(t("agreeMissing"));$("consent-input").focus();return;}
-  const renamed=playerName&&playerName!==v,emailChanged=mail!==playerEmail;
-  playerName=v;save("hornox.player.name",v);updateNameButton();
-  if(emailChanged||mail){const btn=$("name-form").querySelector("button[type=submit]");btn.disabled=true;
-   try{await board.saveContact(playerId,v,mail,ok);playerEmail=mail;save("hornox.player.email",mail);}
-   catch(x){btn.disabled=false;fail(t("contestError"));return;}btn.disabled=false;
-   if(mail)toast(t("contestSaved"),2.6);}
-  else if(renamed)board.rename(playerId,v).catch(()=>{});
-  saved=true;d.close();runPending(fromResult?null:then);refreshResultName();};
-}
-// Ein noch nicht gemeldetes Ergebnis (Name fehlte) wird nachgereicht, sobald ein Name da ist.
-function runPending(then){const send=pendingSend;pendingSend=null;if(send)send();else then?.();}
-function refreshResultName(){if(screen==="result"&&state.phase!=="won"&&testLevel<=1&&board.configured)$("result-title").textContent=t("gameOverName",{name:playerName});}
-// Karte auf der Ergebnis-Seite: zeigt, ob man am Gewinnspiel teilnimmt, und öffnet den Dialog.
-function updateContestCard(){const c=$("contest-card");c.hidden=!board.configured;if(c.hidden)return;
- const inn=!!playerEmail;c.classList.toggle("joined",inn);$("contest-title").textContent=t(inn?"contestJoined":"contestTitle");
- $("contest-note").textContent=inn?t("contestJoinedNote",{name:playerName}):t("contestNote");$("contest-open").textContent=t(inn?"contestEdit":"contestJoin");}
-$("contest-open").onclick=()=>askName(null,{fromResult:true});
-function updateNameButton(){$("global-name").textContent=playerName?t("nameChange",{name:playerName}):t("nameSet");}
-function boardRow(e,rank,isMe){const li=document.createElement("li"),n=document.createElement("b"),main=document.createElement("div"),who=document.createElement("strong"),info=document.createElement("small"),tag=document.createElement("span");
- if(isMe)li.className="me";n.innerHTML="";n.textContent=medal(rank)?medal(rank)+" "+rank+".":rank+".";who.textContent=e.name+(isMe?" · "+t("you"):"");info.textContent=t("rankLevel",{n:e.best_level})+" · "+fmt(e.best_score)+" "+t("points");main.append(who,info);tag.className="tags";li.append(n,main,tag);return li;}
+const runLevel=()=>Math.min(stages.length,getStage(state.elapsed)+1);
+function boardRow(e,isMe){const li=document.createElement("li"),n=document.createElement("b"),main=document.createElement("div"),who=document.createElement("strong"),info=document.createElement("small"),pts=document.createElement("span");
+ const rank=Number(e.rank);if(isMe)li.className="me";n.textContent=(medal(rank)?medal(rank)+" ":"")+rank+".";who.textContent=e.name+(isMe?" · "+t("you"):"");
+ info.textContent=t("levelsReached",{n:e.best_level,total:stages.length});pts.className="pts";pts.textContent=fmt(e.best_score);main.append(who,info);li.append(n,main,pts);return li;}
+const emptyRow=text=>Object.assign(document.createElement("li"),{className:"empty",textContent:text});
+const boardError=err=>err?.offline?t("globalOffline"):err?.network?t("globalNetwork"):t("globalError");
+
+// Rekorde-Tab im Startmenü: Top 10 + eigener Platz (mit Nachbarn), aktualisiert sich alle 8 Sekunden.
 async function refreshBoard(){
- updateNameButton();
  if(!board.configured){$("global-status").textContent=t("globalOffline");$("global-list").replaceChildren();$("global-me").hidden=true;return;}
- try{const [top,me]=await Promise.all([board.top(10),board.standing(playerId)]);lastGlobal=me;
-  $("global-status").textContent=me?.total?t("globalCount",{n:fmt(me.total)}):"";
-  $("global-list").replaceChildren(...(top.length?top.map((e,i)=>boardRow(e,i+1,e.player_id===playerId)):[Object.assign(document.createElement("li"),{className:"empty",textContent:t("globalEmpty")})]));
-  const box=$("global-me");if(me?.me&&me.rank>10){const ol=document.createElement("ol");if(me.above)ol.append(boardRow(me.above,me.rank-1,false));ol.append(boardRow(me.me,me.rank,true));if(me.below)ol.append(boardRow(me.below,me.rank+1,false));const sep=Object.assign(document.createElement("p"),{className:"sep",textContent:"⋯"});box.replaceChildren(sep,ol);box.hidden=false;}else box.hidden=true;
- }catch(err){$("global-status").textContent=t("globalError");}
+ try{const [top,me]=await Promise.all([board.top(10,0,playerId),board.standing(playerId)]);
+  $("global-status").textContent=me?.total||top.length?t("globalCount",{n:fmt(me?.total||top.length)}):"";
+  $("global-list").replaceChildren(...(top.length?top.map(e=>boardRow(e,e.is_me)):[emptyRow(t("globalEmpty"))]));
+  const box=$("global-me");if(me?.rank>10){const around=await board.top(3,me.rank-2,playerId),ol=document.createElement("ol");ol.append(...around.map(e=>boardRow(e,e.is_me)));box.replaceChildren(Object.assign(document.createElement("p"),{className:"sep",textContent:"⋯"}),ol);box.hidden=false;}else box.hidden=true;
+ }catch(err){$("global-status").textContent=boardError(err);}
 }
-// Live-Aktualisierung: solange der Rekorde-Tab offen ist, alle 8 Sekunden neu laden.
 function watchBoard(on){clearInterval(boardTimer);boardTimer=0;if(on){refreshBoard();boardTimer=setInterval(()=>{if(!document.hidden)refreshBoard();},8000);}}
-async function reportGlobal(){
- const box=$("result-global");box.hidden=true;
- if(!board.configured)return;
- if(testLevel>1){box.hidden=false;$("global-place").textContent=t("globalTestRun");$("global-change").textContent="";$("global-around").replaceChildren();return;}
- const level=Math.min(10,getStage(state.elapsed)+1),score=Math.floor(state.score),coins=state.coins||0;
- const send=async()=>{box.hidden=false;$("global-place").textContent=t("globalSending");$("global-change").textContent="";$("global-around").replaceChildren();
-  try{const before=Number(read("hornox.player.rank"))||0;await board.submit(playerId,playerName,score,level,coins);const st=await board.standing(playerId);if(!st?.rank)throw Error("rank");
-   save("hornox.player.rank",st.rank);$("result-title").textContent=state.phase==="won"?t("won"):t("gameOverName",{name:playerName});
-   $("global-place").textContent=(st.rank===1?"👑 ":"🏆 ")+t("globalPlace",{n:st.rank,total:fmt(st.total||st.rank)});
-   $("global-change").textContent=!before?t("globalNew"):st.rank<before?t(before-st.rank===1?"globalUp1":"globalUp",{n:before-st.rank}):st.rank>before?t(st.rank-before===1?"globalDown1":"globalDown",{n:st.rank-before}):t("globalSame");
-   const ol=$("global-around");ol.replaceChildren(...[st.above&&boardRow(st.above,st.rank-1,false),boardRow(st.me,st.rank,true),st.below&&boardRow(st.below,st.rank+1,false)].filter(Boolean));
-  }catch(err){$("global-place").textContent=t("globalError");}};
- updateContestCard();
- // Beim ersten Game Over (oder solange noch keine E-Mail hinterlegt ist, einmal pro Besuch) den Gewinnspiel-Dialog zeigen.
- pendingSend=send;
- if(!playerName||(!playerEmail&&!contestAsked))askName(null);else runPending();
+
+// Eingabefenster: Name und E-Mail (beide Pflicht), danach speichern und Rangliste zeigen.
+function openSave(){
+ const d=$("name-dialog");$("name-input").value=playerName;$("email-input").value=playerEmail;$("name-error").hidden=true;
+ for(const id of["name-input","email-input"])$(id).removeAttribute("aria-invalid");
+ $("save-summary").textContent=t("saveSummary",{score:fmt(state.score),n:runLevel(),total:stages.length});
+ const terms=$("terms-link");terms.hidden=!LEADERBOARD.termsUrl;if(LEADERBOARD.termsUrl)terms.href=LEADERBOARD.termsUrl;
+ setSaving(false);d.showModal();(playerName?$("email-input"):$("name-input")).focus();
 }
-function finish(){if(resultSaved)return;resultSaved=true;audio.setChase(false);audio.setActive(false);addRanking();setTimeout(reportGlobal,0);
+function setSaving(on){run.saving=on;const b=$("save-button");b.disabled=on;b.classList.toggle("busy",on);b.querySelector("span").textContent=t(on?"saving":"saveButton");$("to-board").disabled=on;}
+function formError(msg,field){const e=$("name-error");e.textContent=msg;e.hidden=false;for(const id of["name-input","email-input"])$(id).toggleAttribute("aria-invalid",id===field);if(field)$(field).focus();}
+$("name-later").onclick=()=>{if(!run.saving)$("name-dialog").close();};
+$("name-dialog").addEventListener("cancel",e=>{if(run.saving)e.preventDefault();});
+$("name-form").onsubmit=async e=>{e.preventDefault();if(run.saving)return;
+ const name=$("name-input").value.trim().slice(0,20),email=$("email-input").value.trim().toLowerCase();
+ if(!name)return formError(t("nameMissing"),"name-input");
+ if(!email)return formError(t("emailMissing"),"email-input");
+ if(!validEmail(email))return formError(t("emailInvalid"),"email-input");
+ $("name-error").hidden=true;setSaving(true);
+ try{const st=await board.saveRun({id:playerId,runId:run.id,name,email,score:state.score,level:runLevel(),coins:state.coins||0});
+  if(!st||!st.rank)throw Error("rank");
+  playerName=name;playerEmail=email;save("hornox.player.name",name);save("hornox.player.email",email);
+  // Gleiche E-Mail auf einem anderen Gerät: die Datenbank führt die Läufe unter einer Spieler-ID zusammen.
+  if(st.player_id&&st.player_id!==playerId){playerId=st.player_id;save("hornox.player.id",playerId);}
+  run.saved={...st,score:Math.floor(state.score),level:runLevel(),at:new Date()};setSaving(false);$("name-dialog").close();showBoard();
+ }catch(err){setSaving(false);formError(err?.detail==="invalid email"?t("emailInvalid"):err?.detail==="name required"?t("nameMissing"):t("saveError")+" "+boardError(err));}
+};
+
+// Ranglisten-Ansicht nach dem Speichern: alle Spieler nach Punkten, eigener Eintrag hervorgehoben.
+function showBoard(){$("board-view").hidden=false;viewLimit=50;renderBoardView(true);clearInterval(viewTimer);viewTimer=setInterval(()=>{if(!document.hidden&&!$("board-view").hidden)renderBoardView(false);},8000);$("board-again").focus();}
+function hideBoard(){clearInterval(viewTimer);viewTimer=0;$("board-view").hidden=true;}
+async function renderBoardView(scroll){
+ const test=testLevel>1,sv=run.saved;
+ $("board-title").textContent=sv?t(sv.rank===1?"boardFirst":"boardPlace",{n:fmt(sv.rank)}):t("globalTitleShort");
+ $("board-sub").textContent=sv?t(Number(sv.total)===1?"boardOf1":"boardOf",{total:fmt(sv.total)}):test?t("globalTestRun"):"";
+ $("board-saved").hidden=!sv;if(sv)$("board-saved").textContent="✓ "+t("boardSaved",{score:fmt(sv.score),n:sv.level,total:stages.length,date:sv.at.toLocaleString(({en:"en-GB",de:"de-CH",fr:"fr-CH",ja:"ja-JP",zh:"zh-CN"})[lang],{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"})});
+ if(!board.configured){$("board-status").textContent=t("globalOffline");$("board-list").replaceChildren();$("board-more").hidden=true;return;}
+ if(scroll)$("board-status").textContent=t("boardLoading");
+ try{const [list,me]=await Promise.all([board.top(viewLimit+1,0,playerId),board.standing(playerId)]);
+  const more=list.length>viewLimit,rows=list.slice(0,viewLimit).map(e=>boardRow(e,e.is_me));
+  if(me?.rank>viewLimit){const around=await board.top(3,me.rank-2,playerId);rows.push(Object.assign(document.createElement("li"),{className:"sep",textContent:"⋯"}),...around.map(e=>boardRow(e,e.is_me)));}
+  $("board-list").replaceChildren(...(rows.length?rows:[emptyRow(t("globalEmpty"))]));$("board-more").hidden=!more;
+  if(me?.rank&&sv&&me.rank!==sv.rank){sv.rank=me.rank;sv.total=me.total;$("board-title").textContent=t(sv.rank===1?"boardFirst":"boardPlace",{n:fmt(sv.rank)});$("board-sub").textContent=t(Number(sv.total)===1?"boardOf1":"boardOf",{total:fmt(sv.total)});}
+  else if(sv&&me?.total){sv.total=me.total;$("board-sub").textContent=t(Number(sv.total)===1?"boardOf1":"boardOf",{total:fmt(sv.total)});}
+  $("board-status").textContent=t("boardLive");
+  if(scroll)$("board-list").querySelector("li.me")?.scrollIntoView({block:"center"});
+ }catch(err){$("board-status").textContent=boardError(err);}
+}
+$("board-more").onclick=()=>{viewLimit+=50;renderBoardView(false);};
+$("board-back").onclick=()=>{hideBoard();$("to-board").focus();};
+$("board-again").onclick=()=>start();
+// «Weiter zur Rangliste»: einmal speichern, danach direkt zur Rangliste. Trainingsläufe (Start ab Level 2+) zählen nicht.
+$("to-board").onclick=()=>{if(run.saving)return;if(run.saved||testLevel>1)showBoard();else openSave();};
+function finish(){if(resultSaved)return;resultSaved=true;run={id:newId(),saved:null,saving:false};audio.setChase(false);audio.setActive(false);addRanking();
  const previous=best(state.route,state.mode);recordInfo={previous,isNew:testLevel<=1&&Math.floor(state.score)>previous&&state.score>0};if(recordInfo.isNew)save(bestKey(state.route,state.mode),Math.floor(state.score));
  setScreen("result");$("turn-cue").hidden=true;$("tutorial").hidden=true;$("resort-arrival").hidden=true;$("powerup").hidden=true;$("fisher-bubble").hidden=true;countToken=0;resultCopy();countUp();if(recordInfo.isNew)audio.play("pickup",1.7,.8);$("again").focus();}
 function heartFeedback(gained){const node=$('heart-feedback');node.querySelector('span').textContent=t(gained?'heartGain':'heartFull');node.hidden=false;node.getAnimations().forEach(a=>a.cancel());const target=$('lives').getBoundingClientRect(),x=target.left+target.width/2-innerWidth/2,y=target.top+target.height/2-innerHeight*.40;node.animate(reduced?[{opacity:1},{opacity:1,offset:.75},{opacity:0}]:[{opacity:0,transform:'translate(-50%,-50%) scale(.6)'},{opacity:1,transform:'translate(-50%,-50%) scale(1.15)',offset:.18},{opacity:1,transform:'translate(-50%,-50%) scale(1)',offset:.60},{opacity:0,transform:`translate(calc(-50% + ${x}px),calc(-50% + ${y}px)) scale(.22)`}],{duration:reduced?1000:1350,fill:'forwards'});audio.play('pickup',1.6,.85);}
@@ -342,7 +352,7 @@ document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.datase
 
 $("rush-button").onpointerdown=e=>{e.preventDefault();input("power");};$("rush-button").onclick=e=>{if(e.detail===0)input("power");};
 $("start").onclick=()=>{testLevel=urlLevel;start();};
-$("global-name").onclick=()=>askName(()=>refreshBoard());$("again").onclick=start;$("restart").onclick=start;$("resume").onclick=()=>pause(false);$("pause-button").onclick=()=>pause(true);document.querySelectorAll(".go-home").forEach(b=>b.onclick=home);
+$("again").onclick=start;$("restart").onclick=start;$("resume").onclick=()=>pause(false);$("pause-button").onclick=()=>pause(true);document.querySelectorAll(".go-home").forEach(b=>b.onclick=home);
 $("settings").onclick=()=>openDialog("settings-dialog");$("pause-settings").onclick=()=>openDialog("settings-dialog");$("how").onclick=()=>openDialog("help-dialog");document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>b.closest("dialog").close());
 $("language").onchange=e=>{lang=e.target.value;save("hornox.language.v5",lang);updateCopy();};
 document.querySelectorAll("[data-route]").forEach(b=>b.onclick=()=>{route=b.dataset.route;updateCopy();});

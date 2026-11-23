@@ -84,7 +84,7 @@ export function createForest(r){
  function woodPiece(time,id){a('ring',0,.06,0,.6,.6,.04,[.95,.75,.4,49],PI/2);push(0,1.05+Math.sin(time*3+id)*.08,0,0,time*2+id);a('cylinder',0,0,0,.28,.18,.28,[.55,.38,.22],PI/2);a('cylinder',0,0,.095,.24,.01,.24,[.86,.7,.48],PI/2);a('ring',0,0,.1,.12,.12,.01,[.6,.42,.25],PI/2);pop();}
  // ---------- Waldkulisse ----------
  // Herbstbaum mit bunten Blättern.
- function autumnTree(size,k){const cols=[[.9,.45,.1],[.85,.2,.12],[.95,.75,.15],[.7,.35,.1]];a('cylinder',0,1.6*size,0,.18*size,3.2*size,.18*size,bark);for(let j=0;j<4;j++){const c=cols[(k+j)%4];a('sphere',Math.cos(j*1.7)*.8*size,3.3*size+(j%2)*.5*size,Math.sin(j*1.7)*.8*size,1.2*size,1*size,1.2*size,c);}}
+ function autumnTree(size,k){const cols=[[.9,.45,.1],[.85,.2,.12],[.95,.75,.15],[.7,.35,.1]];a('cylinder',0,1.6*size,0,.18*size,3.2*size,.18*size,bark);for(let j=0;j<4;j++){const c=cols[(((k+j)%4)+4)%4];a('sphere',Math.cos(j*1.7)*.8*size,3.3*size+(j%2)*.5*size,Math.sin(j*1.7)*.8*size,1.2*size,1*size,1.2*size,c);}}
  // Moosbewachsener Felsen.
  function mossRock(size,k){a('rock',0,.3*size,0,1.6*size,.9*size,1.3*size,[.42,.44,.42],0,k);a('sphere',0,.75*size,0,1.2*size,.3*size,1*size,moss);}
  // Wasserfall an einer Felswand mit Becken.
