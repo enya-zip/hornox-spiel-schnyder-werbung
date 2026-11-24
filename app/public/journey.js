@@ -27,3 +27,14 @@ export const meadowWindows={herd:[388,394],cows:[398,404],hay:[409,421]};
 export const lakeSection=t=>t<450||t>=540?0:t<472.5?1:t<495?2:t<517.5?3:4;
 export const swampMud=t=>t>=450&&t<540&&(t-450)%21>=15;
 export const stoneAt=t=>t>=474&&t<492||t>=500&&t<508||t>=519&&t<538;
+// Ab Level 7 steigt das Tempo weiter (gleich wie rules.js): klassisch bis +4 (Level 10 ≈ 31), entspannt bis +1,5.
+export const lateSpeed=(t,relaxed)=>{const k=Math.max(0,Math.min(1,(t-540)/360));return relaxed?k*1.5:k*4;};
+export const baseSpeed=(t,relaxed)=>(relaxed?14:19)+Math.min(relaxed?6:8,t/42)+lateSpeed(t,relaxed);
+// Level 8 «Gletscher»: 5 Abschnitte à 18 s (Gletscherzunge, Schneebrücken, Séracs, Windböen, Seilschaft).
+export const glacierSection=t=>t<630||t>=720?0:1+Math.min(4,Math.floor((t-630)/18));
+export const GUSTS=[686.5,690.5,694.5,698.5];
+// Level 9 «Hörnligrat»: schmale Gratstellen, eine Randspur ist Abgrund (Spur 0 = links, 2 = rechts).
+export const ridgeNarrow=t=>t>=729&&t<737?0:t>=748&&t<756?2:t>=768&&t<776?0:t>=788&&t<796?2:-1;
+// Level 10 «Matterhorn»: schmaler Schneegrat; ab 892 s frei bis zum Gipfelkreuz.
+export const summitNarrow=t=>t>=836&&t<846?2:t>=858&&t<868?0:t>=876&&t<887?2:-1;
+export const SOLVAY_AT=772;   // Solvayhütte (4003 m) am Grat

@@ -1414,3 +1414,39 @@ Object.assign(copy.en,{"shopNeed":"You need {n} more {icon} for 1 life – keep 
 Object.assign(copy.fr,{"shopNeed":"Il te manque encore {n} {icon} pour 1 vie – continue à ramasser, tu les gardes."});
 Object.assign(copy.ja,{"shopNeed":"ライフ1つまであと {n} {icon} – 集め続けよう、持ち越せるよ。"});
 Object.assign(copy.zh,{"shopNeed":"再收集 {n} 个 {icon} 就能换 1 条命 – 继续收集，它们会被保留。"});
+// Level 7–10: eindeutige Namen (Hörnliweg ≠ Hörnligrat), Gletscher-Abschnitte, Windböen, Grat, Gipfel-Finale.
+Object.assign(copy.de,{"mountain":"Hörnliweg","ridge":"Hörnligrat",
+ "glacierSec1":"🧊 Abschnitt 1: Gletscherzunge – über die Leitern","glacierSec2":"❄️ Abschnitt 2: Schneebrücken – sie brechen ein, springen!","glacierSec3":"🗼 Abschnitt 3: Séracs – Eistürme kippen in den Weg","glacierSec4":"💨 Abschnitt 4: Windböen – halte die Spur!","glacierSec5":"🧗 Abschnitt 5: Eine Seilschaft kommt entgegen",
+ "gustLeft":"💨 WINDBÖE – sie drückt dich nach links!","gustRight":"💨 WINDBÖE – sie drückt dich nach rechts!",
+ "ridgeIntro":"⛰️ Hörnligrat: links und rechts geht es steil hinunter – Fixseile sichern den Weg.","ridgeNarrowL":"⚠️ SCHMALER GRAT – links Abgrund!","ridgeNarrowR":"⚠️ SCHMALER GRAT – rechts Abgrund!","solvayHut":"🏠 Solvayhütte, 4003 m – gleich geschafft!",
+ "summitIntro":"🏔️ Gipfelflanke: Felsstufen springen, unter Fixseilen ducken, auf Steinschlag achten.","summitNarrowL":"⚠️ SCHNEEGRAT – links Abgrund!","summitNarrowR":"⚠️ SCHNEEGRAT – rechts Abgrund!","summitFinal":"🏁 Lauf zum Gipfelkreuz!","summitReached":"🎉 Gipfel erreicht – 4478 m!",
+ "seracBump":"Vom Sérac getroffen – weiche den Eistürmen aus!","ropeTeamBump":"In die Seilschaft gelaufen – wechsle die Spur!","snowBridgeBump":"Die Schneebrücke ist eingebrochen – springen!","fixRopeBump":"Am Fixseil hängen geblieben – ducken!","rockStepBump":"An der Felsstufe gestolpert – springen!",
+ "climbReadyAria":"Kletterausrüstung anziehen (Taste E)","climbActiveAria":"Kletterausrüstung aktiv, noch {n} Sekunden"});
+Object.assign(copy.en,{"mountain":"Hörnliweg","ridge":"Hörnligrat",
+ "glacierSec1":"🧊 Section 1: Glacier tongue – cross the ladders","glacierSec2":"❄️ Section 2: Snow bridges – they collapse, jump!","glacierSec3":"🗼 Section 3: Seracs – ice towers topple onto the path","glacierSec4":"💨 Section 4: Wind gusts – hold your lane!","glacierSec5":"🧗 Section 5: A rope team is coming towards you",
+ "gustLeft":"💨 WIND GUST – it pushes you to the left!","gustRight":"💨 WIND GUST – it pushes you to the right!",
+ "ridgeIntro":"⛰️ Hörnligrat: steep drops on both sides – fixed ropes secure the path.","ridgeNarrowL":"⚠️ NARROW RIDGE – drop on the left!","ridgeNarrowR":"⚠️ NARROW RIDGE – drop on the right!","solvayHut":"🏠 Solvay Hut, 4003 m – almost there!",
+ "summitIntro":"🏔️ Summit flank: jump rock steps, duck under fixed ropes, watch for rockfall.","summitNarrowL":"⚠️ SNOW RIDGE – drop on the left!","summitNarrowR":"⚠️ SNOW RIDGE – drop on the right!","summitFinal":"🏁 Run to the summit cross!","summitReached":"🎉 Summit reached – 4478 m!",
+ "seracBump":"Hit by a serac – avoid the ice towers!","ropeTeamBump":"You ran into the rope team – change lanes!","snowBridgeBump":"The snow bridge collapsed – jump!","fixRopeBump":"Caught on the fixed rope – duck!","rockStepBump":"Tripped on the rock step – jump!",
+ "climbReadyAria":"Put on climbing gear (key E)","climbActiveAria":"Climbing gear active, {n} seconds left"});
+Object.assign(copy.fr,{"mountain":"Hörnliweg","ridge":"Hörnligrat",
+ "glacierSec1":"🧊 Partie 1 : Langue glaciaire – passe par les échelles","glacierSec2":"❄️ Partie 2 : Ponts de neige – ils s'effondrent, saute !","glacierSec3":"🗼 Partie 3 : Séracs – des tours de glace basculent sur le chemin","glacierSec4":"💨 Partie 4 : Rafales – garde ta voie !","glacierSec5":"🧗 Partie 5 : Une cordée arrive en face",
+ "gustLeft":"💨 RAFALE – elle te pousse à gauche !","gustRight":"💨 RAFALE – elle te pousse à droite !",
+ "ridgeIntro":"⛰️ Hörnligrat : à gauche et à droite, le vide – des cordes fixes sécurisent le chemin.","ridgeNarrowL":"⚠️ ARÊTE ÉTROITE – vide à gauche !","ridgeNarrowR":"⚠️ ARÊTE ÉTROITE – vide à droite !","solvayHut":"🏠 Refuge Solvay, 4003 m – presque arrivé !",
+ "summitIntro":"🏔️ Flanc sommital : saute les marches rocheuses, baisse-toi sous les cordes fixes, attention aux chutes de pierres.","summitNarrowL":"⚠️ ARÊTE DE NEIGE – vide à gauche !","summitNarrowR":"⚠️ ARÊTE DE NEIGE – vide à droite !","summitFinal":"🏁 Cours jusqu'à la croix du sommet !","summitReached":"🎉 Sommet atteint – 4478 m !",
+ "seracBump":"Touché par un sérac – évite les tours de glace !","ropeTeamBump":"Tu as percuté la cordée – change de voie !","snowBridgeBump":"Le pont de neige s'est effondré – saute !","fixRopeBump":"Accroché à la corde fixe – baisse-toi !","rockStepBump":"Trébuché sur la marche rocheuse – saute !",
+ "climbReadyAria":"Mettre l'équipement d'escalade (touche E)","climbActiveAria":"Équipement d'escalade actif, encore {n} secondes"});
+Object.assign(copy.ja,{"mountain":"Hörnliweg（ヘルンリ登山道）","ridge":"Hörnligrat（ヘルンリ稜線）",
+ "glacierSec1":"🧊 セクション1：氷河の舌端 – はしごを渡ろう","glacierSec2":"❄️ セクション2：スノーブリッジ – 崩れるからジャンプ！","glacierSec3":"🗼 セクション3：セラック – 氷の塔が倒れてくる","glacierSec4":"💨 セクション4：突風 – レーンを守れ！","glacierSec5":"🧗 セクション5：ザイルパーティーがやって来る",
+ "gustLeft":"💨 突風 – 左に押されるよ！","gustRight":"💨 突風 – 右に押されるよ！",
+ "ridgeIntro":"⛰️ ヘルンリ稜線：左右は切れ落ちた崖 – 固定ロープが道を守る。","ridgeNarrowL":"⚠️ 細い稜線 – 左は崖！","ridgeNarrowR":"⚠️ 細い稜線 – 右は崖！","solvayHut":"🏠 ソルベイ小屋 4003 m – もう少し！",
+ "summitIntro":"🏔️ 山頂斜面：岩の段差はジャンプ、固定ロープはしゃがむ、落石に注意。","summitNarrowL":"⚠️ 雪の稜線 – 左は崖！","summitNarrowR":"⚠️ 雪の稜線 – 右は崖！","summitFinal":"🏁 山頂の十字架まで走れ！","summitReached":"🎉 登頂成功 – 4478 m！",
+ "seracBump":"セラックにぶつかった – 氷の塔をよけよう！","ropeTeamBump":"ザイルパーティーにぶつかった – レーンを変えよう！","snowBridgeBump":"スノーブリッジが崩れた – ジャンプ！","fixRopeBump":"固定ロープに引っかかった – しゃがもう！","rockStepBump":"岩の段差でつまずいた – ジャンプ！",
+ "climbReadyAria":"クライミング装備を着ける（Eキー）","climbActiveAria":"クライミング装備 使用中、残り{n}秒"});
+Object.assign(copy.zh,{"mountain":"Hörnliweg（霍恩利小径）","ridge":"Hörnligrat（霍恩利山脊）",
+ "glacierSec1":"🧊 第1段：冰川舌 – 走过梯子","glacierSec2":"❄️ 第2段：雪桥 – 会坍塌，快跳！","glacierSec3":"🗼 第3段：冰塔 – 冰塔会倒向小路","glacierSec4":"💨 第4段：阵风 – 稳住你的道！","glacierSec5":"🧗 第5段：一支结组队伍迎面走来",
+ "gustLeft":"💨 阵风 – 把你吹向左边！","gustRight":"💨 阵风 – 把你吹向右边！",
+ "ridgeIntro":"⛰️ 霍恩利山脊：左右两侧都是深渊 – 固定绳保护着道路。","ridgeNarrowL":"⚠️ 狭窄山脊 – 左边是深渊！","ridgeNarrowR":"⚠️ 狭窄山脊 – 右边是深渊！","solvayHut":"🏠 索尔维小屋 4003 米 – 快到了！",
+ "summitIntro":"🏔️ 峰顶山坡：跳过岩阶，在固定绳下蹲下，小心落石。","summitNarrowL":"⚠️ 雪脊 – 左边是深渊！","summitNarrowR":"⚠️ 雪脊 – 右边是深渊！","summitFinal":"🏁 跑向山顶十字架！","summitReached":"🎉 登顶成功 – 4478 米！",
+ "seracBump":"被冰塔砸中 – 躲开冰塔！","ropeTeamBump":"撞上了结组队伍 – 换道！","snowBridgeBump":"雪桥塌了 – 跳！","fixRopeBump":"被固定绳挂住 – 蹲下！","rockStepBump":"被岩阶绊倒 – 跳！",
+ "climbReadyAria":"穿上攀登装备（E键）","climbActiveAria":"攀登装备生效中，还剩{n}秒"});

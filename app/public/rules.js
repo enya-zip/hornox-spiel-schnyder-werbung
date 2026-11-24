@@ -30,6 +30,16 @@ export function validateAction(s,p,a){
  return{ok:false,error:"action"};
 }
 const SHOP_MAX_LIVES=5,SHOP_AT=84.5;   // Eingang des Bergladens bei Sekunde 84,5 jedes Levels; der Laden öffnet sofort beim Eintreten
+// Ab Level 7 (9:00) steigt das Tempo pro Level weiter an: klassisch bis +4 (Level 10 ≈ 31), entspannt nur bis +1,5.
+function lateSpeed(t,mode){const k=Math.max(0,Math.min(1,(t-540)/360));return mode==="relaxed"?k*1.5:k*4;}
+// Level 8 «Gletscher» (10:30–12:00): 5 Abschnitte à 18 s – 1 Gletscherzunge (Leitern), 2 Schneebrücken,
+// 3 Séracs, 4 Windböen, 5 Seilschaft. Gleiche Zeiten wie in journey.js.
+function glacierSection(t){return t<630||t>=720?0:1+Math.min(4,Math.floor((t-630)/18));}
+const GUSTS=[686.5,690.5,694.5,698.5];
+// Level 9 «Hörnligrat»: schmale Gratstellen – eine Randspur ist Abgrund (nur 2 Spuren begehbar).
+function ridgeNarrow(t){return t>=729&&t<737?0:t>=748&&t<756?2:t>=768&&t<776?0:t>=788&&t<796?2:-1;}
+// Level 10 «Matterhorn»: schmaler Schneegrat (eine Randspur Abgrund); die letzten 8 s sind frei bis zum Gipfelkreuz.
+function summitNarrow(t){return t>=836&&t<846?2:t>=858&&t<868?0:t>=876&&t<887?2:-1;}
 function random(n){return(n*1664525+1013904223)>>>0;}
 function stage(t){return Math.min(9,Math.floor(Math.max(0,t)/90));}
 function zone(t){return [3,6,7,8,1,9,4,0,10,5][stage(t)];}
@@ -75,7 +85,7 @@ export function applyAction(s,p,a){
  if(!jump&&!duck&&queued&&buffer>0){jump=queued==="jump"?18:0;jumpCount=jump?1:0;jumpBase=0;duck=queued==="duck"?16:0;events.push({kind:queued});queued="";buffer=0;}
  if(!buffer)queued="";
  const rushRamp=s.powerTicks>0?Math.min(1,(121-s.powerTicks)/7,s.powerTicks/12):0;
- const speed=(1+.55*rushRamp)*((s.mode==="relaxed"?14:19)+Math.min(s.mode==="relaxed"?6:8,elapsed/42))*(s.slow>20&&!(s.shoes>0)?.35:s.slow>0&&!(s.shoes>0)?.7:1)*(s.shoes>0?1.2:1),distance=s.distance+speed*.05;
+ const speed=(1+.55*rushRamp)*((s.mode==="relaxed"?14:19)+Math.min(s.mode==="relaxed"?6:8,elapsed/42)+lateSpeed(elapsed,s.mode))*(s.slow>20&&!(s.shoes>0)?.35:s.slow>0&&!(s.shoes>0)?.7:1)*(s.shoes>0?1.2:1),distance=s.distance+speed*.05;
  let height=jump?jumpBase*(jump/18)+Math.sin((18-jump)/18*Math.PI)*(jumpCount===2?1.15:1):0;
  let powerCharge=s.powerCharge,powerTicks=Math.max(0,s.powerTicks-1);const powering=s.powerTicks>0;
  let flamingoSpawned=s.flamingoSpawned||false;
@@ -151,7 +161,7 @@ export function applyAction(s,p,a){
     if(aligned){const before=powerCharge;powerCharge=Math.min(30,powerCharge+15);if(before===30)score+=100;events.push({kind:'powerPickup',power:'pickupCharge'});if(before<30&&powerCharge===30)events.push({kind:'powerReady'});}
    }else if(aligned&&powering){score+=25;events.push({kind:"powerClear",object:item.kind,lane:item.lane,d:item.d,id:item.id,points:25});item.powerCleared=true;
    }else if(aligned){
-    const safe=["trunk","fallingBranch","sign","hayBale","haystack","cow","cowWalk","hayRoll","fenceTall","rockFace","ledge","signpost","looseRocks","railLane"].includes(item.kind)?false:item.kind==="hook"?(item.attack==="high"?duck>0:height>.4):item.kind==="gull"?false:item.kind==="crow"?(item.attack==="snatch"&&height>.4):["iceArch","branch","awning","rope","highLog","gate","metalStrut","beamLow","overhang"].includes(item.kind)?duck>0:["crevasse","ridgeGap","manhole","plankGap","stream","ditch","waterGap"].includes(item.kind)?height>.5:height>.4;
+    const safe=["trunk","fallingBranch","sign","hayBale","haystack","cow","cowWalk","hayRoll","fenceTall","rockFace","ledge","signpost","looseRocks","railLane","serac","ropeTeam"].includes(item.kind)?false:item.kind==="hook"?(item.attack==="high"?duck>0:height>.4):item.kind==="gull"?false:item.kind==="crow"?(item.attack==="snatch"&&height>.4):["iceArch","branch","awning","rope","fixRope","highLog","gate","metalStrut","beamLow","overhang"].includes(item.kind)?duck>0:["crevasse","snowBridge","ridgeGap","manhole","plankGap","stream","ditch","waterGap"].includes(item.kind)?height>.5:height>.4;
     if(!safe&&!invulnerable&&!climb){
      // Möwe: kostet kein Leben, stiehlt aber bis zu 3 Fische aus dem Rucksack.
      if(item.kind==='gull'){const lost=Math.min(fish,3);fish-=lost;invulnerable=15;events.push({kind:'gull',lost,fish});}
@@ -168,7 +178,7 @@ export function applyAction(s,p,a){
   const arrivalTime=elapsed+(d-distance)/speed,z=zone(arrivalTime),variant=(rng>>>16)%8;
   const add=(kind,lane,offset=0,extra=null)=>{
    const pace=s.mode==="relaxed"?.75:1;
-   const approach=(["pedestrian","photographers","hiker","influencer","lostTourists","skiers","snowboarders"].includes(kind)?2.4:kind==="carriage"?4.2:kind==="scooter"?6.5:kind==="electric"?7:kind==="rockfall"?3.5:kind==="bike"?8+Math.min(2,elapsed/120):kind==="marmot"?3.8:kind==="sheep"?2.8:kind==="trolley"?4.5:kind==="luggage"?2:kind==="crow"||kind==="gull"?6:0)*pace;
+   const approach=(["pedestrian","photographers","hiker","ropeTeam","influencer","lostTourists","skiers","snowboarders"].includes(kind)?2.4:kind==="carriage"?4.2:kind==="scooter"?6.5:kind==="electric"?7:kind==="rockfall"?(z===5?5.2:3.5):kind==="bike"?8+Math.min(2,elapsed/120):kind==="marmot"?3.8:kind==="sheep"?2.8:kind==="trolley"?4.5:kind==="luggage"?2:kind==="crow"||kind==="gull"?6:0)*pace;
    // Give incoming actors a lead so the entire row reaches the runner together.
    // This preserves the open lane and prevents faster NPCs overtaking jump/slide rows.
    const lead=Math.max(0,(d+offset-distance)/speed)*approach;
@@ -178,21 +188,24 @@ export function applyAction(s,p,a){
   let fullRow=false,pattern=row<2?8:row===2?0:row===3?1:row===4?2:variant;
   const nearest=260+Math.max(0,Math.round((d-260)/680))*680;
   // Short breathing room at corners and biome boundaries; no long empty stretches.
-  if(Math.abs(d-nearest)<Math.max(48,speed*2.2)||[90,180,270,360,450,540,630,720,810].some(t=>Math.abs(arrivalTime-t)<2.5||arrivalTime>t-90+SHOP_AT-3&&arrivalTime<t-90+SHOP_AT+2.5)||arrivalTime>893)pattern=8;
+  if(Math.abs(d-nearest)<Math.max(48,speed*2.2)||[90,180,270,360,450,540,630,720,810].some(t=>Math.abs(arrivalTime-t)<2.5||arrivalTime>t-90+SHOP_AT-3&&arrivalTime<t-90+SHOP_AT+2.5)||arrivalTime>891)pattern=8;   // letzte ~8 s: freier Weg bis zum Gipfelkreuz
   if([2,3].includes(z)&&pattern===6)safe=(rng&1)?0:2;
-  if(z===4&&hornliSteg(arrivalTime)>=0)safe=hornliSteg(arrivalTime);   // Münzen nur auf dem Holzsteg, nie über dem Abgrund
+  if(z===4&&hornliSteg(arrivalTime)>=0)safe=hornliSteg(arrivalTime);
+  const narrowAt=t=>z===10?ridgeNarrow(t):z===5?summitNarrow(t):-1,narrow=narrowAt(arrivalTime),edge=narrow>=0?narrow:Math.max(narrowAt(arrivalTime+.6),narrowAt(arrivalTime+1.2));if(edge>=0&&safe===edge)safe=edge===0?1+((rng>>>9)&1):((rng>>>9)&1);   // Münzen nie über dem Abgrund   // Münzen nur auf dem Holzsteg, nie über dem Abgrund
   const one=(safe+1)%3,two=(safe+2)%3,busy=row>=(s.mode==="relaxed"?12:5);
   if(!flamingoSpawned&&arrivalTime>=65&&[2,3].includes(z)&&pattern!==8){add('flamingo',one);flamingoSpawned=true;}
   else if(z===5){
-   // Level 10 (Matterhorn): Steinböcke springen auf die Piste, Krähen klauen Münzen.
-   if(pattern===0){add("iceBlock",one);if(busy)add("crevasse",two);}
-   else if(pattern===1)add("crevasse",-1);
-   // Krähen-Angriffe: Sturzflug (Spur wechseln), Münzenklau (springen),
-   // Scheinangriff (nicht zu früh reagieren) und Doppelangriff (zwei Krähen).
-   // Krähen: zwischen zwei Angriffen liegen mindestens 8 Sekunden (plus 0–4 s Zufall).
-   else if(pattern===2)add("iceArch",-1);
-   else if(pattern===3){add("ibex",one);if(busy)add("iceBlock",two);}
-   else if(pattern===4){add("crevasse",one);if(busy)add("iceArch",two);}
+   // Level 10 (Matterhorn): Felsstufen (springen), Fixseile (ducken), Steinschlag, schmaler Schneegrat,
+   // Steinböcke und Krähen. Krähen-Angriffe: Sturzflug (Spur wechseln), Münzenklau (springen),
+   // Scheinangriff (nicht zu früh reagieren), Doppelangriff; mindestens 8 s (plus 0–4 s) dazwischen.
+   const other=[0,1,2].find(l=>l!==safe&&l!==narrow);
+   if(pattern===8){}
+   else if(narrow>=0){add("ridgeGap",narrow);const k=pattern%4;if(k===0)add("rockStep",other);else if(k===1)add("rockfall",other);else if(k===2)add("ibex",other);else add("rockStep",other);}
+   else if(pattern===0){add("rockStep",one);if(busy)add("rockfall",two);}
+   else if(pattern===1)add("fixRope",-1);
+   else if(pattern===2)add("rockStep",-1);
+   else if(pattern===3){add("ibex",one);if(busy)add("rockStep",two);}
+   else if(pattern===4){add("rockfall",one);if(busy)add("rockStep",two);}
    else if((pattern===5||pattern===7)&&arrivalTime>=nextCrowAt){
     nextCrowAt=arrivalTime+8+((rng>>>20)%5);const kind=(rng>>>8)%4;
     if(kind===0)add("crow",one,0,{attack:"snatch"});
@@ -200,17 +213,18 @@ export function applyAction(s,p,a){
     else if(kind===2&&busy){add("crow",one,0,{attack:"dive",double:true});add("crow",two,0,{attack:"dive",double:true});}
     else add("crow",one,0,{attack:"dive"});
    }
-   else if(pattern===5){add("iceBlock",one);if(busy)add("ibex",two);}
-   else if(pattern===6){add("iceArch",two);if(busy)add("crevasse",one);}
-   else if(pattern===7){add("ibex",one);if(busy)add("crevasse",two);}
+   else if(pattern===5){add("ibex",one);if(busy)add("rockfall",two);}
+   else if(pattern===6){add("rockfall",two);if(busy)add("rockStep",one);}
+   else if(pattern===7){add("ibex",one);if(busy)add("rockfall",two);}
   }else if(z===0){
-   if(pattern===0){add("iceBlock",one);if(busy)add("crevasse",two);}
-   else if(pattern===1)add("crevasse",-1);
-   else if(pattern===2)add("iceArch",-1);
-   else if(pattern===3){add("crevasse",one);if(busy)add("iceBlock",two);}
-   else if(pattern===4){add("crevasse",one);if(busy)add("iceArch",two);}
-   else if(pattern===5||pattern===7){add("iceBlock",one);if(busy)add("iceBlock",two);}
-   else if(pattern===6){add("iceArch",two);if(busy)add("crevasse",one);}
+   // Level 8 «Gletscher» in 5 Abschnitten (glacierSection).
+   const sec=glacierSection(arrivalTime),k=pattern%5,ladder=()=>{add("crevasse",one,0,{bridgeLane:safe});add("crevasse",two,0,{bridgeLane:safe});};
+   if(pattern===8){}
+   else if(sec===1){/* Gletscherzunge: Eisblöcke, Spalten, Leitern über Spalten */if(k===0){add("iceBlock",one);if(busy)add("crevasse",two);}else if(k===1)ladder();else if(k===2)add("iceArch",-1);else if(k===3){add("crevasse",one);if(busy)add("iceBlock",two);}else{add("iceBlock",one);if(busy)add("iceBlock",two);}}
+   else if(sec===2){/* Schneebrücken brechen kurz vor Hornox ein: springen */if(k===0){add("snowBridge",one);if(busy)add("snowBridge",two);}else if(k===1){add("snowBridge",one);if(busy)add("iceBlock",two);}else if(k===2){add("iceBlock",one);if(busy)add("snowBridge",two);}else if(k===3)ladder();else add("iceArch",-1);}
+   else if(sec===3){/* Séracs kippen in eine Spur: ausweichen */if(k===0){add("serac",one);if(busy)add("iceBlock",two);}else if(k===1){add("serac",one);if(busy)add("serac",two);}else if(k===2){add("crevasse",one);if(busy)add("serac",two);}else if(k===3){add("serac",two);if(busy)add("crevasse",one);}else add("iceArch",-1);}
+   else if(sec===4){/* Windböen schieben Hornox zur Seite – nur leichte Hindernisse */if(k===0)add("iceBlock",one);else if(k===1){add("crevasse",one);if(busy)add("iceBlock",two);}else if(k===2)add("iceArch",-1);else if(k===3)add("serac",one);else add("crevasse",-1);}
+   else{/* Seilschaft kommt entgegen */if(k===0){add("ropeTeam",one);if(busy)add("crevasse",two);}else if(k===1){add("ropeTeam",one);if(busy)add("iceBlock",two);}else if(k===2)add("snowBridge",-1);else if(k===3)ladder();else{add("ropeTeam",two);if(busy)add("serac",one);}}
   }else if(z===7){
    // Level 3 (Zum See): schmaler Wanderweg am See.
    // Gefahren am See, nie dichter als 3 s hintereinander:
@@ -293,12 +307,16 @@ export function applyAction(s,p,a){
    else if(sec===4){const k=pattern%5;if(k===0||k===3){add("snowPatch",one);if(busy)add("snowPatch",two);}else if(k===1){add("rockBig",one);if(busy)add("scree",two);}else if(k===2){add("rockBig",one);if(busy)add("scree",two);}else{add("ledge",one);add("snowPatch",two);}}
    else{const k=pattern%5;if(k===0){add("signpost",one);if(busy)add("scree",two);}else if(k===1)add("woodRail",-1);else if(k===2){add("rockBig",one);}else if(k===3)add("beamLow",-1);else{add("hiker",one);if(busy)add("woodBarrier",two);}}
   }else if(z===10){
-   if(pattern===0){add("hiker",one);if(busy)add("lowRock",two);}
+   // Level 9 «Hörnligrat»: schmaler Felsgrat mit Abgründen, Fixseilen, Steinschlag und Seilschaften.
+   const other=[0,1,2].find(l=>l!==safe&&l!==narrow);
+   if(pattern===8){}
+   else if(narrow>=0){add("ridgeGap",narrow);const k=pattern%4;if(k===0)add("rockfall",other);else if(k===1)add("lowRock",other);else if(k===2)add("boulder",other);else add("ropeTeam",other);}
+   else if(pattern===0){add("ropeTeam",one);if(busy)add("lowRock",two);}
    else if(pattern===1)add("ridgeGap",-1);
    else if(pattern===2)add("rope",-1);
    else if(pattern===3||pattern===7){add("rockfall",one);if(busy)add("boulder",two);}
    else if(pattern===4){add("lowRock",one);if(busy)add("boulder",two);}
-   else if(pattern===5){add("hiker",one);if(busy)add("rockfall",two);}
+   else if(pattern===5){add("ropeTeam",one);if(busy)add("rockfall",two);}
    else if(pattern===6){add("boulder",two);if(busy)add("ridgeGap",one);}
   }else{
    if(pattern===0){add("snowman",one);if(busy)add("luggage",two);}
@@ -321,7 +339,7 @@ export function applyAction(s,p,a){
   // Level 5: Alpenkräuter (selten), Käse, goldene Kuhglocken, goldenes Edelweiss (sehr selten). Blumen = normale Münzen.
   if(z===1&&!heartDue){const sec=meadowSection(arrivalTime);if(sec>=2&&arrivalTime>=honeyNext&&safe!==1&&pattern!==0&&pattern!==4&&pattern!==5){add("honey",safe,22);honeyNext=arrivalTime+18;}/* Honig am alten Bienenbaum */else if(sec>=2&&row%29===14)add("edelweiss",safe,22);else if(row%7===3)add("herb",safe,22);else if(row%11===5)add("cheese",safe,22);else if(row%17===9)add("goldBell",safe,22);}
   if(row>8&&row%17===8&&pattern!==8)add(z===5?['climbGear','snowshoes'][Math.floor(row/17)%2]:['magnet','shieldOrb','coinBoost','rushCharge'][Math.floor(row/17)%4],safe,-8);
-  row++;nextRow+=s.mode==="relaxed"?Math.max(34,38-elapsed/120):Math.max(23,26-elapsed/110);
+  row++;nextRow+=s.mode==="relaxed"?Math.max(34,38-elapsed/120):Math.max(23,26-elapsed/110,speed*.78);   // mindestens ~0,78 s zwischen zwei Reihen, auch bei hohem Tempo (Sprung → Ducken bleibt machbar)
  }
  // Verfolgung durch den wütenden Fischer, direkt hinter Hornox auf der Strecke.
  // chaseGap = Abstand in Streckeneinheiten (4 = fast dran, 16 = weit weg).
@@ -381,11 +399,16 @@ export function applyAction(s,p,a){
   const nextStage=stage(elapsed);
   const gained=lives>0&&lives<s.maxLives;if(gained)lives++;score+=250;events.push({kind:"world",zone:zone(elapsed),stage:nextStage,gained});
  }
+ // Level 8, Abschnitt 4: Windböen schieben Hornox eine Spur zur Seite (Warnung 1,5 s vorher).
+ let target=s.target;
+ GUSTS.forEach((g,i)=>{const lane=Math.max(0,Math.min(2,Math.round(target))),dir=lane===0?1:lane===2?-1:(i%2?1:-1);
+  if(s.elapsed<g-1.5&&elapsed>=g-1.5)events.push({kind:'gustWarn',dir});
+  if(s.elapsed<g&&elapsed>=g&&!climb){target=lane+dir;events.push({kind:'gust',dir,lane:target});}});
  // Bergladen kurz vor Ende jedes Levels (nicht im letzten Level): öffnet, sobald Hornox hineinläuft; schliesst spätestens beim Levelwechsel.
  {const st=stage(elapsed);if(shop&&shop!==st+1)shop=0;if(st<9&&elapsed>=st*90+SHOP_AT&&shopSeen<st+1&&lives>0){shopSeen=st+1;shop=st+1;events.push({kind:'shopOpen',stage:st,items,lives});}}
  const phase=lives<=0?"lost":elapsed>=900?"won":"playing";
  if(phase==="won"){score+=2000;events.push({kind:"summit",points:2000});}
- return{...s,items,shop,shopSeen,beeNest,beeStings,honeyNext,phase,tick,elapsed,distance,speed,x,lives,jump,jumpCount,jumpBase,jumpY:height,fallTicks,duck,queued,buffer,coins,flamingoSpawned,powerCharge,powerTicks,hearts,nextHeartAt,score,chain,bestChain,multiplier,shield,magnet,coinBoost,climb,climbReady,shoes,nextCrowAt,nextFishAt,nextBeaverAt,nextGullAt,lastHazardAt,nextFrogAt,fish,angry,chaseGap,nextCastTick,lastBumpTick,attackSeq,boar,boarGap,boarBump,dog,dogGap,dogBump,dogMode,scared,checkpoints,arrivals,turnIndex,nextTurn,turnChoice,summitTurn,heading,turns,failReason,invulnerable,slow,rng,nextId,nextRow,row,objects,events};
+ return{...s,target,items,shop,shopSeen,beeNest,beeStings,honeyNext,phase,tick,elapsed,distance,speed,x,lives,jump,jumpCount,jumpBase,jumpY:height,fallTicks,duck,queued,buffer,coins,flamingoSpawned,powerCharge,powerTicks,hearts,nextHeartAt,score,chain,bestChain,multiplier,shield,magnet,coinBoost,climb,climbReady,shoes,nextCrowAt,nextFishAt,nextBeaverAt,nextGullAt,lastHazardAt,nextFrogAt,fish,angry,chaseGap,nextCastTick,lastBumpTick,attackSeq,boar,boarGap,boarBump,dog,dogGap,dogBump,dogMode,scared,checkpoints,arrivals,turnIndex,nextTurn,turnChoice,summitTurn,heading,turns,failReason,invulnerable,slow,rng,nextId,nextRow,row,objects,events};
 }
 export function isGameOver(s){return ["lost","won"].includes(s.phase)?{over:true,winner:s.phase==="won"?s.player:null,score:s.score,coins:s.coins,distance:Math.floor(s.distance),arrivals:s.arrivals}:{over:false};}
 export function viewFor(s,p){return{...s,objects:s.objects.map(o=>({...o})),events:s.events.map(e=>({...e})),spectator:p!==s.player};}
