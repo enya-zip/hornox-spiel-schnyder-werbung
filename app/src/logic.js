@@ -29,7 +29,7 @@ export function validateAction(s,p,a){
  if(a.type==="step"&&Object.keys(a).length===1)return{ok:true};
  return{ok:false,error:"action"};
 }
-const SHOP_MAX_LIVES=5,SHOP_AT=84.6;   // Eingang des Bergladens bei Sekunde 84,5 jedes Levels; der Laden öffnet, wenn Hornox drin steht
+const SHOP_MAX_LIVES=5,SHOP_AT=84.5;   // Eingang des Bergladens bei Sekunde 84,5 jedes Levels; der Laden öffnet sofort beim Eintreten
 function random(n){return(n*1664525+1013904223)>>>0;}
 function stage(t){return Math.min(9,Math.floor(Math.max(0,t)/90));}
 function zone(t){return [3,6,7,8,1,9,4,0,10,5][stage(t)];}

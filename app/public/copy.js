@@ -1409,3 +1409,8 @@ Object.assign(copy.ja,{"itemName3":"金貨","itemName6":"色とりどりの葉",
  "itemIntro":"{icon} {name}を集めよう – レベルの最後の山のお店でライフと交換できるよ。","shopTitle":"🛒 山のお店","shopText":"{n} {icon} 集めたよ。ライフと交換しよう – 残りは次のレベルに持っていけるよ。","shopNote":"5個 = ライフ1 · 10個 = ライフ2 · 最大ライフ5","shopFull":"ライフはもう5つ – これが最大だよ。","shopLeave":"走り続ける","shopPassBy":"🛒 山のお店：ライフ1つに5個必要 – 今は {n} {icon}。次まで持っていこう。"});
 Object.assign(copy.zh,{"itemName3":"金币","itemName6":"彩色树叶","itemName7":"鱼","itemName8":"松果","itemName1":"高山花朵","itemName9":"彩色湖石","itemName4":"野生浆果","itemName0":"冰晶","itemName10":"水晶","itemName5":"金色山顶之星",
  "itemIntro":"{icon} 收集{name} – 在关卡结束时的山地商店里换取生命。","shopTitle":"🛒 山地商店","shopText":"你收集了 {n} {icon}。用它们换取生命 – 剩下的会带到下一关。","shopNote":"5 个 = 1 条命 · 10 个 = 2 条命 · 最多 5 条命","shopFull":"你已经有 5 条命了 – 这是上限。","shopLeave":"继续跑","shopPassBy":"🛒 山地商店：1 条命需要 5 个 – 你有 {n} {icon}。留着以后用。"});
+Object.assign(copy.de,{"shopNeed":"Für 1 Leben brauchst du noch {n} {icon} – sammle weiter, sie werden mitgenommen."});
+Object.assign(copy.en,{"shopNeed":"You need {n} more {icon} for 1 life – keep collecting, you keep them."});
+Object.assign(copy.fr,{"shopNeed":"Il te manque encore {n} {icon} pour 1 vie – continue à ramasser, tu les gardes."});
+Object.assign(copy.ja,{"shopNeed":"ライフ1つまであと {n} {icon} – 集め続けよう、持ち越せるよ。"});
+Object.assign(copy.zh,{"shopNeed":"再收集 {n} 个 {icon} 就能换 1 条命 – 继续收集，它们会被保留。"});
