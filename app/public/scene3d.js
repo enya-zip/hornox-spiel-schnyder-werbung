@@ -6,7 +6,7 @@ import {createEncounters} from './encounters.js?v=20';
 import {createSpecials} from './specials.js?v=17';
 import {introFrame} from './intro.js?v=17';
 import {createArchitecture} from './world3d.js?v=17';
-import {createRenderer} from './engine3d.js?v=21';
+import {createRenderer} from './engine3d.js?v=22';
 import {createActor} from './actor.js?v=23';
 import {createEffects} from './effects.js?v=17';
 import {createPath} from './route.js?v=21';
@@ -14,10 +14,11 @@ import {getZone,bridgeAt,fogAt,forestSection,meadowSection,lakeSection,stoneAt,s
 import {createBlackLake} from './blacklake.js?v=11';
 import {createMeadow} from './meadow.js?v=7';
 import {createForest} from './forest.js?v=5';
+import {createHornli} from './hornli.js?v=2';
 export {getZone};
 const PI=Math.PI,C={ice:[.74,.87,.9,10],grass:[.44,.58,.30,11],gravel:[.7,.63,.48,12],cobble:[.65,.66,.61,13],snow:[.86,.92,.94,2],rock:[.48,.52,.53,1],wood:[.32,.22,.15,4],gold:[1,.74,.24,9],dark:[.12,.2,.23],fir:[1,1,1,7],red:[.85,.16,.19],flower:[.97,.85,.40]};
 export function createScene(canvas){
- const r=createRenderer(canvas),a=r.add,push=r.push,pop=r.pop,fx=createEffects(r),arch=createArchitecture(r),special=createSpecials(r),encounters=createEncounters(r),alpine=createAlpine(r),powerups=createPowerups(r),summit=createSummit(r),lake=createLake(r),forest=createForest(r),meadow=createMeadow(r),blacklake=createBlackLake(r);let actor,showcase,npc={},path,key='',origin={x:0,z:0,h:0},lane=1,cam=0,jump=0,lastD=0,anim=0,visibleActor,instances=[],zone=3,trackD=0,grade=0,streetBuildings=[],cinematic=null,cinematicMetrics=null,rushFov=0,tossed=[],touristGroups=[],flamingoInstances=0;const placementCache=new Map(),clearCache=new Map();let visualSubtick=0,mtn=null,mtnFade=0;
+ const r=createRenderer(canvas),a=r.add,push=r.push,pop=r.pop,fx=createEffects(r),arch=createArchitecture(r),special=createSpecials(r),encounters=createEncounters(r),alpine=createAlpine(r),powerups=createPowerups(r),summit=createSummit(r),lake=createLake(r),forest=createForest(r),meadow=createMeadow(r),blacklake=createBlackLake(r),hornli=createHornli(r);let actor,showcase,npc={},path,key='',origin={x:0,z:0,h:0},lane=1,cam=0,jump=0,lastD=0,anim=0,visibleActor,instances=[],zone=3,trackD=0,grade=0,streetBuildings=[],cinematic=null,cinematicMetrics=null,rushFov=0,tossed=[],touristGroups=[],flamingoInstances=0;const placementCache=new Map(),clearCache=new Map();let visualSubtick=0,mtn=null,mtnFade=0;
  const ready=Promise.all([r.ready,createActor(r.gl,'assets/hornox-run.glb','assets/hornox-jump.glb',{brand:true}),createActor(r.gl,'assets/hornox-showcase.glb',null,{brand:true}),...['sheep','marmot','hiker','bike'].map((name,i)=>createActor(r.gl,'assets/'+(name==='hiker'?'hiker-standing':name)+'.glb',null,{height:[1.5,.85,2.35,2.4][i],walk:name==='hiker'}))]).then(([,run,still,...models])=>{actor=run;showcase=still;['sheep','marmot','hiker','bike'].forEach((n,i)=>npc[n]=models[i]);visibleActor=still;r.setExtra((pass,ctx)=>{for(const ins of instances){ins.actor.update(ins.pose);ins.actor.draw(pass,ctx);}visibleActor.draw(pass,ctx);});});
  // Level 10: pyramidenförmiger Gipfel (wie das Matterhorn). Der Zickzack-Weg verläuft nur in zwei
  // Richtungen auf den Gipfel zu, daher steigt er mit der L1-Distanz gleichmässig bis zur Spitze an.
@@ -56,7 +57,7 @@ export function createScene(canvas){
   for(let k=0;k<12;k++){const ang=k*PI/6+.13,rad=2100+(k%3)*150;a('mountain',Math.sin(ang)*rad-shiftX,-55,Math.cos(ang)*rad-shiftZ,950+(k%3)*110,480+(k%4)*65,950,[1,1,1,29],0,ang*.3);}
   a('matterhorn',-220-shiftX,-45,-3200-shiftZ,510,850,580,[1,1,1,29],0,.18);
   // Schwarzsee: das Matterhorn steht immer gut sichtbar im Hintergrund, egal wohin der Weg abbiegt.
-  if(zone===9)a('matterhorn',Math.sin(cam)*2700+Math.cos(cam)*380,-45,-Math.cos(cam)*2700+Math.sin(cam)*380,560,980,620,[1,1,1,29],0,.18-cam);
+  if(zone===9||zone===4)a('matterhorn',Math.sin(cam)*2700+Math.cos(cam)*380,-45,-Math.cos(cam)*2700+Math.sin(cam)*380,560,980,620,[1,1,1,29],0,.18-cam);
   // Opaque ground meets the mountain feet; there is no horizon alpha mask.
 
  }
@@ -139,6 +140,22 @@ export function createScene(canvas){
  // Level 6: Schwarzsee – die ganze Welt liegt auf dem Wasser. Die Strecke besteht aus Flössen, Baumstamm-Bündeln,
  // Plattformen und (im Steinpfad) Trittsteinen; rundherum nur Wasser, Seerosen, Schilfinseln, Fliegen und Frösche,
  // in der Ferne eine Kapelleninsel, das Matterhorn und die Berge von Zermatt.
+ // Level 7 «Hörnliweg» (2583–3260 m): links Felswände aus Gneis, rechts die Abbruchkante; Geröll und
+ // Felsplatten auf dem Weg, spärliches Gras, Holzgeländer (Abschnitt 2), Metalltreppen und -brücke
+ // (Abschnitt 3), Altschnee (Abschnitt 4), am Schluss die Hörnlihütte. Das Matterhorn steht immer vorne.
+ function hornliScenery(d,elapsed,speed){
+  for(let w=Math.floor((d-24)/8)*8;w<d+360;w+=8){const t=Math.max(0,elapsed+(w-d)/speed);if(getZone(t)!==4)continue;const k=Math.round(w/8),sec=Math.min(5,1+Math.floor((t-540)/18)),bridge=t>=581&&t<586||t>=589&&t<592;
+   if(w<d+160&&!(sec===3&&bridge)){at(w,0);hornli.pebbles(k);pop();}
+   // Felswand links (höher, je weiter oben), Abbruchkante rechts
+   if(w<d+340){const cp=point(w,-(7.4+(k%3)*.8));if(clear(cp.x,cp.z,2,w)){at(w,-(7.4+(k%3)*.8));hornli.cliff(k,7+sec*1.4+(k%4));pop();}}
+   if(w<d+300){at(w,7);hornli.edge(k);pop();}
+   if(w<d+200&&k%3===0){at(w+3,-(5.3));hornli.tuft(k);pop();}if(w<d+200&&k%4===1){at(w+5,5.4);hornli.tuft(k+3);pop();}
+   if(sec===2&&w<d+220)for(const side of[-1,1]){at(w,side*4.6);push(0,0,0,0,0);hornli.sideRail();pop();pop();}
+   if(sec===3&&w<d+200){if(bridge){for(const l of[-1,1]){at(w,l*2.5);hornli.abyss(k);pop();at(w,l*5.6);hornli.abyss(k);pop();}for(let j=0;j<8;j+=2.5){at(w+j,0);hornli.bridgeDeck();pop();}}else if(t%9<5){for(let j=0;j<8;j+=1.6){at(w+j,0,(j/8)*.25);hornli.stairStep(k+j|0);pop();}}}
+   if(sec>=4&&w<d+260){if(k%2===0){at(w+2,-(5+(k%3)));hornli.snowRest(k);pop();}if(k%3===1){at(w+4,5.6);hornli.snowRest(k+1);pop();}}
+   if(sec===5&&k%40===7){const hp=point(w,26);if(clear(hp.x,hp.z,14,w)){at(w,26);push(0,0,0,0,-PI/2,0,.9);hornli.hut();pop();pop();}}
+  }
+ }
  function lakeScenery9(d,elapsed,speed){
   // Level 6 «Schwarzsee» – Sumpfgebiet: Wasser mit Holzbalken und versunkenen Steinen (alle 5 s Wechsel),
   // alle 15 s eine Schlammebene. Ufer mit goldenem Schilf, Berge und Kapelle im Hintergrund.
@@ -169,7 +186,7 @@ export function createScene(canvas){
   }
  }
 
- function environment(d,elapsed,speed){zone=getZone(elapsed);landscape(d,elapsed);road(d,elapsed,speed);street(d,elapsed,speed);lakeside(d,elapsed,speed);bridge(d,elapsed,speed);forestScenery(d,elapsed,speed);meadowScenery(d,elapsed,speed);lakeScenery9(d,elapsed,speed);
+ function environment(d,elapsed,speed){zone=getZone(elapsed);landscape(d,elapsed);road(d,elapsed,speed);street(d,elapsed,speed);lakeside(d,elapsed,speed);bridge(d,elapsed,speed);forestScenery(d,elapsed,speed);meadowScenery(d,elapsed,speed);lakeScenery9(d,elapsed,speed);hornliScenery(d,elapsed,speed);
   const start=Math.floor((d-22)/14)*14;
   for(let w=start;w<d+430;w+=14){const z=getZone(Math.max(0,elapsed+(w-d)/speed)),index=Math.floor(w/14),side=index%2?1:-1,off=side*(7.7+(Math.abs(index)%3)*1.4),p=point(w,off);
    if([1,2,3,8,9].includes(z)||z===7&&side<0||!clear(p.x,p.z,1.8,w))continue;
@@ -255,6 +272,9 @@ export function createScene(canvas){
     push(tp.x,tp.y,tp.z,0,-tp.h);a('ring',0,.62,0,1.15,1.15,.1,hot?[1,.15+.25*(1-pulse),.15,49]:[1,.85,.25,49],PI/2);a('ring',0,.64,0,.75,.75,.06,hot?[1,.4,.35,49]:[1,.95,.6,49],PI/2,0,time*3);pop();
     if(gapT>.05||l!==far){push(tp.x+Math.sin(time*7+o.id+l)*.45,tp.y+1.3+Math.sin(time*9+l)*.3,tp.z+Math.cos(time*6+l)*.35,0,time*4,0,3.2);blacklake.fly(time,o.id+l);pop();}}
    return;}
+  if(['scree','rockBig','woodPiece','woodBarrier','woodRail','metalBarrier','rockFace','ledge','signpost','metalStrut','beamLow','overhang','snowPatch'].includes(o.kind)){
+   // Level 7 Hörnliweg: Hindernisse am Bergweg.
+   at(od,o.lane<0?0:(o.lane-1)*2.5,rise);if(toss)push(0,0,0,0,toss.spin,toss.lean);if(o.kind==='ledge')hornli.ledge(o.id,o.lane===0?-1:1);else hornli[o.kind](o.id);if(toss)pop();pop();return;}
   if(o.kind==='honey'){const side=o.lane===0?-1:1;at(od,side*5.8);push(0,0,0,0,side>0?PI:0,0,1.15);meadow.nestTree(time,o.id);pop();pop();if(!o.resolved){at(od,(o.lane-1)*2.5);meadow.honeyPot(time,o.id);pop();}return;}
   if(o.kind==='fenceLow'||o.kind==='fenceTall'){at(od,(o.lane-1)*2.5,rise);if(toss)push(0,0,0,0,toss.spin,toss.lean);meadow[o.kind](o.id);if(toss)pop();pop();return;}
   if(['fence','gate','haystack','trough','ditch','woodstack','hayBale'].includes(o.kind)){

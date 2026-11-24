@@ -145,7 +145,7 @@ export function createRenderer(canvas){
  for(const[name,data]of Object.entries(geometry(software))){
   const vao=gl.createVertexArray();gl.bindVertexArray(vao);const vertices=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vertices);gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);
   for(let i=0;i<3;i++){gl.enableVertexAttribArray(i);gl.vertexAttribPointer(i,3,gl.FLOAT,false,36,i*12);}
-  const capacity=name==="box"?24576:["sphere","cylinder","billboard","blossom","roundedBox"].includes(name)?4096:256;const instances=gl.createBuffer(),array=new Float32Array(capacity*20);gl.bindBuffer(gl.ARRAY_BUFFER,instances);gl.bufferData(gl.ARRAY_BUFFER,array.byteLength,gl.DYNAMIC_DRAW);
+  const capacity=name==="box"?24576:["sphere","cylinder","billboard","blossom","roundedBox","rock","cone","ring"].includes(name)?4096:256;const instances=gl.createBuffer(),array=new Float32Array(capacity*20);gl.bindBuffer(gl.ARRAY_BUFFER,instances);gl.bufferData(gl.ARRAY_BUFFER,array.byteLength,gl.DYNAMIC_DRAW);
   for(let i=0;i<5;i++){gl.enableVertexAttribArray(3+i);gl.vertexAttribPointer(3+i,4,gl.FLOAT,false,80,i*16);gl.vertexAttribDivisor(3+i,1);}
   meshes[name]={vao,buffer:vertices,instances,array,capacity,count:0,vertices:data.length/9};
  }
