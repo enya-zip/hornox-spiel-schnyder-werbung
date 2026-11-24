@@ -1,9 +1,9 @@
 // Globale Rangliste (Supabase). Alle Zugriffe laufen über Datenbank-Funktionen (supabase/leaderboard.sql):
-//  save_run         Name + E-Mail + Punkte + Level speichern, liefert den neuen Platz
-//  leaderboard_top  Rangliste lesen (Platz, Name, Punkte, Level) – sortiert nach Punkten
-//  player_standing  eigener Platz
+//  hornox_save_run         Name + E-Mail + Punkte + Level speichern, liefert den neuen Platz
+//  hornox_leaderboard_top  Rangliste lesen (Platz, Name, Punkte, Level) – sortiert nach Punkten
+//  hornox_player_standing  eigener Platz
 // E-Mail-Adressen können damit nicht gelesen werden; das geht nur für eingeloggte Admins.
-import {LEADERBOARD} from "./leaderboard-config.js?v=3";
+import {LEADERBOARD} from "./leaderboard-config.js?v=4";
 export function createLeaderboard(config=LEADERBOARD){
  const url=(config.url||"").replace(/\/$/,""),key=config.anonKey||"",configured=!!(url&&key);
  async function rpc(fn,body={},token){
@@ -22,13 +22,13 @@ export function createLeaderboard(config=LEADERBOARD){
  return{
   configured,
   // Lauf speichern. runId verhindert doppelte Einträge, falls der Knopf mehrfach gedrückt wird.
-  async saveRun({id,runId,name,email,score,level,coins}){return one(await rpc("save_run",{p_id:id,p_run:runId,p_name:name,p_email:email,p_score:Math.floor(score),p_level:level,p_coins:coins||0}));},
-  async top(limit=50,offset=0,me=null){return(await rpc("leaderboard_top",{p_limit:limit,p_offset:offset,p_me:me}))||[];},
-  async standing(id){return one(await rpc("player_standing",{p_id:id}));},
-  async rename(id,name){await rpc("rename_player",{p_id:id,p_name:name});},
-  // Admin: Zugang nur mit dem Admin-Passwort; geprüft wird es in der Datenbank (admin_check).
-  async adminCheck(password){const r=await rpc("admin_check",{p_password:password});return r===true||(Array.isArray(r)&&r[0]?.admin_check===true);},
-  async adminEntries(password){return(await rpc("admin_entries",{p_password:password}))||[];},
-  async adminRuns(password){return(await rpc("admin_runs",{p_password:password}))||[];}
+  async saveRun({id,runId,name,email,score,level,coins}){return one(await rpc("hornox_save_run",{p_id:id,p_run:runId,p_name:name,p_email:email,p_score:Math.floor(score),p_level:level,p_coins:coins||0}));},
+  async top(limit=50,offset=0,me=null){return(await rpc("hornox_leaderboard_top",{p_limit:limit,p_offset:offset,p_me:me}))||[];},
+  async standing(id){return one(await rpc("hornox_player_standing",{p_id:id}));},
+  async rename(id,name){await rpc("hornox_rename_player",{p_id:id,p_name:name});},
+  // Admin: Zugang nur mit dem Admin-Passwort; geprüft wird es in der Datenbank (hornox_admin_check).
+  async adminCheck(password){const r=await rpc("hornox_admin_check",{p_password:password});return r===true||(Array.isArray(r)&&r[0]?.hornox_admin_check===true);},
+  async adminEntries(password){return(await rpc("hornox_admin_entries",{p_password:password}))||[];},
+  async adminRuns(password){return(await rpc("hornox_admin_runs",{p_password:password}))||[];}
  };
 }

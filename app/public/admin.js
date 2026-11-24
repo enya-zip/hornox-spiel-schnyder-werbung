@@ -1,7 +1,7 @@
 // Admin-Seite des Gewinnspiels: Login über Supabase Auth, danach Teilnehmerliste mit E-Mail-Adressen.
 // Die Daten kommen ausschliesslich aus der Datenbankfunktion admin_entries, die nur für Admins antwortet.
 // Zugang nur mit dem Admin-Passwort (geprüft in der Datenbank). Es wird nur im Speicher dieses Tabs gehalten.
-import {createLeaderboard} from "./leaderboard.js?v=7";
+import {createLeaderboard} from "./leaderboard.js?v=8";
 const $=id=>document.getElementById(id),board=createLeaderboard();
 let session=null,entries=[];
 
