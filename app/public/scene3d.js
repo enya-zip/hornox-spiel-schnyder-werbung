@@ -6,7 +6,7 @@ import {createEncounters} from './encounters.js?v=20';
 import {createSpecials} from './specials.js?v=17';
 import {introFrame} from './intro.js?v=17';
 import {createArchitecture} from './world3d.js?v=17';
-import {createRenderer} from './engine3d.js?v=22';
+import {createRenderer} from './engine3d.js?v=23';
 import {createActor} from './actor.js?v=23';
 import {createEffects} from './effects.js?v=17';
 import {createPath} from './route.js?v=21';
@@ -14,7 +14,7 @@ import {getZone,bridgeAt,fogAt,forestSection,meadowSection,lakeSection,stoneAt,s
 import {createBlackLake} from './blacklake.js?v=11';
 import {createMeadow} from './meadow.js?v=7';
 import {createForest} from './forest.js?v=5';
-import {createHornli} from './hornli.js?v=2';
+import {createHornli} from './hornli.js?v=6';
 export {getZone};
 const PI=Math.PI,C={ice:[.74,.87,.9,10],grass:[.44,.58,.30,11],gravel:[.7,.63,.48,12],cobble:[.65,.66,.61,13],snow:[.86,.92,.94,2],rock:[.48,.52,.53,1],wood:[.32,.22,.15,4],gold:[1,.74,.24,9],dark:[.12,.2,.23],fir:[1,1,1,7],red:[.85,.16,.19],flower:[.97,.85,.40]};
 export function createScene(canvas){
@@ -144,16 +144,52 @@ export function createScene(canvas){
  // Felsplatten auf dem Weg, spärliches Gras, Holzgeländer (Abschnitt 2), Metalltreppen und -brücke
  // (Abschnitt 3), Altschnee (Abschnitt 4), am Schluss die Hörnlihütte. Das Matterhorn steht immer vorne.
  function hornliScenery(d,elapsed,speed){
-  for(let w=Math.floor((d-24)/8)*8;w<d+360;w+=8){const t=Math.max(0,elapsed+(w-d)/speed);if(getZone(t)!==4)continue;const k=Math.round(w/8),sec=Math.min(5,1+Math.floor((t-540)/18)),bridge=t>=581&&t<586||t>=589&&t<592;
-   if(w<d+160&&!(sec===3&&bridge)){at(w,0);hornli.pebbles(k);pop();}
-   // Felswand links (höher, je weiter oben), Abbruchkante rechts
-   if(w<d+340){const cp=point(w,-(7.4+(k%3)*.8));if(clear(cp.x,cp.z,2,w)){at(w,-(7.4+(k%3)*.8));hornli.cliff(k,7+sec*1.4+(k%4));pop();}}
-   if(w<d+300){at(w,7);hornli.edge(k);pop();}
-   if(w<d+200&&k%3===0){at(w+3,-(5.3));hornli.tuft(k);pop();}if(w<d+200&&k%4===1){at(w+5,5.4);hornli.tuft(k+3);pop();}
-   if(sec===2&&w<d+220)for(const side of[-1,1]){at(w,side*4.6);push(0,0,0,0,0);hornli.sideRail();pop();pop();}
+  // Level 7 «Hörnliweg» – Landschafts-Highlight in fünf Abschnitten (zeitgleich mit den Spielabschnitten):
+  // 1 Alpenwiesen (Blumen, Bach, Tannen, Hütten), 2 Bergsee (türkis, gespiegelte Gipfel), 3 Felslandschaft
+  // (moosige Wände, Wasserfälle, Bach, Holzbrücke), 4 Alpenpanorama (offen, Wolkenmeer im Tal),
+  // 5 Hochgebirge (Felsen, Schnee, Gletscher, Hörnlihütte). Das Matterhorn steht immer vorne.
+  for(let w=Math.floor((d-24)/8)*8;w<d+380;w+=8){const t=Math.max(0,elapsed+(w-d)/speed);if(getZone(t)!==4)continue;const k=Math.round(w/8),sec=Math.min(5,1+Math.floor((t-540)/18)),bridge=t>=581&&t<586||t>=589&&t<592;
+   if(w<d+120&&!(sec===3&&bridge)&&sec>=3){at(w,0);hornli.pebbles(k);pop();}
+   // Spielelemente der Abschnitte (Geländer, Treppen, Brücke) bleiben
+   if(sec===2&&w<d+220&&k%2===0)for(const side of[-1,1]){at(w,side*4.6);hornli.sideRail();pop();}
    if(sec===3&&w<d+200){if(bridge){for(const l of[-1,1]){at(w,l*2.5);hornli.abyss(k);pop();at(w,l*5.6);hornli.abyss(k);pop();}for(let j=0;j<8;j+=2.5){at(w+j,0);hornli.bridgeDeck();pop();}}else if(t%9<5){for(let j=0;j<8;j+=1.6){at(w+j,0,(j/8)*.25);hornli.stairStep(k+j|0);pop();}}}
-   if(sec>=4&&w<d+260){if(k%2===0){at(w+2,-(5+(k%3)));hornli.snowRest(k);pop();}if(k%3===1){at(w+4,5.6);hornli.snowRest(k+1);pop();}}
-   if(sec===5&&k%40===7){const hp=point(w,26);if(clear(hp.x,hp.z,14,w)){at(w,26);push(0,0,0,0,-PI/2,0,.9);hornli.hut();pop();pop();}}
+   if(sec===1){
+    // Alpenwiesen: Wildblumen, Bach rechts mit Holzbrücke, Tannen, Hütten, moosige Felsen
+    for(const side of[-1,1]){if(w<d+220){for(const off of[5.6,10,16]){const f=point(w+(off%3),side*off);if(clear(f.x,f.z,1.2,w)){push(f.x,f.y,f.z);meadow.flowerPatch(anim,k*3+off|0,off<6?6:8);pop();}}}
+     if(k%3===(side>0?0:1)&&w<d+380){const tp=point(w,side*(13+(k%4)*3));if(clear(tp.x,tp.z,1.8,w))tree(tp.x,tp.z,.85+(k%3)*.2,tp.y);}
+     if(k%5===(side>0?2:4)&&w<d+300){at(w,side*(9+(k%3)*2));forest.mossRock(.7+(k%3)*.25,k);pop();}}
+    if(w<d+300){at(w,7.2);push(0,0,0,0,0,0,1);meadow.brook(anim);pop();pop();}
+    if(k%9===4&&w<d+300){at(w,-20);push(0,0,0,0,PI/2,0,.85);alpine.chalet(k%3);pop();pop();}
+    if(k%13===6&&w<d+300){at(w,24);push(0,0,0,0,-PI/2);hornli.stoneHut(k);pop();pop();}
+   }else if(sec===2){
+    // Bergsee rechts: türkis, mit gespiegeltem Matterhorn und Bergen; links Blumenwiese und Tannen
+    for(let x=10;x<=70;x+=10){at(w,x);hornli.lake(anim,k+x,x===10);pop();}
+    if(w<d+260){at(w,8.6);for(let j=0;j<3;j++)a('rock',((j*7+k)%5)-2,.05,(j-1)*2.5,.5+(j%2)*.3,.25,.45,[.58,.6,.58],0,k+j);pop();}
+    if(k%6===3){at(w+4,40);hornli.reflection(26,24,true);pop();}if(k%10===7){at(w,56);hornli.reflection(16,20,false);pop();}
+    if(w<d+220){const f=point(w,-6);if(clear(f.x,f.z,1.2,w)){push(f.x,f.y,f.z);meadow.flowerPatch(anim,k,7);pop();}}
+    if(k%2===0&&w<d+360){const tp=point(w,-(12+(k%3)*4));if(clear(tp.x,tp.z,1.8,w))tree(tp.x,tp.z,.9+(k%2)*.2,tp.y);}
+    if(k%11===5&&w<d+340){at(w,-18);push(0,0,0,0,PI/2,0,.8);alpine.chalet(1);pop();pop();}
+   }else if(sec===3){
+    // Felslandschaft: moosige Felswände mit Wasserfällen, Bach mit Steinen, vereinzelte Tannen
+    if(w<d+340){const cp=point(w,-(8.5+(k%3)*.8));if(clear(cp.x,cp.z,2,w)){at(w,-(8.5+(k%3)*.8));push(0,0,0,0,PI/2);if(k%4===1)hornli.fallWall(anim,k);else hornli.cliff(k,8+(k%4));pop();pop();}}
+    if(w<d+300){at(w,7.4);meadow.brook(anim);pop();}
+    if(k%3===2&&w<d+300){at(w,11+(k%2)*3);forest.mossRock(.9+(k%3)*.2,k);pop();}
+    if(k%4===0&&w<d+360){const tp=point(w,16+(k%3)*3);if(clear(tp.x,tp.z,1.8,w))tree(tp.x,tp.z,.8,tp.y);}
+   }else if(sec===4){
+    // Alpenpanorama: offen, Felskante rechts, Wolkenmeer im Tal, Grasbüschel und Altschnee
+    if(w<d+240){const f=point(w,(k%2?1:-1)*(6+(k%3)*3));if(clear(f.x,f.z,1.2,w)){push(f.x,f.y,f.z);meadow.flowerPatch(anim,k,6);pop();}}
+    if(k%2===0&&w<d+380){at(w,(k%4?1:-1)*(70+(k%5)*14));push(0,4+(k%3)*3,0);hornli.cloud(26,k);pop();pop();}
+    if(w<d+200&&k%2===0){at(w+3,-5.4);hornli.tuft(k);pop();}if(w<d+260&&k%3===1){at(w+2,-(6+(k%3)));hornli.snowRest(k);pop();}
+    if(k%5===2&&w<d+300){at(w,-(9+(k%3)*2));forest.mossRock(.8,k);pop();}
+   }else{
+    // Hochgebirge: grosse Felsen, Schnee, Gletscher am Hang, Hörnlihütte
+    if(w<d+340){const cp=point(w,-(8+(k%3)*.8));if(clear(cp.x,cp.z,2,w)){at(w,-(8+(k%3)*.8));hornli.cliff(k,10+(k%4));pop();}}
+    if(w<d+260){at(w,7.5);hornli.scree(k);pop();if(k%2===0){at(w+2,-(5+(k%3)));hornli.snowRest(k);pop();}if(k%3===1){at(w+4,6);hornli.snowRest(k+1);pop();}}
+    if(k%12===3){at(w,-40);push(0,0,0,0,.4,0,2.2);hornli.glacier(k);pop();pop();}
+    if(k%40===7){const hp=point(w,26);if(clear(hp.x,hp.z,14,w)){at(w,26);push(0,0,0,0,-PI/2,0,.9);hornli.hut();pop();pop();}}
+   }
+   // Wolken hoch über den Gipfeln (alle Abschnitte)
+   if(k%9===4&&w<d+380){at(w,(k%2?1:-1)*(80+(k%3)*30));push(0,40+(k%4)*8,0);hornli.cloud(30,k);pop();pop();}
   }
  }
  function lakeScenery9(d,elapsed,speed){
@@ -192,7 +228,7 @@ export function createScene(canvas){
    if([1,2,3,8,9].includes(z)||z===7&&side<0||!clear(p.x,p.z,1.8,w))continue;
    if(z===0||z===5){at(w,off);a('rock',0,-.16,0,2.2,.45,3.5,C.snow,0,w*.2);if(index%3===0){a('box',0,1,0,.06,2,.06,C.wood);a('box',0,1.8,0,.09,.22,.09,C.red);}pop();}
    else if([1,6,7,8].includes(z)){if(index%3===0||z===8)tree(p.x,p.z,.65+(Math.abs(index)%4)*.12,p.y);if([6,7].includes(z)&&index%3===0){at(w,side*(z===6?10:13));push(0,0,0,0,side<0?PI/2:-PI/2,0,z===7?.83:1);alpine.chalet(Math.abs(index)%3);pop();pop();}if(z===6&&index%23===0){at(w,side*19);alpine.chapel();pop();}if(z===8&&index%29===0){at(w,side*14);alpine.bridge();pop();}if(w<d+150){flowers(p.x,p.z,w,p.y);const f=point(w,side*4.65);flowers(f.x,f.z,w+2,f.y);}at(w,side*4.9);a('box',0,.65,0,.1,1.3,.1,C.wood);a('box',0,1.03,0,.07,.07,5,C.wood);a('box',0,.60,0,.07,.07,5,C.wood);pop();if(index%7===0&&w<d+150){const q=point(w,side*7);instances.push({actor:npc.sheep,pose:{x:q.x,y:q.y,z:q.z,heading:side*PI/2,home:true}});}}
-   else if([4,9,10].includes(z)){at(w,off);a('rock',0,-.25,0,1.8,.8,2.5,C.rock,0,w*.3);if(index%3===0){a('box',0,.65,0,.10,1.6,.1,C.wood);a('box',0,1.35,0,.16,.23,.16,C.red);}pop();if(z!==10&&index%5===0)tree(p.x,p.z,.38,p.y);if(z===9&&index%31===0){const lp=point(w,side*42);if(clear(lp.x,lp.z,23,w)){at(w,side*42);const h=path.frame(w).h,sx=grade*(.55*Math.cos(h)-.83*Math.sin(h)),sz=grade*(-.55*Math.sin(h)-.83*Math.cos(h));push(0,0,0,Math.atan(-sz),0,Math.atan(sx));alpine.lake(anim);pop();pop();}}if(z===10&&index%3===0){at(w,off);a('rock',0,.24,0,1.9,.33,2.6,C.snow);pop();}}
+   else if([9,10].includes(z)){at(w,off);a('rock',0,-.25,0,1.8,.8,2.5,C.rock,0,w*.3);if(index%3===0){a('box',0,.65,0,.10,1.6,.1,C.wood);a('box',0,1.35,0,.16,.23,.16,C.red);}pop();if(z!==10&&index%5===0)tree(p.x,p.z,.38,p.y);if(z===9&&index%31===0){const lp=point(w,side*42);if(clear(lp.x,lp.z,23,w)){at(w,side*42);const h=path.frame(w).h,sx=grade*(.55*Math.cos(h)-.83*Math.sin(h)),sz=grade*(-.55*Math.sin(h)-.83*Math.cos(h));push(0,0,0,Math.atan(-sz),0,Math.atan(sx));alpine.lake(anim);pop();pop();}}if(z===10&&index%3===0){at(w,off);a('rock',0,.24,0,1.9,.33,2.6,C.snow);pop();}}
   }
   if(elapsed>=720){for(let w=Math.floor((d-10)/12)*12;w<d+390;w+=12){for(const side of[-1,1]){at(w,side*4.8);a('cylinder',0,.62,0,.035,1.25,.035,C.dark);a('cylinder',0,1.1,0,.018,6,.018,[.69,.46,.24],PI/2);pop();}}
    if(elapsed>880){const finish=d+Math.max(0,900-elapsed)*speed;at(finish);a('rock',0,-.3,-3,4.5,.7,3.5,C.snow);a('box',-3,2,-3,.24,4,.24,C.wood);a('box',-3,2.9,-3,2,.22,.22,C.wood);push(3,0,-3);arch.flag(anim);pop();pop();}

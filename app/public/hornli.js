@@ -58,5 +58,22 @@ export function createHornli(r){
   for(let fl=0;fl<2;fl++)for(let j=-3;j<=3;j++)a('box',j*2,1.8+fl*2.6,4.55,.8,1,.05,[.25,.3,.35]);for(let j=-3;j<=3;j++)a('box',j*2,1.8,4.58,.95,.12,.02,[.75,.2,.15]);
   a('cylinder',6.5,8,2,.06,3.4,.06,[.85,.85,.85]);a('box',7.1,9.2,2,1.2,.8,.03,[.85,.1,.1]);a('box',7.1,9.2,2.02,.6,.18,.01,[1,1,1]);a('box',7.1,9.2,2.02,.18,.6,.01,[1,1,1]);
   a('rock',0,-.6,0,20,1.6,12,rock,0,1);}
- return{abyss,scree,rockBig,woodPiece,woodBarrier,woodRail,metalBarrier,rockFace,ledge,signpost,metalStrut,beamLow,overhang,snowPatch,cliff,edge,tuft,pebbles,snowRest,stairStep,bridgeDeck,sideRail,hut};
+ // ---------- Schöne Alpenwelt (Landschafts-Highlight) ----------
+ // Türkisfarbener Bergsee (Abschnitt 2): Wasser, helle Uferzone, Lichtreflexe und gespiegelte Gipfel.
+ function lake(time,k,shore=false){a('box',0,.06,0,11.2,.06,8.1,shore?[.36,.7,.68,26]:[.14,.56,.62,26]);
+  const ph=(time*.15+k*.07)%1;a('box',-3+ph*6,.1,((k%3)-1)*2.4,3,.01,.06,[.85,.97,1,49]);}
+ // Spiegelbild eines Bergs im See: dunkleres, umgedrehtes Dreieck aus flachen Quadern.
+ function reflection(h=18,w=16,snowy=true){for(let j=0;j<6;j++){const f=j/6,ww=w*(1-f);a('box',0,.095,f*h*.55,ww,.005,h*.55/6+.02,j<2&&snowy?[.62,.8,.84,26]:[.1,.36,.4,26]);}}
+ // Gletscherzunge am Berghang (Abschnitt 5).
+ function glacier(k=0){for(let j=0;j<5;j++){a('rock',j*1.2-2.4,2+j*1.6,-j*3,7-j*.8,2.2,6,j%2?[.86,.92,.96]:[.78,.88,.94],0,k+j);}for(let j=0;j<4;j++)a('box',j*1.5-2.2,3.2+j*1.6,-j*3+1.5,.08,.1,3.5,[.45,.62,.72],0,.3);}
+ // Wolkenbank / Bergnebel (weiche Billboards).
+ function cloud(size=12,k=0){for(let j=0;j<6;j++)a('sphere',((j*37+k)%9-4)*size*.16,((j*13+k)%5)*size*.035,((j*7+k)%5-2)*size*.1,size*(.35+(j%3)*.1),size*(.16+(j%2)*.06),size*(.3+(j%2)*.1),[.97,.98,1,49]);}
+ // Moosige Felswand mit Wasserfall und Becken (Abschnitt 3).
+ function fallWall(time,k){a('rock',0,4.5,0,6,9,3.4,[.46,.48,.44],0,k);a('rock',-2.6,2.5,.8,2.6,5,2.4,[.4,.44,.38],0,k+1);a('sphere',-1,6.8,1.5,1.8,.3,1,[.34,.5,.26]);a('sphere',2,3.2,1.6,1.5,.25,.9,[.38,.54,.28]);
+  a('box',.6,4.5,1.75,1.4,9,.2,[.78,.93,1,49]);for(let j=0;j<5;j++){const ph=(time*1.9+j*.2)%1;a('box',.6+((j%3)-1)*.35,9-ph*9,1.9,.25,.7,.04,[.96,.99,1,49]);}
+  a('cylinder',.6,.03,3.3,2.6,.08,1.8,[.2,.6,.64,26]);for(let j=0;j<4;j++){const ph=(time*2+j*.3)%1;a('sphere',.6+Math.cos(j*1.7)*1.1*ph,.25+ph*.6,2.3+Math.sin(j)*.5,.25+ph*.3,.18,.25+ph*.3,[.96,.99,1,49]);}}
+ // Kleine Berghütte aus Holz und Stein.
+ function stoneHut(k=0){a('box',0,1,0,4.2,2,3.4,[.62,.6,.56]);a('box',0,2.6,0,4.2,1.2,3.4,[.5,.34,.2]);a('box',0,3.4,-.9,4.8,.18,2.3,[.35,.32,.3],.62);a('box',0,3.4,.9,4.8,.18,2.3,[.35,.32,.3],-.62);
+  a('box',-.9,1.1,1.72,.7,.8,.04,[.25,.3,.35]);a('box',.9,1.1,1.72,.7,.8,.04,[.25,.3,.35]);a('box',0,2.6,1.72,.8,.6,.04,[.25,.3,.35]);for(const x of[-.9,.9])a('box',x,.65,1.75,.8,.14,.04,[.8,.25,.2]);a('box',1.4,3.9,0,.4,.9,.4,[.55,.53,.5]);}
+ return{lake,reflection,glacier,cloud,fallWall,stoneHut,abyss,scree,rockBig,woodPiece,woodBarrier,woodRail,metalBarrier,rockFace,ledge,signpost,metalStrut,beamLow,overhang,snowPatch,cliff,edge,tuft,pebbles,snowRest,stairStep,bridgeDeck,sideRail,hut};
 }
