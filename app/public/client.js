@@ -1,10 +1,10 @@
 import {INTRO_DURATION,COUNTDOWN_DURATION} from './intro.js?v=17';
 import {stages,getStage,DURATION,fogAt,bridgeAt,forestSection,meadowSection,meadowWindows,lakeSection,stoneAt,swampMud} from "./journey.js?v=26";
-import {createScene} from "./scene3d.js?v=81";
+import {createScene} from "./scene3d.js?v=82";
 import {setup,validateAction,applyAction} from "./rules.js?v=45";
 import {installControls} from "./controls.js?v=17";
 import {createAudio} from "./audio.js?v=23";
-import {getZone} from "./scene3d.js?v=81";
+import {getZone} from "./scene3d.js?v=82";
 import {copy} from "./copy.js?v=54";
 import {turnDirection} from "./route.js?v=21";
 import {createLeaderboard} from "./leaderboard.js?v=8";
@@ -289,7 +289,7 @@ function hud(){if(screen==="play"&&state.phase==="playing")crowWarnings();fisher
  const lifeKey=lang+':'+state.lives+':'+state.maxLives;if($('lives').dataset.value!==lifeKey){$('lives').dataset.value=lifeKey;$('lives-label').textContent=t('heart');document.querySelectorAll('#life-hearts svg').forEach((heart,i)=>heart.classList.toggle('empty',i>=state.lives));$('lives').setAttribute('aria-label',t('heart')+': '+state.lives+' / 3');}
 
  const active=screen==="play",intro=introElapsed>=0;app.classList.toggle("intro-active",intro);$("intro-caption").hidden=!intro;$("intro-caption").querySelector("span").textContent=t("introCaption");$("tutorial").hidden=!active||intro||state.distance>70||countdown>0;
- const rem=state.nextTurn-state.distance,show=active&&state.nextTurn>0&&rem<state.speed*2.8&&state.elapsed<892;
+ const rem=state.nextTurn-state.distance,show=active&&state.nextTurn>0&&rem<state.speed*2.8&&state.elapsed<892&&!(state.elapsed>=578&&state.elapsed<592.5);
  $("turn-cue").hidden=!show;
  if(show){const direction=turnDirection(state.seed,state.summitTurn,state.turnIndex),ready=state.turnChoice===direction;$("turn-arrow").textContent=direction<0?"↰":"↱";$("turn-label").textContent=t(direction<0?"turnLeft":"turnRight");$("turn-distance").textContent=ready?t("turnReady"):inTurn()?t("turnNow"):Math.ceil(rem)+" m";$("turn-cue").classList.toggle("now",inTurn()&&!ready);$("turn-cue").classList.toggle("accepted",ready);}
  const power=[state.magnet>0?t("magnetShort",{n:Math.ceil(state.magnet/20)}):"",state.shield?t("shieldShort"):"",state.coinBoost>0?t("boostShort",{n:Math.ceil(state.coinBoost/20)}):"",state.shoes>0?t("shoesShort",{n:Math.ceil(state.shoes/20)}):"",!state.angry&&(state.fish>0||getStage(state.elapsed)===2)?t("fishShort",{n:state.fish||0}):"",getStage(state.elapsed)===3?t("forestShort",{c:state.coins||0}):"",getStage(state.elapsed)===4?t("meadowShort",{h:"0"+Math.floor(state.elapsed/60),m:String(Math.floor(state.elapsed%60)).padStart(2,"0")}):""].filter(Boolean).join(" · ");

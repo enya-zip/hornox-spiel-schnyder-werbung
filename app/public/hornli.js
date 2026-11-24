@@ -25,7 +25,7 @@ export function createHornli(r){
  // Quer verlaufender Holzbalken (ducken).
  function beamLow(){for(const x of[-4,4])a('cylinder',x,.95,0,.13,1.9,.13,woodOld);a('cylinder',0,1.48,0,.17,8.4,.17,wood,0,0,PI/2);}
  // Niedriger Felsüberhang (ducken): Felsdach über den Weg, auf einer Seite in der Wand verankert.
- function overhang(k=0){a('rock',-4.6,1.4,0,1.6,2.8,1.4,rockDark,0,k);a('rock',4.6,1.2,0,1.4,2.4,1.3,rock,0,k+1);a('rock',0,1.85,0,9,.6,1.4,rock,0,k*.3);a('rock',-1,1.62,.1,2.5,.35,1,rockDark,0,k);for(let j=0;j<4;j++)a('cone',-2.5+j*1.6,1.52,0,.08,.25,.08,rockDark,PI);}
+ function overhang(k=0){a('rock',-4.4,1.1,0,.9,2.2,.9,rockDark,0,k);a('rock',4.4,1,0,.8,2,.8,rock,0,k+1);a('rock',0,1.78,0,8.6,.3,.8,rock,0,k*.3);a('rock',-1,1.66,.05,1.6,.16,.6,rockDark,0,k);}
  // Kleines Schneefeld in einer Spur (rutschig).
  function snowPatch(k=0){a('cylinder',0,.04,0,1.2,.08,1.6,snow,0,k);a('cylinder',.3,.07,.2,.7,.06,.9,[.98,.99,1],0,k);a('sphere',-.5,.1,-.6,.3,.08,.25,[.85,.88,.92]);}
 

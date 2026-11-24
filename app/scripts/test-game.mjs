@@ -250,7 +250,7 @@ check('level 7 Hörnliweg: five sections, realistic jump/duck/lane obstacles, wo
  const steg=t=>action({...start(3),tick:t*20,elapsed:t,distance:14600,nextRow:14630,nextTurn:1e9,row:95},{type:'step'}).objects.filter(o=>o.biome===4&&o.kind==='ridgeGap');
  {const a=steg(582),b=steg(589.5);assert(a.length>=2&&a.every(o=>o.lane!==1));assert(b.length>=2&&b.every(o=>o.lane!==2));}
  // Felsiger Aufstieg: keine Metallteile mehr, dafür lose Steine und Holzgeländer in einer Spur
- const s3=kindsIn(577,580.5);for(const k of['metalStrut','metalBarrier'])assert(!s3.has(k),'Metall im Aufstieg: '+k);assert(s3.has('looseRocks')||s3.has('railLane')||s3.has('rockBig'));
+ const s3=kindsIn(574,580.5);for(const k of['metalStrut','metalBarrier'])assert(!s3.has(k),'Metall im Aufstieg: '+k);assert(s3.has('looseRocks')||s3.has('railLane')||s3.has('rockBig'));const pre=kindsIn(577,580.5);for(const k of['railLane','woodRail','woodBarrier'])assert(!pre.has(k),'Zaun vor dem Holzsteg: '+k);
  assert.equal(collision('looseRocks',{jump:10}).lives,2);assert.equal(collision('looseRocks',{lane:0}).lives,3);assert.equal(collision('railLane',{jump:10}).lives,2);assert.equal(collision('railLane',{lane:2}).lives,3);
  // Ausweichen: springen / ducken / Spur wechseln
  assert.equal(collision('rockBig',{jump:10}).lives,3);assert.equal(collision('woodRail',{lane:-1,jump:10}).lives,3);

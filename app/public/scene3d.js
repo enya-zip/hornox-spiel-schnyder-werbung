@@ -14,7 +14,7 @@ import {getZone,bridgeAt,fogAt,forestSection,meadowSection,lakeSection,stoneAt,s
 import {createBlackLake} from './blacklake.js?v=11';
 import {createMeadow} from './meadow.js?v=7';
 import {createForest} from './forest.js?v=5';
-import {createHornli} from './hornli.js?v=10';
+import {createHornli} from './hornli.js?v=11';
 export {getZone};
 const PI=Math.PI,C={ice:[.74,.87,.9,10],grass:[.44,.58,.30,11],gravel:[.7,.63,.48,12],cobble:[.65,.66,.61,13],snow:[.86,.92,.94,2],rock:[.48,.52,.53,1],wood:[.32,.22,.15,4],gold:[1,.74,.24,9],dark:[.12,.2,.23],fir:[1,1,1,7],red:[.85,.16,.19],flower:[.97,.85,.40]};
 export function createScene(canvas){
@@ -151,8 +151,8 @@ export function createScene(canvas){
   // 2 Hirli-Grat: Geröll, Felsplatten, Steinstufen, Felsrippe links, Holzgeländer zur Hangseite
   // 3 Der felsige Aufstieg: Schieferhänge, lose Platten, schmale Holzstege über Felsrinnen
   // 4 Ausgesetzter Wegabschnitt: massive Felswand links, Abbruch rechts, Geländer, Altschnee
-  // 5 Schlussaufstieg zur Hörnlihütte (3260 m): Fels, Schnee, Steinstufen, Gletscher, Hütte
-  for(let w=Math.floor((d-24)/8)*8;w<d+380;w+=8){const t=Math.max(0,elapsed+(w-d)/speed);if(getZone(t)!==4)continue;const k=Math.round(w/8),sec=Math.min(5,1+Math.floor((t-540)/18)),steg=t>=581&&t<586?1:t>=589&&t<592?2:-1,bridge=steg>=0;
+  // 5 Schlussaufstieg zur Hörnlihütte (3260 m): Fels, Schnee, Hütte
+  for(let w=Math.floor((d-24)/8)*8;w<d+380;w+=8){const t=Math.max(0,elapsed+(w-d)/speed);if(getZone(t)!==4)continue;const ok=(off,rad)=>{const q=point(w,off);return clear(q.x,q.z,rad,w);},k=Math.round(w/8),sec=Math.min(5,1+Math.floor((t-540)/18)),steg=t>=581&&t<586?1:t>=589&&t<592?2:-1,bridge=steg>=0;
    if(w<d+120&&!(sec===3&&bridge)){at(w,0);hornli.pebbles(k);pop();}
    if(sec===2&&w<d+220&&k%2===0){at(w,4.6);hornli.sideRail();pop();}
    if(sec===4&&w<d+220&&k%2===0){at(w,4.6);hornli.sideRail();pop();}
@@ -163,33 +163,30 @@ export function createScene(canvas){
     for(const side of[-1,1]){
      if(w<d+220&&k%2===(side>0?0:1)){at(w+2,side*(5.4+(k%3)*.7));hornli.tuft(k);pop();}
      if(w<d+340&&k%3===(side>0?0:1)){const mp=point(w,side*(8+(k%4)*3));if(clear(mp.x,mp.z,2,w)){at(w,side*(8+(k%4)*3));hornli.moraine(k);pop();}}
-     if(w<d+300&&k%4===(side>0?1:3)){at(w+4,side*(13+(k%3)*4));hornli.scree(k);pop();}}
-    if(w<d+340&&k%2===0){at(w,-(16+(k%3)*2));hornli.slateSlope(k,3+(k%3),-1);pop();}
+     if(w<d+300&&k%4===(side>0?1:3)&&ok(side*(13+(k%3)*4),1.5)){at(w+4,side*(13+(k%3)*4));hornli.scree(k);pop();}}
+    if(w<d+340&&k%2===0&&ok(-(16+(k%3)*2),3)){at(w,-(16+(k%3)*2));hornli.slateSlope(k,3+(k%3),-1);pop();}
    }else if(sec===2){
     // Hirli-Grat: Felsrippe links, Geröllhang rechts, Felsplatten
-    at(w,-(7.5+(k%3)*.6));hornli.cliff(k,5+(k%3)*1.5);pop();
-    if(w<d+300){at(w,7.5);hornli.scree(k);pop();}
-    if(w<d+260&&k%2===1){at(w+3,6);hornli.slateSlope(k+3,1.6,1);pop();}
+    if(ok(-(7.5+(k%3)*.6),2)){at(w,-(7.5+(k%3)*.6));hornli.cliff(k,5+(k%3)*1.5);pop();}
+    if(w<d+300&&ok(7.5,1.5)){at(w,7.5);hornli.scree(k);pop();}
+    if(w<d+260&&k%2===1&&ok(6,1)){at(w+3,6);hornli.slateSlope(k+3,1.6,1);pop();}
     if(w<d+200&&k%3===2){at(w+5,-5.4);hornli.tuft(k);pop();}
    }else if(sec===3){
     // Der felsige Aufstieg: braune Schieferhänge links (steigend) und rechts (fallend), lose Platten, wenig Gras
-    at(w,-(6.5+(k%3)*.6));hornli.slateSlope(k,5+(k%4),-1);pop();
-    if(w<d+300){at(w,7.2+(k%2)*.8);hornli.slateSlope(k+5,2.2,1);pop();}
-    if(w<d+240&&k%2===0){at(w+3,-(10+(k%3)*3));hornli.slateSlope(k+9,7,-1);pop();}
+    if(ok(-(6.5+(k%3)*.6),1.4)){at(w,-(6.5+(k%3)*.6));hornli.slateSlope(k,5+(k%4),-1);pop();}
+    if(w<d+300&&ok(7.6,1.5)){at(w,7.2+(k%2)*.8);hornli.slateSlope(k+5,2.2,1);pop();}
+    if(w<d+240&&k%2===0&&ok(-(10+(k%3)*3),3)){at(w+3,-(10+(k%3)*3));hornli.slateSlope(k+9,7,-1);pop();}
     if(w<d+200&&k%4===1){at(w+5,5.2);hornli.tuft(k);pop();}
-    if(k%10===4){at(w,-38);push(0,0,0,0,.3,0,2);hornli.glacier(k);pop();pop();}
    }else if(sec===4){
-    // Ausgesetzt: massive Felswand links, Abbruchkante rechts mit Tiefblick, Wolken im Tal, Altschnee
-    at(w,-(7.6+(k%3)*.5));hornli.cliff(k,12+(k%4)*2);pop();
-    if(w<d+300){at(w,6.2);hornli.edge(k);pop();}
-    if(k%2===0&&w<d+380){at(w,70+(k%5)*14);push(0,-14-(k%3)*4,0);hornli.cloud(28,k);pop();pop();}
+    // Ausgesetzt: massive Felswand links, Abbruchkante rechts mit Tiefblick, Altschnee
+    if(ok(-(7.6+(k%3)*.5),2)){at(w,-(7.6+(k%3)*.5));hornli.cliff(k,12+(k%4)*2);pop();}
+    if(w<d+300&&ok(11,5)){at(w,6.2);hornli.edge(k);pop();}
     if(w<d+260&&k%3===1){at(w+2,-(5.6+(k%2)*.5));hornli.snowRest(k);pop();}
     if(w<d+200&&k%4===2){at(w+5,-5.3);hornli.tuft(k);pop();}
    }else{
-    // Schlussaufstieg: grosse Felsen, Schnee, Gletscher am Hang, Hörnlihütte
-    at(w,-(8+(k%3)*.8));hornli.cliff(k,10+(k%4));pop();
-    if(w<d+260){at(w,7.5);hornli.scree(k);pop();if(k%2===0){at(w+2,-(5+(k%3)));hornli.snowRest(k);pop();}if(k%3===1){at(w+4,6);hornli.snowRest(k+1);pop();}}
-    if(k%12===3){at(w,-40);push(0,0,0,0,.4,0,2.2);hornli.glacier(k);pop();pop();}
+    // Schlussaufstieg: grosse Felsen, Schnee, Hörnlihütte
+    if(ok(-(8+(k%3)*.8),2)){at(w,-(8+(k%3)*.8));hornli.cliff(k,10+(k%4));pop();}
+    if(w<d+260&&ok(7.5,1.5)){at(w,7.5);hornli.scree(k);pop();}if(w<d+260){if(k%2===0){at(w+2,-(5+(k%3)));hornli.snowRest(k);pop();}if(k%3===1){at(w+4,6);hornli.snowRest(k+1);pop();}}
     if(k%40===7){const hp=point(w,26);if(clear(hp.x,hp.z,14,w)){at(w,26);push(0,0,0,0,-PI/2,0,.9);hornli.hut();pop();pop();}}
    }
    // Wenige, hohe Wolken (alle Abschnitte)
@@ -203,7 +200,7 @@ export function createScene(canvas){
   for(let w=Math.floor((d-30)/6)*6;w<d+430;w+=6){const t=Math.max(0,elapsed+(w-d)/speed);if(getZone(t)!==9)continue;const k=Math.round(w/6),mud=swampMud(t);
    const h=path.frame(w).h,sx=grade*(.55*Math.cos(h)-.83*Math.sin(h)),sz=grade*(-.55*Math.sin(h)-.83*Math.cos(h));
    // Wasserfläche quer über die ganze Breite (folgt der Geländeneigung)
-   at(w,0);push(0,0,0,Math.atan(-sz),0,Math.atan(sx));a('box',0,-.1,0,130,.12,6.02,[.38,.5,.26,26]);if(mud)a('box',0,.04,0,9.4,.2,6.02,[.36,.26,.15]);pop();pop();
+   const ext=side=>{let e=8;for(const c of[14,22,34,48,65]){const q=point(w,side*c);if(!clear(q.x,q.z,1,w))break;e=c;}return e;},eL=ext(-1),eR=ext(1);at(w,0);push(0,0,0,Math.atan(-sz),0,Math.atan(sx));a('box',(eR-eL)/2,-.1,0,eL+eR,.12,6.02,[.38,.5,.26,26]);if(mud)a('box',0,.04,0,9.4,.2,6.02,[.36,.26,.15]);pop();pop();
    if(mud){if(k%2===0)for(const x of[-3.4,3.4]){at(w+1.5,x);a('sphere',0,.12,0,.5,.06,.4,[.29,.2,.11]);pop();}}
    else{
     // Laufstrecke: je Spur ein Balken oder eine Steinplatte alle 2,4 m – Lücken nur bei echten Wasserlücken

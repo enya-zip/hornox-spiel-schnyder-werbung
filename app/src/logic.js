@@ -274,11 +274,12 @@ export function applyAction(s,p,a){
    // Level 7 «Hörnliweg»: realistische Hindernisse am Bergweg (springen, ducken, Spur wechseln).
    const sec=hornliSection(arrivalTime);
    if(pattern===8){}
+   else if(sec===3&&(arrivalTime>=576&&arrivalTime<581||arrivalTime>=586&&arrivalTime<589)){const k=pattern%3;if(k===0){add("rockBig",one);if(busy)add("looseRocks",two);}else if(k===1)add("looseRocks",one);}   // vor den Holzstegen: keine Geländer/Zäune, nur Felsen
    else if(sec===3&&hornliSteg(arrivalTime)>=0){const st=hornliSteg(arrivalTime);for(const l of[0,1,2])if(l!==st)add("ridgeGap",l);}   // schmaler Holzsteg: präzise Spurwahl
    else if(sec===1){const k=pattern%5;if(k===0){add("rockBig",one);if(busy)add("scree",two);}else if(k===1)add("scree",one);else if(k===2){add("woodPiece",-1);}else if(k===3){add("signpost",one);if(busy)add("rockBig",two);}else{add("boulder",one);if(busy)add("hiker",two);}}
    else if(sec===2){const k=pattern%5;if(k===0)add("woodRail",-1);else if(k===1)add("beamLow",-1);else if(k===2){add("ledge",one);if(busy)add("woodBarrier",two);}else if(k===3){add("woodBarrier",one);if(busy)add("rockFace",two);}else add("hiker",one);}
    else if(sec===3){const k=pattern%5;/* Der felsige Aufstieg: Felsbrocken springen, Überhänge ducken, lose Steine ausweichen, Holzgeländer Spur wechseln */if(k===0){add("rockBig",one);if(busy)add("looseRocks",two);}else if(k===1)add("overhang",-1);else if(k===2)add("looseRocks",one);else if(k===3){add("railLane",one);if(busy)add("rockBig",two);}else{add("looseRocks",one);if(busy)add("railLane",two);}}
-   else if(sec===4){const k=pattern%5;if(k===0||k===3){add("snowPatch",one);if(busy)add("snowPatch",two);}else if(k===1)add("overhang",-1);else if(k===2){add("rockBig",one);if(busy)add("scree",two);}else{add("ledge",one);add("snowPatch",two);}}
+   else if(sec===4){const k=pattern%5;if(k===0||k===3){add("snowPatch",one);if(busy)add("snowPatch",two);}else if(k===1){add("rockBig",one);if(busy)add("scree",two);}else if(k===2){add("rockBig",one);if(busy)add("scree",two);}else{add("ledge",one);add("snowPatch",two);}}
    else{const k=pattern%5;if(k===0){add("signpost",one);if(busy)add("scree",two);}else if(k===1)add("woodRail",-1);else if(k===2){add("rockBig",one);}else if(k===3)add("beamLow",-1);else{add("hiker",one);if(busy)add("woodBarrier",two);}}
   }else if(z===10){
    if(pattern===0){add("hiker",one);if(busy)add("lowRock",two);}
@@ -358,7 +359,7 @@ export function applyAction(s,p,a){
  if(!summitTurn&&elapsed>=785)summitTurn=Math.floor((distance+440)/680)+1;
  if(distance>=nextTurn&&elapsed<892){
   const direction=turnDir(s.seed,summitTurn,turnIndex);
-  if(turnChoice!==direction&&!powering){if(shield)shield=0;else lives--;slow=16;invulnerable=30;failReason="turn";events.push({kind:"missedTurn"});}
+  if(turnChoice!==direction&&!powering&&!(elapsed>=580&&elapsed<592.5)){/* schmale Holzstege: Hornox biegt automatisch ab */if(shield)shield=0;else lives--;slow=16;invulnerable=30;failReason="turn";events.push({kind:"missedTurn"});}
   else{score+=75;turns++;events.push({kind:"turn",direction});}
   heading+=direction*Math.PI/2;turnIndex++;nextTurn=260+turnIndex*680;turnChoice=0;
  }
