@@ -11,7 +11,7 @@ import {createActor} from './actor.js?v=23';
 import {createEffects} from './effects.js?v=17';
 import {createPath} from './route.js?v=21';
 import {getZone,bridgeAt,fogAt,forestSection,meadowSection,lakeSection,stoneAt,swampMud} from './journey.js?v=26';
-import {createBlackLake} from './blacklake.js?v=8';
+import {createBlackLake} from './blacklake.js?v=11';
 import {createMeadow} from './meadow.js?v=6';
 import {createForest} from './forest.js?v=5';
 export {getZone};
@@ -147,7 +147,7 @@ export function createScene(canvas){
   for(let w=Math.floor((d-30)/6)*6;w<d+430;w+=6){const t=Math.max(0,elapsed+(w-d)/speed);if(getZone(t)!==9)continue;const k=Math.round(w/6),mud=swampMud(t);
    const h=path.frame(w).h,sx=grade*(.55*Math.cos(h)-.83*Math.sin(h)),sz=grade*(-.55*Math.sin(h)-.83*Math.cos(h));
    // Wasserfläche quer über die ganze Breite (folgt der Geländeneigung)
-   at(w,0);push(0,0,0,Math.atan(-sz),0,Math.atan(sx));a('box',0,-.1,0,130,.12,6.02,[.16,.32,.36,26]);if(mud)a('box',0,.04,0,9.4,.2,6.02,[.36,.26,.15]);pop();pop();
+   at(w,0);push(0,0,0,Math.atan(-sz),0,Math.atan(sx));a('box',0,-.1,0,130,.12,6.02,[.38,.5,.26,26]);if(mud)a('box',0,.04,0,9.4,.2,6.02,[.36,.26,.15]);pop();pop();
    if(mud){if(k%2===0)for(const x of[-3.4,3.4]){at(w+1.5,x);a('sphere',0,.12,0,.5,.06,.4,[.29,.2,.11]);pop();}}
    else{
     // Laufstrecke: je Spur ein Balken oder eine Steinplatte alle 2,4 m – Lücken nur bei echten Wasserlücken
@@ -156,8 +156,14 @@ export function createScene(canvas){
      for(const l of[0,1,2]){if(gaps.some(g=>(g.lane<0||g.lane===l)&&Math.abs(g.d-sw)<3.7))continue;at(sw,(l-1)*2.5);push(0,0,0,0,((n*3+l)%5-2)*.05);if(stones)blacklake.slab(n*3+l);else blacklake.beam(anim,n*3+l);pop();pop();}}
    }
    for(const side of[-1,1]){
-    // Goldenes Schilf am Ufer (dicht wie auf dem Foto), dazwischen kleine Wasserläufe
-    if(w<d+260){for(const off of[6.4,8.6,11]){if((k%4===3&&off===8.6)||(w>d+150&&off===11))continue;at(w+(off%2),side*off);blacklake.reedBed(anim,k*3+off|0,w<d+100?9:5);pop();}}
+    // Entengrütze: unregelmässige, flache Flecken auf dem Wasser
+    if(w<d+220){const ox=side*(5.2+((k*7)%5)*.9);at(w+((k*3)%5),ox);a('cylinder',0,-.02,0,1.4+(k%3)*.5,.02,.9+(k%2)*.6,[.5,.62,.28],0,k);pop();}
+    // Sumpfwald: Erlen im Wasser, grüne Seggen-Bulte und umgestürzte Äste (wie auf dem Foto)
+    if(w<d+240){for(const off of[5.6,8.4]){if((k+(off>6?1:0))%2)continue;at(w+(off%3),side*off);blacklake.sedge(anim,k*3+off|0,w<d+90?12:7);pop();}}
+    if(w<d+380&&k%2===(side>0?0:1)){const tp=point(w,side*(9.5+(k%3)*2.6));if(clear(tp.x,tp.z,1.5,w)){at(w,side*(9.5+(k%3)*2.6));blacklake.swampTree(anim,k);pop();}}
+    if(w<d+380&&k%3===(side>0?1:2)){at(w+3,side*(15+(k%4)*3));blacklake.swampTree(anim,k+7);pop();}
+    if(w<d+200&&k%7===(side>0?3:5)){at(w,side*7.2);push(0,0,0,0,side*.6);blacklake.fallenBranch(k);pop();pop();}
+    if(w<d+200&&k%13===(side>0?4:10)){at(w,side*6.8);push(0,0,0,0,side>0?-PI/2:PI/2);blacklake.lurk(anim,k);pop();pop();}
     if(k%9===(side>0?2:6)&&w<d+300){at(w,side*(14+(k%3)*2));a('rock',0,.05,0,1.4,.5,1.1,C.rock,0,k);pop();}
     if(k%60===(side>0?17:47)){const cp=point(w,side*55);if(clear(cp.x,cp.z,8,w)){at(w,side*55);a('rock',0,-.3,0,9,1.6,7,[.4,.45,.35],0,k);a('sphere',0,.6,0,6,.8,5,[.32,.55,.24]);push(0,1,0,0,-side*PI/2);alpine.chapel();pop();pop();}}
    }
@@ -193,7 +199,7 @@ export function createScene(canvas){
    push(x,y,z,0,-h,(toss?.lean||0)+sway,style===4?.83:scale);encounters.accessory(poseStyle,variant,pace);pop();
   }
  }
- let stingT=-99,beeNest=null,curObjects=[],tongueDrawn=new Set(),dogVis=40,dogLane=1,speedNow=16,flyingFish=[],tickNow=0,chaser=null,chaseVis=40,chaseLane=1,reelT=-9,fogNow=0,boarVis=40,boarLane=1,rammed=new Set();
+ let stingT=-99,beeNest=null,crocAttack=null,curObjects=[],tongueDrawn=new Set(),dogVis=40,dogLane=1,speedNow=16,flyingFish=[],tickNow=0,chaser=null,chaseVis=40,chaseLane=1,reelT=-9,fogNow=0,boarVis=40,boarLane=1,rammed=new Set();
  function obstacle(o,d,time,toss=null){if(!toss&&(rammed.has(o.id)||fogNow>0&&o.d-d>180-140*fogNow))return;const od=o.d-(toss?0:(o.approach||0)*visualSubtick);if(!toss&&(od<d-8||od>d+180||(o.resolved&&['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom','herb','cheese','goldBell','edelweiss'].includes(o.kind))))return;const off=(o.lane<0?0:(o.lane-1)*2.5)+(toss?.side||0),p=point(od,off),rise=toss?.y||0;
   if(['pedestrian','hiker','photographers','influencer','lostTourists','scooter','skiers','snowboarders'].includes(o.kind)){visitors(o,p,time,toss);if(o.kind!=='scooter')return;}
   if(o.kind==='ibex'&&!toss){
@@ -232,7 +238,7 @@ export function createScene(canvas){
    const gapT=(od-d)/Math.max(1,speedNow),brk=Math.max(0,Math.min(1,(1.05-gapT)/.45));at(od,(o.lane-1)*2.5);forest.brokenPlank(brk,time,o.id);pop();return;}
   if(o.kind==='floatLog'){at(od,0,rise);if(toss)push(0,0,0,0,toss.spin,toss.lean);blacklake.floatLog(time,o.id);if(toss)pop();pop();return;}
   if(o.kind==='mudPuddle'){at(od,(o.lane-1)*2.5,0);blacklake.mudPuddle(time,o.id);pop();return;}
-  if(o.kind==='waterGap'&&!toss){at(od,0);for(const x of(o.lane<0?[-2.5,0,2.5]:[(o.lane-1)*2.5])){a('box',x,.0,0,2.45,.03,6.4,[.05,.18,.24,26]);for(const z of[-3.1,3.1])a('box',x,.05,z,2.4,.05,.28,[.9,.97,1,49]);for(let k=0;k<3;k++){const ph=(time*.8+k*.33+o.id*.1)%1;a('ring',x+(k-1)*.6,.04,(k-1)*1.6,.3+ph*.6,.3+ph*.6,.015,[.8,.92,1,49],PI/2);}}pop();return;}
+  if(o.kind==='waterGap'&&!toss){at(od,0);for(const x of(o.lane<0?[-2.5,0,2.5]:[(o.lane-1)*2.5])){a('box',x,.0,0,2.45,.03,6.4,[.05,.18,.24,26]);for(const z of[-3.1,3.1])a('box',x,.05,z,2.4,.05,.28,[.9,.97,1,49]);for(let k=0;k<3;k++){const ph=(time*.8+k*.33+o.id*.1)%1;a('ring',x+(k-1)*.6,.04,(k-1)*1.6,.3+ph*.6,.3+ph*.6,.015,[.8,.92,1,49],PI/2);}}if(o.lane<0&&o.id%2===0){push(((o.id>>1)%3-1)*2.5,0,0,0,PI/2+(o.id%4?.3:-.3));blacklake.lurk(time,o.id);pop();}pop();return;}
   if(o.kind==='tongue'&&!toss){
    // Frosch sitzt neben der Strecke: Kehlsack bläht sich (Warnung), dann schiesst die Zunge über 1–2 Spuren und zieht sich zurück.
    if(tongueDrawn.has(o.attackId))return;tongueDrawn.add(o.attackId);
@@ -315,11 +321,11 @@ export function createScene(canvas){
   else if(o.kind==='planter'){a('cylinder',0,.46,0,.67,.9,.67,[.55,.36,.24]);a('sphere',0,1.02,0,.65,.4,.65,[.22,.38,.18]);for(let i=0;i<7;i++)a('sphere',Math.sin(i*7)*.5,1.2,Math.cos(i*7)*.5,.13,.11,.13,C.red);}
   if(toss)pop();pop();
  }
- return{ready,resize:r.resize,emit(e,s){if(!path)path=createPath(s.seed);fx.emit(e,s,path);if(e.kind==='fishCatch')flyingFish.push(anim);if(e.kind==='hooked')reelT=anim;if(e.kind==='beeSting')stingT=anim;if(e.kind==='beesAppear')beeNest={d:s.distance+24,side:s.x>1.2?-1:1,t:anim};
+ return{ready,resize:r.resize,emit(e,s){if(!path)path=createPath(s.seed);fx.emit(e,s,path);if(e.kind==='fishCatch')flyingFish.push(anim);if(e.kind==='hooked')reelT=anim;if(e.kind==='beeSting')stingT=anim;if(e.kind==='splash')crocAttack={t:anim,d:s.distance+1.5,lane:Math.round(s.x)};if(e.kind==='beesAppear')beeNest={d:s.distance+24,side:s.x>1.2?-1:1,t:anim};
   if(e.kind==='powerClear'&&!['crevasse','ridgeGap','manhole','rope','branch','iceArch'].includes(e.object)){
    if(tossed.length>=12)tossed.shift();tossed.push({o:{id:e.id||0,kind:e.object,lane:e.lane,d:e.d??s.distance},time:anim,side:e.lane===0?-1:e.lane===2?1:(e.id%2?-1:1)});
   }
- },resetEffects(){fx.reset();tossed=[];rushFov=0;flyingFish=[];chaseVis=40;chaser=null;reelT=-9;boarVis=40;dogVis=40;stingT=-99;beeNest=null;rammed=new Set();},
+ },resetEffects(){fx.reset();tossed=[];rushFov=0;flyingFish=[];chaseVis=40;chaser=null;reelT=-9;boarVis=40;dogVis=40;stingT=-99;beeNest=null;crocAttack=null;rammed=new Set();},
  render(s,{distance,time,delta,active,paused,reduced,screen,introTime=null,waiting=false}){if(!actor)return;const d=active?distance:0,newKey=s.seed+':summit';if(key!==newKey){key=newKey;placementCache.clear();clearCache.clear();path=createPath(s.seed,'summit');cam=0;}
   const mobile=canvas.width/canvas.height<.9;cinematic=introTime===null?null:introFrame(introTime,mobile,reduced);cinematicMetrics=cinematic?{time:introTime,heroZ:cinematic.z,doorOpen:cinematic.doorOpen,orbitDegrees:cinematic.orbitDegrees,eye:cinematic.eye,target:cinematic.target}:null;
   trackD=d;speedNow=s.speed||16;const stage=getZone(active?s.elapsed:0);const phase=active?s.elapsed:0,ease=(a,b)=>{const t=Math.max(0,Math.min(1,(phase-a)/(b-a)));return t*t*(3-2*t);};grade=.025*ease(90,110)+.015*ease(180,200)+.015*ease(360,380)+.035*ease(540,560)-.015*ease(630,650)+.035*ease(720,740)-.11*ease(785,812);visualSubtick=active&&!paused?Math.max(0,Math.min(.05,(d-s.distance)/Math.max(1,s.speed))):0;
@@ -361,6 +367,7 @@ export function createScene(canvas){
     const sp=emerging?.25+fly*spread:spread;push(cx,cy,cz,0,PI-q.h);
     for(let j=0;j<9;j++){const t=anim*(2.2+j*.31)+j*1.9;push(Math.sin(t*1.7+j)*sp,Math.sin(t*2.6+j*.7)*.45*(emerging?fly:1),Math.cos(t*1.3+j)*sp*.8,0,t*2.4,0,.8);meadow.bee(anim,j);pop();}pop();}
   }
+  if(active&&crocAttack){const u=(anim-crocAttack.t)/1.6;if(u>1)crocAttack=null;else{const rise=Math.min(1,u*4)*(u>.8?(1-u)/.2:1),open=u<.35?u/.35:u<.5?1-(u-.35)/.15*.9:.1+.1*Math.sin(u*30);at(d+6,(crocAttack.lane-1)*2.5+.4);push(0,0,0,0,PI-.3,0,1.7);blacklake.croc(anim,open,rise,1);fx&&a('ring',0,.05,0,1.2+u*2.5,1.2+u*2.5,.03,[.9,.97,1,49],PI/2);pop();pop();}}
   // Nach einem Bienenstich wird Hornox für drei Sekunden rot (pulsierend, dann verblassend).
   if(actor){const age=anim-stingT;actor.setRed(age>=0&&age<3?(1-age/3)*(.75+.25*Math.sin(age*14)):0);}
   if(active)for(const o of s.objects)obstacle(o,d,anim);

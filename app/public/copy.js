@@ -1350,3 +1350,9 @@ Object.assign(copy.en,{"schwarzsee":"Schwarzsee · Swamp","swampStart":"🌾 Swa
 Object.assign(copy.fr,{"schwarzsee":"Schwarzsee · Marais","swampStart":"🌾 Marais : saute de poutre en pierre – ne tombe pas à l'eau !","mudAlert":"🟤 PLAINE DE BOUE !","mudHint":"Évite les flaques de boue ou saute par-dessus – sinon tu restes coincé !","waterHint":"🪵 Retour sur l'eau – saute de poutre en pierre !","mudStuck":"Splotch ! Tu es coincé dans la boue !","splash":"Plouf ! Tu es tombé à l'eau !"});
 Object.assign(copy.ja,{"schwarzsee":"シュヴァルツゼー · 湿地","swampStart":"🌾 湿地：丸太から石へ跳ぼう – 水に落ちないで！","mudAlert":"🟤 泥の平原！","mudHint":"泥の水たまりをよけるか飛び越えよう – はまると動けなくなる！","waterHint":"🪵 再び水の上へ – 丸太から石へ跳ぼう！","mudStuck":"ベチャッ！泥にはまった！","splash":"ザブン！水に落ちた！"});
 Object.assign(copy.zh,{"schwarzsee":"黑湖 · 沼泽","swampStart":"🌾 沼泽：从木梁跳到石头上 – 别掉进水里！","mudAlert":"🟤 泥地！","mudHint":"避开泥坑或跳过去 – 否则会被困住！","waterHint":"🪵 回到水面 – 从木梁跳到石头！","mudStuck":"啪嗒！你陷进泥里了！","splash":"扑通！你掉进水里了！"});
+// Schwarzsee: Krokodil lauert im Wasser.
+Object.assign(copy.de,{"swampStart":"🌾 Sumpfgebiet: Spring von Balken zu Stein – im Wasser lauern Krokodile! 🐊","crocBite":"🐊 Ins Wasser gefallen – das Krokodil schnappt zu! −1 Leben"});
+Object.assign(copy.en,{"swampStart":"🌾 Swamp: jump from beam to stone – crocodiles lurk in the water! 🐊","crocBite":"🐊 You fell in – the crocodile snaps! −1 life"});
+Object.assign(copy.fr,{"swampStart":"🌾 Marais : saute de poutre en pierre – des crocodiles guettent dans l'eau ! 🐊","crocBite":"🐊 Tombé à l'eau – le crocodile attaque ! −1 vie"});
+Object.assign(copy.ja,{"swampStart":"🌾 湿地：丸太から石へ跳ぼう – 水中にはワニが潜んでいる！🐊","crocBite":"🐊 水に落ちた – ワニがかみついた！ライフ−1"});
+Object.assign(copy.zh,{"swampStart":"🌾 沼泽：从木梁跳到石头 – 水里潜伏着鳄鱼！🐊","crocBite":"🐊 掉进水里 – 鳄鱼咬住了你！生命 −1"});
