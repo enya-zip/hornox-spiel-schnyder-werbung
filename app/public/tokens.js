@@ -28,17 +28,40 @@ export function createTokens(r){
   else if(zone===4)berries();else if(zone===0)iceCrystal();else if(zone===10)rockCrystal();else summitStar();
   pop();
  }
- // Bergladen am Wegrand: Holzhütte mit rot-weisser Markise, Theke, Herz-Schild und Kisten.
+ // Bergladen über dem Weg: Hornox läuft durch das offene Tor hinein (dann öffnet sich der Laden) und hinten wieder hinaus.
+ // Lokales System: Eingang bei z=0, Laufrichtung +z. Hohe, offene Halle (Dach erst ab 6,8 m), damit die Kamera
+ // (rund 5 m hoch) beim Hineinlaufen nicht durch Decke oder Giebel fährt und man die Regale links und rechts sieht.
  function shop(time){
-  const wood=[.55,.4,.26],dark=[.4,.28,.17];
-  a('box',0,1.1,0,3,2.2,1.8,wood);a('box',0,2.35,0,3.4,.18,2.2,dark);
-  for(let k=0;k<6;k++)a('box',-1.45+k*.58,2.1,1.15,.58,.08,.7,k%2?[.95,.95,.92]:[.82,.14,.14],-.45);
-  a('box',0,.95,1.05,2.6,.12,.5,[.62,.46,.3]);a('box',0,.45,1.0,2.6,.9,.08,dark);
-  push(0,2.95,.6);a('box',0,0,0,1.9,.6,.08,[.97,.94,.86]);for(const s of[-1,1])a('sphere',s*.11-.45,.05,.06,.13,.13,.05,[.9,.15,.2]);a('cone',-.45,-.1,.06,.2,.18,.05,[.9,.15,.2],PI);a('box',.35,0,.06,.85,.12,.02,[.25,.2,.15]);pop();
-  for(const [x,c] of[[-.8,[1,.8,.2]],[0,[.9,.3,.25]],[.8,[.4,.7,.95]]])a('box',x,1.12,1.05,.4,.22,.3,c);
-  a('box',1.9,.3,.9,.6,.6,.6,dark);a('box',2.2,.25,1.5,.5,.5,.5,wood);
-  for(const s of[-1,1])a('cylinder',s*1.6,1.2,1.3,.07,2.2,.07,dark);
-  const sway=Math.sin(time*2)*.08;a('sphere',-1.6,2.6+sway,1.3,.12,.16,.12,[1,.8,.3,9]);
+  const wood=[.56,.4,.25],dark=[.38,.26,.15],light=[.7,.54,.36],stone=[.55,.53,.5],D=8,W=12,H=6.4;
+  for(const s of[-1,1]){const xw=s*(W/2-.5);
+   a('box',xw,.45,D/2,1,.9,D,stone);a('box',xw,(H+.9)/2,D/2,.9,H-.9,D,wood);
+   for(let k=0;k<7;k++)a('box',s*(W/2-.98),1.3+k*.75,D/2,.05,.07,D,dark);
+   // Regale mit Waren: Herzen, Honig- und Beerengläser, Kristalle, Kisten
+   for(const [y,kind] of[[1.25,0],[2.15,1],[3.05,2]]){a('box',s*(W/2-1.4),y,D/2,.7,.08,D-1.2,light);
+    for(let j=0;j<6;j++){const z=1+j*1.2,x=s*(W/2-1.4);
+     if(kind===0){a('sphere',x-.08,y+.22,z-.1,.13,.13,.1,[.9,.15,.2]);a('sphere',x+.08,y+.22,z-.1,.13,.13,.1,[.9,.15,.2]);a('cone',x,y+.08,z-.1,.18,.16,.1,[.9,.15,.2],Math.PI);}
+     else if(kind===1)a('cylinder',x,y+.2,z,.14,.32,.14,[[1,.75,.2],[.75,.1,.2],[.45,.7,.95]][j%3]);
+     else a('cone',x,y+.22,z,.1,.36,.1,[.85,.92,1,49]);}}
+   for(let j=0;j<4;j++)a('box',s*(W/2-1.5),.4,1.4+j*1.8,.6,.6,.6,j%2?dark:wood);
+   // Torpfosten vorne und hinten
+   for(const z of[0,D])a('box',s*(W/2-1),H/2,z,.4,H,.4,dark);}
+  // Dach hoch oben: Firstbalken, zwei Schrägen, Giebel nur oberhalb der Kamera
+  for(const z of[0,D])a('box',0,H+.2,z,W,.4,.35,dark);
+  for(const s of[-1,1]){push(s*W/4,H+1.35,D/2);a('box',0,0,0,W/2+1.4,.25,D+1.4,[.32,.22,.14],0,0,-s*.4);pop();}
+  for(const z of[0,D])for(let k=0;k<4;k++)a('box',0,H+.55+k*.45,z,(W-1)*(1-k/4.4),.45,.2,wood);
+  for(let k=1;k<4;k++)a('box',0,H+.15,k*D/4,W-1,.2,.2,dark);   // Querbalken
+  // Holzboden durch den Laden
+  for(let k=0;k<14;k++)a('box',0,.04,.3+k*.56,W-2.2,.06,.48,k%2?light:wood);
+  // Rot-weisse Markise über dem Eingang und Laternen
+  for(let k=0;k<11;k++)a('box',-4.95+k*.99,H-.15,-.55,.99,.08,1.2,k%2?[.96,.96,.93]:[.82,.13,.13],-.3);
+  const sway=Math.sin(time*2)*.06;for(const s of[-1,1]){a('cylinder',s*4.2,H-.9+sway,.4,.03,.6,.03,dark);a('sphere',s*4.2,H-1.3+sway,.4,.18,.24,.18,[1,.82,.35,9]);}
+  // Grosses Ladenschild über dem Tor: Herz + Korb mit bunten Gegenständen
+  push(0,H+1.5,-.3);a('box',0,0,0,4.6,1.2,.14,[.97,.93,.82]);a('box',0,0,.03,4.8,1.4,.1,dark);
+  for(const s of[-1,1])a('sphere',-1.3+s*.2,.15,-.1,.28,.28,.06,[.88,.12,.18]);a('cone',-1.3,-.2,-.1,.42,.36,.06,[.88,.12,.18],Math.PI);
+  a('box',.7,-.1,-.1,1.6,.55,.04,[.75,.5,.25]);for(let k=0;k<3;k++)a('sphere',.2+k*.5,.28,-.12,.18,.18,.06,[[1,.78,.2],[.9,.3,.25],[.4,.7,.95]][k]);
+  pop();
+  // Blumenkästen und Fässer vor dem Eingang
+  for(const s of[-1,1]){a('cylinder',s*6.9,.5,.4,.42,1,.42,wood);a('cylinder',s*6.9,.5,.4,.44,.08,.44,dark);a('box',s*6.9,1.12,1.4,.9,.3,.35,dark);for(let k=0;k<3;k++)a('sphere',s*6.9-.3+k*.3,1.35,1.4,.14,.14,.14,k%2?[.9,.2,.3]:[1,.85,.3]);}
  }
  return{token,shop};
 }

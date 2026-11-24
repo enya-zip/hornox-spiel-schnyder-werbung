@@ -15,7 +15,7 @@ import {createBlackLake} from './blacklake.js?v=11';
 import {createMeadow} from './meadow.js?v=7';
 import {createForest} from './forest.js?v=5';
 import {createHornli} from './hornli.js?v=12';
-import {createTokens} from './tokens.js?v=2';
+import {createTokens} from './tokens.js?v=4';
 export {getZone};
 const PI=Math.PI,C={ice:[.74,.87,.9,10],grass:[.44,.58,.30,11],gravel:[.7,.63,.48,12],cobble:[.65,.66,.61,13],snow:[.86,.92,.94,2],rock:[.48,.52,.53,1],wood:[.32,.22,.15,4],gold:[1,.74,.24,9],dark:[.12,.2,.23],fir:[1,1,1,7],red:[.85,.16,.19],flower:[.97,.85,.40]};
 export function createScene(canvas){
@@ -224,9 +224,9 @@ export function createScene(canvas){
   }
  }
 
- // Bergladen am Ende jedes Levels (Level 1–9): steht ab Sekunde 83 links am Weg, dort wird getauscht.
+ // Bergladen am Ende jedes Levels (Level 1–9): Gebäude über dem Weg, Hornox läuft bei Sekunde 84,5 hinein.
  function shops(d,elapsed,speed){
-  for(let st=0;st<9;st++){const T=st*90+84.5,w=d+(T-elapsed)*speed;if(w<d-20||w>d+380)continue;const p=point(w,-8.2);if(!clear(p.x,p.z,1.5,w))continue;at(w,-8.2);push(0,0,0,0,PI/2);tokens.shop(anim);pop();pop();}
+  for(let st=0;st<9;st++){const T=st*90+84.5,w=d+(T-elapsed)*speed;if(w<d-12||w>d+380)continue;at(w,0);tokens.shop(anim);pop();}
  }
  function environment(d,elapsed,speed){zone=getZone(elapsed);landscape(d,elapsed);road(d,elapsed,speed);street(d,elapsed,speed);lakeside(d,elapsed,speed);bridge(d,elapsed,speed);forestScenery(d,elapsed,speed);meadowScenery(d,elapsed,speed);lakeScenery9(d,elapsed,speed);hornliScenery(d,elapsed,speed);shops(d,elapsed,speed);
   const start=Math.floor((d-22)/14)*14;

@@ -262,14 +262,14 @@ check('level 7 Hörnliweg: five sections, realistic jump/duck/lane obstacles, wo
 check('level collectibles and mountain shop: 5 items = 1 life, 10 items = 2 lives, leftovers carry over',()=>{
  // In jedem Level ausser Level 3 (Fische) gibt es Sammelobjekte; Fische zählen ebenfalls.
  for(const [el,z] of [[30,3],[400,1],[560,4]]){let r={...start(5),tick:el*20,elapsed:el,distance:9000,nextRow:9030,nextTurn:1e9,row:40};let n=0;while(r.elapsed<el+25){r=action({...r,lives:9,invulnerable:1},{type:'step'});n=Math.max(n,r.objects.filter(o=>o.kind==='token').length);}assert(n>0,'kein Sammelobjekt in Zone '+z);}
- let r={...start(),tick:20*82.9,elapsed:82.9,distance:1500,nextRow:99999,nextTurn:99999,items:12,lives:2};
- r=action(r,{type:'step'});r=action(r,{type:'step'});assert(r.shop===1);assert(r.events.some(e=>e.kind==='shopOpen')||r.shopSeen===1);
+ let r={...start(),tick:20*84.4,elapsed:84.4,distance:1500,nextRow:99999,nextTurn:99999,items:12,lives:2};
+ for(let i=0;i<6&&!r.shop;i++)r=action(r,{type:'step'});assert(r.shop===1);assert(r.events.some(e=>e.kind==='shopOpen')||r.shopSeen===1);
  assert.equal(g.validateAction({...r,items:4},'p',{type:'shop',offer:5}).ok,false);
  r=action(r,{type:'shop',offer:10});assert.equal(r.lives,4);assert.equal(r.items,2);
  assert.equal(g.validateAction(r,'p',{type:'shop',offer:10}).ok,false);   // nicht mehr als 5 Leben
  r=action(r,{type:'shopClose'});assert.equal(r.shop,0);
  for(let i=0;i<200;i++)r=action(r,{type:'step'});assert.equal(r.shop,0);assert.equal(r.items,2);   // Rest wird mitgenommen, Laden nur einmal pro Level
- let q={...start(),tick:20*85,elapsed:85,distance:1500,nextRow:99999,nextTurn:99999,shop:1,shopSeen:1};for(let i=0;i<120;i++)q=action(q,{type:'step'});assert.equal(q.shop,0);   // schliesst beim Levelwechsel
+ let q={...start(),tick:20*86,elapsed:86,distance:1500,nextRow:99999,nextTurn:99999,shop:1,shopSeen:1};for(let i=0;i<120;i++)q=action(q,{type:'step'});assert.equal(q.shop,0);   // schliesst beim Levelwechsel
  const st={...start(),tick:20*582,elapsed:582,distance:10300,nextRow:10320,nextTurn:1e9,row:60};let w=st;for(let i=0;i<40;i++){w=action({...w,lives:9,invulnerable:1},{type:'step'});}
  for(const o of w.objects)if(['coin','token'].includes(o.kind)&&o.encounter){const t=582+(o.encounter-st.distance)/st.speed;}
 });

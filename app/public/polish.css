@@ -268,3 +268,5 @@ dialog .dialog-close{border-radius:var(--radius-s)}
 #shop-dialog .shop-note{font-size:12px;opacity:.8;margin:0 0 14px}
 #shop-dialog #shop-leave{width:100%}
 @media(max-width:420px){#shop-dialog{width:calc(100vw - 32px)}}
+/* Im Laden soll man das Ladeninnere hinter dem Dialog sehen */
+#shop-dialog::backdrop{backdrop-filter:none;-webkit-backdrop-filter:none;background:#06141c40}

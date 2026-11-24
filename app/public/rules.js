@@ -29,7 +29,7 @@ export function validateAction(s,p,a){
  if(a.type==="step"&&Object.keys(a).length===1)return{ok:true};
  return{ok:false,error:"action"};
 }
-const SHOP_MAX_LIVES=5;
+const SHOP_MAX_LIVES=5,SHOP_AT=84.6;   // Eingang des Bergladens bei Sekunde 84,5 jedes Levels; der Laden öffnet, wenn Hornox drin steht
 function random(n){return(n*1664525+1013904223)>>>0;}
 function stage(t){return Math.min(9,Math.floor(Math.max(0,t)/90));}
 function zone(t){return [3,6,7,8,1,9,4,0,10,5][stage(t)];}
@@ -178,7 +178,7 @@ export function applyAction(s,p,a){
   let fullRow=false,pattern=row<2?8:row===2?0:row===3?1:row===4?2:variant;
   const nearest=260+Math.max(0,Math.round((d-260)/680))*680;
   // Short breathing room at corners and biome boundaries; no long empty stretches.
-  if(Math.abs(d-nearest)<Math.max(48,speed*2.2)||[90,180,270,360,450,540,630,720,810].some(t=>Math.abs(arrivalTime-t)<2.5)||arrivalTime>893)pattern=8;
+  if(Math.abs(d-nearest)<Math.max(48,speed*2.2)||[90,180,270,360,450,540,630,720,810].some(t=>Math.abs(arrivalTime-t)<2.5||arrivalTime>t-90+SHOP_AT-3&&arrivalTime<t-90+SHOP_AT+2.5)||arrivalTime>893)pattern=8;
   if([2,3].includes(z)&&pattern===6)safe=(rng&1)?0:2;
   if(z===4&&hornliSteg(arrivalTime)>=0)safe=hornliSteg(arrivalTime);   // Münzen nur auf dem Holzsteg, nie über dem Abgrund
   const one=(safe+1)%3,two=(safe+2)%3,busy=row>=(s.mode==="relaxed"?12:5);
@@ -381,8 +381,8 @@ export function applyAction(s,p,a){
   const nextStage=stage(elapsed);
   const gained=lives>0&&lives<s.maxLives;if(gained)lives++;score+=250;events.push({kind:"world",zone:zone(elapsed),stage:nextStage,gained});
  }
- // Bergladen kurz vor Ende jedes Levels (nicht im letzten Level); schliesst spätestens beim Levelwechsel.
- {const st=stage(elapsed);if(shop&&shop!==st+1)shop=0;if(st<9&&elapsed>=st*90+83&&shopSeen<st+1&&lives>0){shopSeen=st+1;shop=st+1;events.push({kind:'shopOpen',stage:st,items,lives});}}
+ // Bergladen kurz vor Ende jedes Levels (nicht im letzten Level): öffnet, sobald Hornox hineinläuft; schliesst spätestens beim Levelwechsel.
+ {const st=stage(elapsed);if(shop&&shop!==st+1)shop=0;if(st<9&&elapsed>=st*90+SHOP_AT&&shopSeen<st+1&&lives>0){shopSeen=st+1;shop=st+1;events.push({kind:'shopOpen',stage:st,items,lives});}}
  const phase=lives<=0?"lost":elapsed>=900?"won":"playing";
  if(phase==="won"){score+=2000;events.push({kind:"summit",points:2000});}
  return{...s,items,shop,shopSeen,beeNest,beeStings,honeyNext,phase,tick,elapsed,distance,speed,x,lives,jump,jumpCount,jumpBase,jumpY:height,fallTicks,duck,queued,buffer,coins,flamingoSpawned,powerCharge,powerTicks,hearts,nextHeartAt,score,chain,bestChain,multiplier,shield,magnet,coinBoost,climb,climbReady,shoes,nextCrowAt,nextFishAt,nextBeaverAt,nextGullAt,lastHazardAt,nextFrogAt,fish,angry,chaseGap,nextCastTick,lastBumpTick,attackSeq,boar,boarGap,boarBump,dog,dogGap,dogBump,dogMode,scared,checkpoints,arrivals,turnIndex,nextTurn,turnChoice,summitTurn,heading,turns,failReason,invulnerable,slow,rng,nextId,nextRow,row,objects,events};
