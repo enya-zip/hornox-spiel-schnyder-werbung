@@ -2,7 +2,7 @@ export const meta={game:"Hornox Run · Zermatt",minPlayers:1,maxPlayers:1};
 export function setup(players){
  return{version:17,player:players[0]||"guest",phase:"ready",mode:"classic",route:"summit",
  tick:0,elapsed:0,distance:0,speed:18,x:1,target:1,lives:3,maxLives:3,jump:0,jumpCount:0,jumpBase:0,jumpY:0,fallTicks:0,duck:0,queued:"",buffer:0,
- flamingoSpawned:false,coins:0,powerCharge:0,powerTicks:0,powerUses:0,hearts:0,nextHeartAt:40,score:0,chain:0,bestChain:0,multiplier:1,shield:0,magnet:0,coinBoost:0,climb:0,climbReady:0,shoes:0,nextCrowAt:0,nextFishAt:0,nextBeaverAt:0,nextGullAt:0,lastHazardAt:0,nextFrogAt:0,fish:0,angry:0,chaseGap:0,nextCastTick:0,lastBumpTick:0,attackSeq:0,boar:0,boarGap:0,boarBump:0,dog:0,dogGap:0,dogBump:0,dogMode:0,scared:0,checkpoints:0,arrivals:0,
+ flamingoSpawned:false,coins:0,items:0,shop:0,shopSeen:0,powerCharge:0,powerTicks:0,powerUses:0,hearts:0,nextHeartAt:40,score:0,chain:0,bestChain:0,multiplier:1,shield:0,magnet:0,coinBoost:0,climb:0,climbReady:0,shoes:0,nextCrowAt:0,nextFishAt:0,nextBeaverAt:0,nextGullAt:0,lastHazardAt:0,nextFrogAt:0,fish:0,angry:0,chaseGap:0,nextCastTick:0,lastBumpTick:0,attackSeq:0,boar:0,boarGap:0,boarBump:0,dog:0,dogGap:0,dogBump:0,dogMode:0,scared:0,checkpoints:0,arrivals:0,
  turnIndex:0,nextTurn:260,turnChoice:0,summitTurn:0,heading:0,turns:0,failReason:"",
  seed:20261029,rng:20261029,nextId:1,nextRow:30,row:0,invulnerable:0,slow:0,objects:[],events:[]};
 }
@@ -17,6 +17,9 @@ export function validateAction(s,p,a){
   return{ok:true};
  }
  if(s.phase!=="playing")return{ok:false,error:"finished"};
+ // Bergladen am Ende jedes Levels: Sammelobjekte gegen Leben tauschen (5 = 1 Leben, 10 = 2 Leben, höchstens 5 Leben).
+ if(a.type==="shop")return s.shop>0&&(a.offer===5||a.offer===10)&&(s.items||0)>=a.offer&&s.lives+(a.offer===10?2:1)<=SHOP_MAX_LIVES?{ok:true}:{ok:false,error:"shop"};
+ if(a.type==="shopClose")return s.shop>0?{ok:true}:{ok:false,error:"shop"};
  if(a.type==="climb")return s.climbReady>0&&!(s.climb>0)?{ok:true}:{ok:false,error:"climb-not-ready"};
  if(a.type==="power")return s.powerCharge>=30&&s.powerTicks===0?{ok:true}:{ok:false,error:"power-not-ready"};
  if(a.type==="steer")return Number.isFinite(a.lane)&&a.lane>=0&&a.lane<=2?{ok:true}:{ok:false,error:"lane"};
@@ -26,10 +29,11 @@ export function validateAction(s,p,a){
  if(a.type==="step"&&Object.keys(a).length===1)return{ok:true};
  return{ok:false,error:"action"};
 }
+const SHOP_MAX_LIVES=5;
 function random(n){return(n*1664525+1013904223)>>>0;}
 function stage(t){return Math.min(9,Math.floor(Math.max(0,t)/90));}
 function zone(t){return [3,6,7,8,1,9,4,0,10,5][stage(t)];}
-const pickups=['coin','heart','magnet','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom','herb','cheese','goldBell','edelweiss','honey'];
+const pickups=['token','coin','heart','magnet','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom','herb','cheese','goldBell','edelweiss','honey'];
 // Level 4 (Furi): morsche Holzbrücke über den Bach – in diesen Zeitfenstern brechen Bretter weg.
 function bridgeAt(t){return t>=317&&t<327;} // gleiche Zeiten wie in journey.js
 // Level 5 «Alpweiden» (6:00–7:30): Abschnitte und Challenge-Fenster (gleich wie in journey.js).
@@ -52,6 +56,8 @@ export function applyAction(s,p,a){
  if(!validateAction(s,p,a).ok)return s;
  if(a.type==="start"){const maxLives=3;return{...setup([p]),phase:"playing",mode:a.mode,maxLives,lives:maxLives,seed:a.seed,rng:a.seed,speed:a.mode==="relaxed"?14:19};}
  // Kletterausrüstung wird mit E / Power-Button angezogen.
+ if(a.type==="shop"){const gain=a.offer===10?2:1,lives=s.lives+gain,items=s.items-a.offer;return{...s,lives,items,events:[{kind:"shopBuy",offer:a.offer,gain,lives,items}]};}
+ if(a.type==="shopClose")return{...s,shop:0,events:[{kind:"shopClose"}]};
  if(a.type==="climb")return{...s,climbReady:0,climb:200,events:[{kind:"climbStart"}]};
  if(a.type==="power")return{...s,powerCharge:0,powerTicks:120,powerUses:s.powerUses+1,slow:0,events:[{kind:"powerStart"}]};
  if(a.type==="steer")return{...s,target:a.lane,events:[]};
@@ -73,6 +79,7 @@ export function applyAction(s,p,a){
  let height=jump?jumpBase*(jump/18)+Math.sin((18-jump)/18*Math.PI)*(jumpCount===2?1.15:1):0;
  let powerCharge=s.powerCharge,powerTicks=Math.max(0,s.powerTicks-1);const powering=s.powerTicks>0;
  let flamingoSpawned=s.flamingoSpawned||false;
+ let items=s.items||0,shop=s.shop||0,shopSeen=s.shopSeen||0;
  let hearts=s.hearts||0,nextHeartAt=s.nextHeartAt??40;
  let lives=s.lives,score=s.score+Math.floor(distance)-Math.floor(s.distance),coins=s.coins,chain=s.chain,bestChain=s.bestChain,multiplier=s.multiplier;
  let shield=s.shield,magnet=Math.max(0,s.magnet-1),coinBoost=Math.max(0,(s.coinBoost||0)-1),climb=Math.max(0,(s.climb||0)-1),climbReady=s.climbReady||0,nextCrowAt=s.nextCrowAt||0,nextFishAt=s.nextFishAt||0,nextBeaverAt=s.nextBeaverAt||0,nextGullAt=s.nextGullAt||0,lastHazardAt=s.lastHazardAt||0,nextFrogAt=s.nextFrogAt||0,chaseGap=s.chaseGap||0,nextCastTick=s.nextCastTick||0,lastBumpTick=s.lastBumpTick||0,attackSeq=s.attackSeq||0,hookedAttack=0,boar=Math.max(0,(s.boar||0)-1),boarGap=s.boarGap||0,boarBump=s.boarBump||0,dog=Math.max(0,(s.dog||0)-1),dogGap=s.dogGap||0,dogBump=s.dogBump||0,dogMode=s.dogMode||0,beeNest=s.beeNest||0,beeStings=s.beeStings||0,honeyNext=s.honeyNext||0,scared=s.scared||0,fish=s.fish||0,angry=Math.max(0,(s.angry||0)-1),shoes=Math.max(0,(s.shoes||0)-1),invulnerable=Math.max(0,s.invulnerable-1),slow=Math.max(0,s.slow-1);
@@ -112,10 +119,13 @@ export function applyAction(s,p,a){
     if(aligned){if(shield)score+=50;shield=1;events.push({kind:'powerPickup',power:'pickupShield'});}
    }else if(item.kind==='coinBoost'){
     if(aligned){coinBoost=200;events.push({kind:'powerPickup',power:'pickupBoost'});}
+   }else if(item.kind==='token'){
+    // Level-Sammelobjekt (Münze, Blatt, Tannenzapfen, Blume, Seestein, Beeren, Eiskristall, Bergkristall, Gipfelstern) für den Bergladen.
+    if(aligned){items++;score+=50;events.push({kind:'token',items,zone:item.biome,lane:item.lane});}
    }else if(item.kind==='fishCatch'){
     // Level 3: Fische landen im Wanderrucksack. Bei 10 Fischen wird der Fischer aufmerksam,
     // bei 20 Fischen wütend: dann wirft er 20 Sekunden lang die Angel nach Hornox.
-    if(aligned){fish++;events.push({kind:'fishCatch',fish});if(fish===10)events.push({kind:'fisherNotice'});if(fish===20&&!angry){angry=400;events.push({kind:'fisherAngry'});}}
+    if(aligned){fish++;items++;events.push({kind:'fishCatch',fish,items});if(fish===10)events.push({kind:'fisherNotice'});if(fish===20&&!angry){angry=400;events.push({kind:'fisherAngry'});}}
    }else if(item.kind==='mushroom'){
     // Level 4: Glückspilz = Bonuspunkte.
     if(aligned){score+=250;events.push({kind:'mushroom',points:250,lane:item.lane});}
@@ -170,6 +180,7 @@ export function applyAction(s,p,a){
   // Short breathing room at corners and biome boundaries; no long empty stretches.
   if(Math.abs(d-nearest)<Math.max(48,speed*2.2)||[90,180,270,360,450,540,630,720,810].some(t=>Math.abs(arrivalTime-t)<2.5)||arrivalTime>893)pattern=8;
   if([2,3].includes(z)&&pattern===6)safe=(rng&1)?0:2;
+  if(z===4&&hornliSteg(arrivalTime)>=0)safe=hornliSteg(arrivalTime);   // Münzen nur auf dem Holzsteg, nie über dem Abgrund
   const one=(safe+1)%3,two=(safe+2)%3,busy=row>=(s.mode==="relaxed"?12:5);
   if(!flamingoSpawned&&arrivalTime>=65&&[2,3].includes(z)&&pattern!==8){add('flamingo',one);flamingoSpawned=true;}
   else if(z===5){
@@ -304,6 +315,8 @@ export function applyAction(s,p,a){
   for(const offset of(heartDue?[5,17]:[5,9,13,17]))add("coin",safe,offset);
   // Level 3: jede zweite Reihe ein Fisch zum Sammeln, damit der Fischer nach rund 10–15 s wütend wird.
   if(z===7&&row%2===1&&!heartDue)add("fishCatch",safe,22);
+  // Jedes andere Level: ein passendes Sammelobjekt etwa jede vierte Reihe (Level 3 sammelt Fische).
+  if(z!==7&&row%6===2&&!heartDue&&arrivalTime<885)add("token",safe,0);
   // Level 4: Glückspilze geben Bonuspunkte (Haselnüsse sind die normalen Münzen).
   // Level 5: Alpenkräuter (selten), Käse, goldene Kuhglocken, goldenes Edelweiss (sehr selten). Blumen = normale Münzen.
   if(z===1&&!heartDue){const sec=meadowSection(arrivalTime);if(sec>=2&&arrivalTime>=honeyNext&&safe!==1&&pattern!==0&&pattern!==4&&pattern!==5){add("honey",safe,22);honeyNext=arrivalTime+18;}/* Honig am alten Bienenbaum */else if(sec>=2&&row%29===14)add("edelweiss",safe,22);else if(row%7===3)add("herb",safe,22);else if(row%11===5)add("cheese",safe,22);else if(row%17===9)add("goldBell",safe,22);}
@@ -368,9 +381,11 @@ export function applyAction(s,p,a){
   const nextStage=stage(elapsed);
   const gained=lives>0&&lives<s.maxLives;if(gained)lives++;score+=250;events.push({kind:"world",zone:zone(elapsed),stage:nextStage,gained});
  }
+ // Bergladen kurz vor Ende jedes Levels (nicht im letzten Level); schliesst spätestens beim Levelwechsel.
+ {const st=stage(elapsed);if(shop&&shop!==st+1)shop=0;if(st<9&&elapsed>=st*90+83&&shopSeen<st+1&&lives>0){shopSeen=st+1;shop=st+1;events.push({kind:'shopOpen',stage:st,items,lives});}}
  const phase=lives<=0?"lost":elapsed>=900?"won":"playing";
  if(phase==="won"){score+=2000;events.push({kind:"summit",points:2000});}
- return{...s,beeNest,beeStings,honeyNext,phase,tick,elapsed,distance,speed,x,lives,jump,jumpCount,jumpBase,jumpY:height,fallTicks,duck,queued,buffer,coins,flamingoSpawned,powerCharge,powerTicks,hearts,nextHeartAt,score,chain,bestChain,multiplier,shield,magnet,coinBoost,climb,climbReady,shoes,nextCrowAt,nextFishAt,nextBeaverAt,nextGullAt,lastHazardAt,nextFrogAt,fish,angry,chaseGap,nextCastTick,lastBumpTick,attackSeq,boar,boarGap,boarBump,dog,dogGap,dogBump,dogMode,scared,checkpoints,arrivals,turnIndex,nextTurn,turnChoice,summitTurn,heading,turns,failReason,invulnerable,slow,rng,nextId,nextRow,row,objects,events};
+ return{...s,items,shop,shopSeen,beeNest,beeStings,honeyNext,phase,tick,elapsed,distance,speed,x,lives,jump,jumpCount,jumpBase,jumpY:height,fallTicks,duck,queued,buffer,coins,flamingoSpawned,powerCharge,powerTicks,hearts,nextHeartAt,score,chain,bestChain,multiplier,shield,magnet,coinBoost,climb,climbReady,shoes,nextCrowAt,nextFishAt,nextBeaverAt,nextGullAt,lastHazardAt,nextFrogAt,fish,angry,chaseGap,nextCastTick,lastBumpTick,attackSeq,boar,boarGap,boarBump,dog,dogGap,dogBump,dogMode,scared,checkpoints,arrivals,turnIndex,nextTurn,turnChoice,summitTurn,heading,turns,failReason,invulnerable,slow,rng,nextId,nextRow,row,objects,events};
 }
 export function isGameOver(s){return ["lost","won"].includes(s.phase)?{over:true,winner:s.phase==="won"?s.player:null,score:s.score,coins:s.coins,distance:Math.floor(s.distance),arrivals:s.arrivals}:{over:false};}
 export function viewFor(s,p){return{...s,objects:s.objects.map(o=>({...o})),events:s.events.map(e=>({...e})),spectator:p!==s.player};}

@@ -251,3 +251,20 @@ dialog .dialog-close{border-radius:var(--radius-s)}
 #fisher-bubble .bee-face{display:none}
 #fisher-bubble[data-who="bees"] .bee-face{display:block}
 #fisher-bubble[data-who="bees"] .fisher-face,#fisher-bubble[data-who="bees"] .dog-face,#fisher-bubble[data-who="bees"] .boar-face{display:none}
+/* Level-Sammelobjekte: kleiner Zähler unter den Münzen */
+#hud .score-box .items-chip{display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:3px;font-size:12px;font-weight:700;color:#fff6dc;font-variant-numeric:tabular-nums}
+#hud .score-box .items-chip[hidden]{display:none}
+#hud .score-box .items-chip i{font-style:normal;font-size:14px;line-height:1}
+#life-hearts svg.bonus{fill:#ffcf5a}
+/* Bergladen am Levelende */
+#shop-dialog{width:420px;text-align:center}
+#shop-dialog .shop-text{margin:6px 0 14px;line-height:1.45}
+#shop-dialog .shop-offers{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+#shop-dialog .shop-offer{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border-radius:var(--radius-s,12px);border:1px solid #c8d7bd55;background:#ffffff14;color:inherit;font:inherit;cursor:pointer}
+#shop-dialog .shop-offer:not(:disabled):hover{background:#ffffff26}
+#shop-dialog .shop-offer:disabled{opacity:.4;cursor:not-allowed}
+#shop-dialog .shop-cost{font-size:20px;font-weight:800}
+#shop-dialog .shop-gain{font-size:16px}
+#shop-dialog .shop-note{font-size:12px;opacity:.8;margin:0 0 14px}
+#shop-dialog #shop-leave{width:100%}
+@media(max-width:420px){#shop-dialog{width:calc(100vw - 32px)}}

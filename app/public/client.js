@@ -1,11 +1,11 @@
 import {INTRO_DURATION,COUNTDOWN_DURATION} from './intro.js?v=17';
 import {stages,getStage,DURATION,fogAt,bridgeAt,forestSection,meadowSection,meadowWindows,lakeSection,stoneAt,swampMud} from "./journey.js?v=26";
-import {createScene} from "./scene3d.js?v=82";
-import {setup,validateAction,applyAction} from "./rules.js?v=45";
+import {createScene} from "./scene3d.js?v=83";
+import {setup,validateAction,applyAction} from "./rules.js?v=46";
 import {installControls} from "./controls.js?v=17";
 import {createAudio} from "./audio.js?v=23";
-import {getZone} from "./scene3d.js?v=82";
-import {copy} from "./copy.js?v=54";
+import {getZone} from "./scene3d.js?v=83";
+import {copy} from "./copy.js?v=55";
 import {turnDirection} from "./route.js?v=21";
 import {createLeaderboard} from "./leaderboard.js?v=8";
 import {LEADERBOARD} from "./leaderboard-config.js?v=4";
@@ -214,6 +214,19 @@ function finish(){if(resultSaved)return;resultSaved=true;run={id:newId(),saved:n
  const previous=best(state.route,state.mode);recordInfo={previous,isNew:testLevel<=1&&Math.floor(state.score)>previous&&state.score>0};if(recordInfo.isNew)save(bestKey(state.route,state.mode),Math.floor(state.score));
  setScreen("result");$("turn-cue").hidden=true;$("tutorial").hidden=true;$("resort-arrival").hidden=true;$("powerup").hidden=true;$("fisher-bubble").hidden=true;countToken=0;resultCopy();countUp();if(recordInfo.isNew)audio.play("pickup",1.7,.8);$("again").focus();}
 function heartFeedback(gained){const node=$('heart-feedback');node.querySelector('span').textContent=t(gained?'heartGain':'heartFull');node.hidden=false;node.getAnimations().forEach(a=>a.cancel());const target=$('lives').getBoundingClientRect(),x=target.left+target.width/2-innerWidth/2,y=target.top+target.height/2-innerHeight*.40;node.animate(reduced?[{opacity:1},{opacity:1,offset:.75},{opacity:0}]:[{opacity:0,transform:'translate(-50%,-50%) scale(.6)'},{opacity:1,transform:'translate(-50%,-50%) scale(1.15)',offset:.18},{opacity:1,transform:'translate(-50%,-50%) scale(1)',offset:.60},{opacity:0,transform:`translate(calc(-50% + ${x}px),calc(-50% + ${y}px)) scale(.22)`}],{duration:reduced?1000:1350,fill:'forwards'});audio.play('pickup',1.6,.85);}
+// Level-Sammelobjekte und Bergladen: Symbol je Zone, Laden-Dialog am Ende jedes Levels.
+const ITEM_ICON={3:"🪙",6:"🍂",7:"🐟",8:"🌰",1:"🌼",9:"💎",4:"🍓",0:"❄️",10:"💎",5:"⭐"};
+const itemIcon=()=>ITEM_ICON[getZone(state.elapsed)]??"🪙",itemName=()=>t("itemName"+getZone(state.elapsed));
+function renderShop(){
+ const n=state.items||0,ic=itemIcon();$("shop-level").textContent=t(stages[Math.min(9,Math.floor(state.elapsed/90))].key);
+ $("shop-text").textContent=t("shopText",{n,icon:ic,name:itemName()});$("shop-cost5").textContent="5 "+ic;$("shop-cost10").textContent="10 "+ic;
+ for(const offer of[5,10])$("shop-buy"+offer).disabled=!validateAction(state,player,{type:"shop",offer}).ok;
+ $("shop-note").textContent=state.lives>=5?t("shopFull"):t("shopNote");
+}
+function openShop(){if($("shop-dialog").open)return;renderShop();$("shop-dialog").showModal();$("shop-buy5").disabled?$("shop-leave").focus():$("shop-buy5").focus();}
+function closeShop(){if(state.shop)dispatch({type:"shopClose"});if($("shop-dialog").open)$("shop-dialog").close();}
+function buy(offer){if(!dispatch({type:"shop",offer}))return;audio.play("pickup",1.7,.9);heartFeedback(true);renderShop();if($("shop-buy5").disabled&&$("shop-buy10").disabled)$("shop-leave").focus();}
+$("shop-buy5").onclick=()=>buy(5);$("shop-buy10").onclick=()=>buy(10);$("shop-leave").onclick=closeShop;$("shop-dialog").addEventListener("close",()=>{if(state.shop)dispatch({type:"shopClose"});});
 function processEvents(){
  for(const e of state.events){scene?.emit(e,state);if(["jump","duck","land","pickup","bump"].includes(e.kind))audio.play(e.kind,e.kind==="pickup"?1+(state.chain%8)*.035:1);
  if(e.kind==="pickup"&&!reduced){$("coins").getAnimations().forEach(a=>a.cancel());$("coins").animate([{transform:"scale(1.35)",color:"#ffe6a2"},{transform:"scale(1)",color:"#fff6dc"}],{duration:240});}
@@ -225,7 +238,9 @@ function processEvents(){
  if(e.kind==="powerClear")audio.play("pickup",1.3,.55);
  if(e.kind==="powerPickup"){toast(t(e.power),2.5);audio.play("pickup",1.6,.8);}
  if(e.kind==="heart")heartFeedback(e.gained);if(e.kind==="world"&&e.gained)heartFeedback(true);
- if(e.kind==="world")levelBanner(e.stage);
+ if(e.kind==="world"){levelBanner(e.stage);setTimeout(()=>{if(screen==="play")toast(t("itemIntro",{icon:itemIcon(),name:itemName()}),3.2);},2600);}
+ if(e.kind==="token"||e.kind==="fishCatch"){if(e.kind==="token")audio.play("pickup",1.45,.8);if(!reduced){$("items").getAnimations().forEach(a=>a.cancel());$("items").animate([{transform:"scale(1.4)"},{transform:"scale(1)"}],{duration:260});}}
+ if(e.kind==="shopOpen"){if(validateAction(state,player,{type:"shop",offer:5}).ok)openShop();else{toast(state.lives>=5?t("shopFull"):t("shopPassBy",{n:state.items||0,icon:itemIcon()}),3);dispatch({type:"shopClose"});}}
  if(e.kind==="bump")toast(t(e.object==="sheep"?"sheepBump":e.object==="fish"?"fishBump":e.object==="beaverLog"?"beaverBump":e.object==="tongue"?"tongueBump":e.object==="floatLog"?"floatLogBump":e.object==="hook"?"hookBump":e.object==="fenceTall"?"fenceTallBump":["rockFace","ledge"].includes(e.object)?"rockBump":e.object==="looseRocks"?"looseBump":e.object==="railLane"?"railBump":e.object==="signpost"?"signBump":["metalStrut","beamLow","overhang"].includes(e.object)?"duckBump":e.object==="ridgeGap"?"abyssBump":e.object==="fence"||e.object==="fenceLow"?"fenceBump":"bump"));else if(e.kind==="checkpoint")toast(t("checkpoint"),2.5);else if(e.kind==="arrival"){$("toast").classList.remove("visible");toastUntil=0;}else if(e.kind==="magnet")toast(t("magnet"),2.3);else if(e.kind==="fishCatch")audio.play("pickup",1.5,.7);else if(e.kind==="fisherNotice"){toast(t("fisherNotice"),3.2);audio.play("pickup",.8,.7);}else if(e.kind==="gull"){toast(t(e.lost>0?"gullSteal":"gullEmpty",{n:e.lost}),2.4);audio.play("bump",1.6,.6);}else if(e.kind==="fisherAngry"){bigAlert(t("fisherAngry"));toast(t("fisherHint"),3);}else if(e.kind==="splash"){const croc=getStage(state.elapsed)===5;toast(t(croc?"crocBite":"splash"),2.6);audio.synth("splash",1);if(croc){const f=$("hit-flash");f.getAnimations().forEach(a=>a.cancel());f.animate([{opacity:.7},{opacity:0}],{duration:600,easing:"ease-out"});try{navigator.vibrate?.(180);}catch{}}}else if(e.kind==="slip"){toast(t("slip"),1.6);audio.play("duck",.8,.6);}else if(e.kind==="mudStuck"){toast(t("mudStuck"),2);audio.synth("stream",1);try{navigator.vibrate?.(80);}catch{}}else if(e.kind==="beeBuzz"){toast(t("beeBuzz"),2.6);audio.synth("buzz",1);}else if(e.kind==="honey"){toast(t("honeyTaken",{n:e.points}),2.4);audio.play("pickup",1.3,.8);audio.synth("buzz",1.4);}else if(e.kind==="beesAppear"){bigAlert(t("beesAlert"));setTimeout(()=>toast(t("beesHint"),3.2),900);audio.synth("buzz",1.4);}else if(e.kind==="beeSting"){const f=$("hit-flash");f.getAnimations().forEach(a=>a.cancel());f.animate([{opacity:.75},{opacity:0}],{duration:650,easing:"ease-out"});toast(t(e.hurt?"beeSting":"beeStingSlow"),2.6);audio.synth("buzz",1.4);try{navigator.vibrate?.(160);}catch{}}else if(e.kind==="beesQuit"){toast(t(e.escaped?"beesEscaped":"beesQuit"),2.8);if(e.escaped)audio.play("pickup",1.6,.7);}else if(e.kind==="meadowPickup"){toast(t("pick_"+e.item,{n:e.points}),1.6);audio.play(e.item==="goldBell"?"pickup":"pickup",e.item==="edelweiss"?2.4:e.item==="goldBell"?1.2:1.7,.9);if(e.item==="goldBell")audio.synth("cowbell",.8);}else if(e.kind==="boarGrunt"){toast(t("boarGrunt"),2.6);audio.synth("grunt",.7);}else if(e.kind==="boarAppear"){bigAlert(t("boarAlert"));toast(t("boarHint"),3);audio.synth("grunt",1.2);}else if(e.kind==="boarRace"){bigAlert(t("boarRaceAlert"));toast(t("boarRaceHint"),3);audio.synth("grunt",1.3);}else if(e.kind==="boarRam"){const f=$("hit-flash");f.getAnimations().forEach(a=>a.cancel());f.animate([{opacity:.75},{opacity:0}],{duration:650,easing:"ease-out"});toast(t("boarRam"),2.4);audio.play("bump",.8,.9);try{navigator.vibrate?.(160);}catch{}}else if(e.kind==="boarQuit")toast(t("boarQuit"),2.6);else if(e.kind==="mushroom"){toast(t("mushroom"),1.6);audio.play("pickup",2,.8);}else if(e.kind==="fisherCast")audio.play("jump",.55,.55);else if(e.kind==="hooked"){const f=$("hit-flash");f.getAnimations().forEach(a=>a.cancel());f.animate([{opacity:.75},{opacity:0}],{duration:650,easing:"ease-out"});try{navigator.vibrate?.(140);}catch{}}else if(e.kind==="fisherQuit"){fisherEscaped=true;toast(t("fisherQuit"),2.6);audio.play("pickup",1.1,.8);}else if(e.kind==="crow"){toast(t(e.lost>0?"crowHit":"crowHitEmpty",{n:e.lost}),2.4);audio.play("bump",1.4,.8);}else if(e.kind==="shieldHit")toast(t("shieldHit"));else if(e.kind==="missedTurn")toast(t("turnMiss"));}
 }
 // Level 4 «Furi · Waldpfad»: Abschnitts-Hinweise, heller/dunkler Wald und Waldgeräusche.
@@ -282,11 +297,11 @@ let hornliSec=0;function hornliAmbience(){const el=state.elapsed,sec=screen==="p
  if(sec!==hornliSec){if(sec>0)toast(t("hornliSec"+sec),3.4);hornliSec=sec;}
  if(sec===3&&!paused)for(const w of[581,589])if(el>=w-4.5&&el<w-4.25&&!lakeSounds.has("bridge"+w)){lakeSounds.add("bridge"+w);bigAlert(t("bridgeAlert7"));toast(t("bridgeHint7"),2.6);}}
 function hud(){if(screen==="play"&&state.phase==="playing")crowWarnings();fisherBubble();forestAmbience();meadowAmbience();lakeAmbience();hornliAmbience();
- $("score").textContent=fmt(state.score);$("coins").textContent=state.coins;$("combo").textContent=state.multiplier>1?"×"+state.multiplier:"";
+ $("score").textContent=fmt(state.score);$("coins").textContent=state.coins;{const ic=itemIcon();$("items").hidden=state.phase!=="playing"&&!(state.items>0);if($("items-icon").textContent!==ic)$("items-icon").textContent=ic;$("items-count").textContent=state.items||0;$("items").title=itemName();}$("combo").textContent=state.multiplier>1?"×"+state.multiplier:"";
  $("distance").textContent=Math.floor(state.elapsed/60)+":"+String(Math.floor(state.elapsed%60)).padStart(2,"0")+" / 15:00 · "+(getStage(state.elapsed)+1)+"/10";
  $("stage").textContent=t(stages[getStage(state.elapsed)].key).toUpperCase();
  $("progress").style.width=(Math.min(100,state.elapsed/DURATION*100))+"%";
- const lifeKey=lang+':'+state.lives+':'+state.maxLives;if($('lives').dataset.value!==lifeKey){$('lives').dataset.value=lifeKey;$('lives-label').textContent=t('heart');document.querySelectorAll('#life-hearts svg').forEach((heart,i)=>heart.classList.toggle('empty',i>=state.lives));$('lives').setAttribute('aria-label',t('heart')+': '+state.lives+' / 3');}
+ const lifeKey=lang+':'+state.lives+':'+state.maxLives;if($('lives').dataset.value!==lifeKey){$('lives').dataset.value=lifeKey;$('lives-label').textContent=t('heart');document.querySelectorAll('#life-hearts svg').forEach((heart,i)=>{heart.classList.toggle('empty',i>=state.lives);if(i>=3)heart.toggleAttribute('hidden',i>=state.lives);});$('lives').setAttribute('aria-label',t('heart')+': '+state.lives+' / '+Math.max(3,state.lives));}
 
  const active=screen==="play",intro=introElapsed>=0;app.classList.toggle("intro-active",intro);$("intro-caption").hidden=!intro;$("intro-caption").querySelector("span").textContent=t("introCaption");$("tutorial").hidden=!active||intro||state.distance>70||countdown>0;
  const rem=state.nextTurn-state.distance,show=active&&state.nextTurn>0&&rem<state.speed*2.8&&state.elapsed<892&&!(state.elapsed>=578&&state.elapsed<592.5);
@@ -309,7 +324,7 @@ function loop(ms){
   if(introElapsed>=0){introElapsed+=dt;if(introElapsed>=INTRO_DURATION){introElapsed=-1;countdown=COUNTDOWN_DURATION;lastCount=3;$("countdown").hidden=false;$("countdown").textContent="3";audio.play('pickup',.9,.55);}}
   else if(countdown>0){countdown=Math.max(0,countdown-dt);const n=Math.ceil(countdown);if(n!==lastCount){lastCount=n;audio.play('pickup',n?1.2-n*.1:1.6,n?.55:.8);}$("countdown").textContent=n||t("go");if(countdown<=0)$("countdown").hidden=true;}
 
-  else{acc+=dt;while(acc>=.05&&state.phase==="playing"){if(tilt)dispatch({type:"steer",lane:tiltValue});dispatch({type:"step"});acc-=.05;}if(!bestAnnounced&&runBest>0&&testLevel<=1&&state.score>runBest&&state.phase==="playing"){bestAnnounced=true;toast(t("newBestRun"),2.4);audio.play("pickup",1.9,.7);}if(state.phase!=="playing")finish();}
+  else{acc+=dt;while(acc>=.05&&state.phase==="playing"&&!$("shop-dialog").open){if(tilt)dispatch({type:"steer",lane:tiltValue});dispatch({type:"step"});acc-=.05;}if(!bestAnnounced&&runBest>0&&testLevel<=1&&state.score>runBest&&state.phase==="playing"){bestAnnounced=true;toast(t("newBestRun"),2.4);audio.play("pickup",1.9,.7);}if(state.phase!=="playing")finish();}
  }
  if(loaded&&screen==='play'&&!paused&&introElapsed<0&&countdown<=0){
   qualityCooldown=Math.max(0,qualityCooldown-dt);qualityLowTime=fps<43?qualityLowTime+dt:Math.max(0,qualityLowTime-dt*2);qualityHighTime=fps>56?qualityHighTime+dt:0;

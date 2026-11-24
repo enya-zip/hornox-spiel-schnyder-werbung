@@ -39,7 +39,7 @@ export function createHornli(r){
  // mit winzigem Geröll weit unten – so ist sofort klar, dass man nur auf dem Holz laufen kann.
  function abyss(k=0,toward=1,outer=0){const w=2.5+outer;a('box',-toward*outer/2,.03,0,w,.02,8.02,[.035,.04,.055]);
   for(let i=0;i<4;i++){const c=.32-i*.07;a('box',toward*(1.1-i*.28),.035,0,.3,.02,8.02,[c,c*.98,c*.95]);}
-  for(let j=-1;j<=1;j++)a('rock',toward*1.05,-.02,j*2.6+((k+j)%3-1)*.3,.55,.28,1.5,rockDark,0,k+j,0,toward*.55);
+  for(let j=-1;j<=1;j++)a('rock',toward*1.05,-.02,j*2.6+((k+j)%3-1)*.3,.55,.28,1.5,rockDark,0,k+j,toward*.55);
   for(let j=0;j<5;j++)a('rock',-toward*((j*.37+k*.13)%1.6),.04,((j*29+k*7)%15)/15*7-3.5,.06,.03,.05,[.18,.19,.22],0,j+k);}
  // Grasbüschel (spärliche Vegetation).
  function tuft(k=0){for(let j=0;j<5;j++){const ang=j*1.3+k,h=.18+(j%3)*.07;a('box',Math.cos(ang)*.1,h/2,Math.sin(ang)*.1,.03,h,.03,j%2?grass:[.62,.62,.38],Math.sin(ang)*.3,0,-Math.cos(ang)*.3);}}
