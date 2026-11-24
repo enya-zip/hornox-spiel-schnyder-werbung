@@ -16,16 +16,12 @@ export function createHornli(r){
  function woodBarrier(){for(const x of[-1,1])a('box',x,.42,0,.12,.84,.12,woodOld);a('box',0,.62,0,2.3,.14,.08,wood);a('box',0,.32,0,2.3,.12,.08,wood);for(const x of[-.6,0,.6])a('box',x,.62,.05,.25,.1,.01,[.85,.25,.2]);}
  // Holzgeländer quer über den ganzen Weg (drüberspringen).
  function woodRail(){for(const x of[-3.9,-1.3,1.3,3.9])a('cylinder',x,.5,0,.09,1,.09,woodOld);a('cylinder',0,.92,0,.07,8,.07,wood,0,0,PI/2);a('cylinder',0,.52,0,.06,8,.06,wood,0,0,PI/2);}
- // Metallbarriere quer über den Weg (drüberspringen).
- function metalBarrier(){for(const x of[-3.6,0,3.6]){a('cylinder',x,.48,0,.06,.96,.06,metalDark);a('box',x,.03,0,.3,.06,.3,metalDark);}a('cylinder',0,.92,0,.05,7.4,.05,metal,0,0,PI/2);a('box',0,.6,0,7.4,.3,.03,[.75,.7,.25]);for(let j=-3;j<=3;j++)a('box',j*1.05,.6,.02,.45,.3,.005,[.15,.15,.15],0,0,.6);}
  // Grosse Felsformation, die eine Spur blockiert (Spur wechseln).
  function rockFace(k=0){a('rock',0,1.3,0,1.45,2.6,1.4,rockDark,0,k);a('rock',.4,2.4,.2,1,1.3,1,rock,0,k+1);a('rock',-.5,.6,.5,.8,.7,.7,rockLight,0,k+2);a('sphere',.2,2.95,0,.6,.06,.5,lichen);}
  // Felsvorsprung, der von der Seite in eine Spur ragt (Spur wechseln).
  function ledge(k=0,side=1){push(side*.6,0,0);a('rock',0,1.1,0,1.9,2.2,1.2,rock,0,k);a('rock',-side*.6,1.6,0,1.2,1,1,rockDark,0,k+2);pop();}
  // Schweizer Wanderwegweiser (gelb) – blockiert eine Spur.
  function signpost(k=0){a('cylinder',0,1.1,0,.07,2.2,.07,[.6,.6,.62]);for(const [y,dir] of[[1.95,1],[1.65,-1],[1.35,1]]){push(dir*.35,y,0);a('box',0,0,0,.95,.22,.04,[.97,.8,.1]);a('box',dir*.55,0,0,.18,.18,.04,[.97,.8,.1],0,0,PI/4);a('box',0,0,.025,.7,.05,.005,[.15,.15,.12]);pop();}a('rock',0,.12,0,.45,.25,.4,rockDark,0,k);}
- // Niedrige Metallstrebe über dem Weg (ducken).
- function metalStrut(){for(const x of[-4,4]){a('cylinder',x,.9,0,.08,1.8,.08,metalDark);}a('box',0,1.42,0,8.2,.14,.14,metal);a('box',0,1.42,0,8.2,.03,.16,[.9,.75,.15]);for(let j=-3;j<=3;j+=2)a('box',j,1.43,.08,.5,.12,.005,[.12,.12,.12],0,0,.6);}
  // Quer verlaufender Holzbalken (ducken).
  function beamLow(){for(const x of[-4,4])a('cylinder',x,.95,0,.13,1.9,.13,woodOld);a('cylinder',0,1.48,0,.17,8.4,.17,wood,0,0,PI/2);}
  // Niedriger Felsüberhang (ducken): Felsdach über den Weg, auf einer Seite in der Wand verankert.
@@ -39,18 +35,18 @@ export function createHornli(r){
   a('sphere',.6,h*.45,1.2,.6,.08,.5,lichen);if(k%3===0)a('rock',0,h+.4,0,1.6,1,1.8,rockLight,0,k);}
  // Abbruchkante zum Abgrund: Felskante mit Blick in die Tiefe.
  function edge(k=0){a('rock',-.4,-.05,0,1.2,.35,2.4,rockDark,0,k);a('box',3.5,-.08,0,6,.04,8.02,[.08,.09,.11]);a('box',8,-.06,0,4,.04,8.02,[.12,.14,.17]);if(k%2)a('rock',0,-.1,1.6,.5,.25,.4,rock,0,k+1);}
- // Abgrund unter einer Spur (Metallbrücke): dunkle Tiefe mit Felskante.
- function abyss(k=0){a('box',0,.03,0,2.5,.02,8.02,[.06,.07,.09]);a('box',0,.035,0,2.1,.02,8.02,[.03,.035,.05]);}
+ // Abhang neben dem Holzsteg: die Felskante bricht zur Stegseite hin ab, darunter dunkle Tiefe
+ // mit winzigem Geröll weit unten – so ist sofort klar, dass man nur auf dem Holz laufen kann.
+ function abyss(k=0,toward=1,outer=0){const w=2.5+outer;a('box',-toward*outer/2,.03,0,w,.02,8.02,[.035,.04,.055]);
+  for(let i=0;i<4;i++){const c=.32-i*.07;a('box',toward*(1.1-i*.28),.035,0,.3,.02,8.02,[c,c*.98,c*.95]);}
+  for(let j=-1;j<=1;j++)a('rock',toward*1.05,-.02,j*2.6+((k+j)%3-1)*.3,.55,.28,1.5,rockDark,0,k+j,0,toward*.55);
+  for(let j=0;j<5;j++)a('rock',-toward*((j*.37+k*.13)%1.6),.04,((j*29+k*7)%15)/15*7-3.5,.06,.03,.05,[.18,.19,.22],0,j+k);}
  // Grasbüschel (spärliche Vegetation).
  function tuft(k=0){for(let j=0;j<5;j++){const ang=j*1.3+k,h=.18+(j%3)*.07;a('box',Math.cos(ang)*.1,h/2,Math.sin(ang)*.1,.03,h,.03,j%2?grass:[.62,.62,.38],Math.sin(ang)*.3,0,-Math.cos(ang)*.3);}}
  // Steine auf dem Schotterweg.
  function pebbles(k=0){for(let j=0;j<6;j++){const x=((j*41+k*17)%23)/23*7.6-3.8,z=((j*29+k*11)%19)/19*7.6-3.8,sz=.06+((j+k)%3)*.05;a('rock',x,sz*.4,z,sz*1.4,sz*.8,sz*1.2,j%2?rock:rockLight,0,j+k);}}
  // Altschnee zwischen Felsen.
  function snowRest(k=0){a('cylinder',0,.06,0,1.6+(k%3)*.5,.12,1+(k%2)*.6,snow,0,k);a('rock',.9,.3,.4,.6,.5,.5,rockDark,0,k);}
- // Metalltreppe: Gitterstufe quer über den Weg mit Seitenwangen.
- function stairStep(k=0){a('box',0,.06,0,8,.08,1.1,metal);for(let j=-3;j<=3;j++)a('box',j*1.1,.11,0,.04,.02,1.05,metalDark);for(const x of[-4.1,4.1]){a('box',x,.35,0,.08,.6,1.1,metalDark);if(k%2===0)a('cylinder',x,1,0,.035,1.3,.035,metal);}a('cylinder',-4.1,1.6,0,.03,1.2,.03,metal,PI/2);a('cylinder',4.1,1.6,0,.03,1.2,.03,metal,PI/2);}
- // Metallbrücke: schmaler Steg (eine Spur) mit Geländer.
- function bridgeDeck(){a('box',0,0,0,2.3,.1,2.5,metal);for(let j=-1;j<=1;j++)a('box',j*.7,.06,0,.04,.02,2.45,metalDark);for(const x of[-1.2,1.2]){a('cylinder',x,.55,0,.04,1.1,.04,metalDark);a('cylinder',x,1.1,0,.035,2.5,.035,metal,PI/2);a('cylinder',x,.6,0,.025,2.5,.025,metal,PI/2);}a('box',0,-.35,0,.2,.6,.2,metalDark);}
  // Holzgeländer am Wegrand (Abschnitt 2).
  function sideRail(){a('cylinder',0,.55,0,.07,1.1,.07,woodOld);a('cylinder',0,1,1.9,.05,3.8,.05,wood,PI/2);}
  // Hörnlihütte (3260 m): Steinbau mit flachem Dach, Fensterreihen und Schweizer Fahne.
@@ -59,22 +55,10 @@ export function createHornli(r){
   a('cylinder',6.5,8,2,.06,3.4,.06,[.85,.85,.85]);a('box',7.1,9.2,2,1.2,.8,.03,[.85,.1,.1]);a('box',7.1,9.2,2.02,.6,.18,.01,[1,1,1]);a('box',7.1,9.2,2.02,.18,.6,.01,[1,1,1]);
   a('rock',0,-.6,0,20,1.6,12,rock,0,1);}
  // ---------- Schöne Alpenwelt (Landschafts-Highlight) ----------
- // Türkisfarbener Bergsee (Abschnitt 2): Wasser, helle Uferzone, Lichtreflexe und gespiegelte Gipfel.
- function lake(time,k,shore=false){a('box',0,.06,0,11.2,.06,8.1,shore?[.36,.7,.68,26]:[.14,.56,.62,26]);
-  const ph=(time*.15+k*.07)%1;a('box',-3+ph*6,.1,((k%3)-1)*2.4,3,.01,.06,[.85,.97,1,49]);}
- // Spiegelbild eines Bergs im See: dunkleres, umgedrehtes Dreieck aus flachen Quadern.
- function reflection(h=18,w=16,snowy=true){for(let j=0;j<6;j++){const f=j/6,ww=w*(1-f);a('box',0,.095,f*h*.55,ww,.005,h*.55/6+.02,j<2&&snowy?[.62,.8,.84,26]:[.1,.36,.4,26]);}}
  // Gletscherzunge am Berghang (Abschnitt 5).
  function glacier(k=0){for(let j=0;j<5;j++){a('rock',j*1.2-2.4,2+j*1.6,-j*3,7-j*.8,2.2,6,j%2?[.86,.92,.96]:[.78,.88,.94],0,k+j);}for(let j=0;j<4;j++)a('box',j*1.5-2.2,3.2+j*1.6,-j*3+1.5,.08,.1,3.5,[.45,.62,.72],0,.3);}
  // Wolkenbank / Bergnebel (weiche Billboards).
  function cloud(size=12,k=0){for(let j=0;j<6;j++)a('sphere',((j*37+k)%9-4)*size*.16,((j*13+k)%5)*size*.035,((j*7+k)%5-2)*size*.1,size*(.35+(j%3)*.1),size*(.16+(j%2)*.06),size*(.3+(j%2)*.1),[.97,.98,1,49]);}
- // Moosige Felswand mit Wasserfall und Becken (Abschnitt 3).
- function fallWall(time,k){a('rock',0,4.5,0,6,9,3.4,[.46,.48,.44],0,k);a('rock',-2.6,2.5,.8,2.6,5,2.4,[.4,.44,.38],0,k+1);a('sphere',-1,6.8,1.5,1.8,.3,1,[.34,.5,.26]);a('sphere',2,3.2,1.6,1.5,.25,.9,[.38,.54,.28]);
-  a('box',.6,4.5,1.75,1.4,9,.2,[.78,.93,1,49]);for(let j=0;j<5;j++){const ph=(time*1.9+j*.2)%1;a('box',.6+((j%3)-1)*.35,9-ph*9,1.9,.25,.7,.04,[.96,.99,1,49]);}
-  a('cylinder',.6,.03,3.3,2.6,.08,1.8,[.2,.6,.64,26]);for(let j=0;j<4;j++){const ph=(time*2+j*.3)%1;a('sphere',.6+Math.cos(j*1.7)*1.1*ph,.25+ph*.6,2.3+Math.sin(j)*.5,.25+ph*.3,.18,.25+ph*.3,[.96,.99,1,49]);}}
- // Kleine Berghütte aus Holz und Stein.
- function stoneHut(k=0){a('box',0,1,0,4.2,2,3.4,[.62,.6,.56]);a('box',0,2.6,0,4.2,1.2,3.4,[.5,.34,.2]);a('box',0,3.4,-.9,4.8,.18,2.3,[.35,.32,.3],.62);a('box',0,3.4,.9,4.8,.18,2.3,[.35,.32,.3],-.62);
-  a('box',-.9,1.1,1.72,.7,.8,.04,[.25,.3,.35]);a('box',.9,1.1,1.72,.7,.8,.04,[.25,.3,.35]);a('box',0,2.6,1.72,.8,.6,.04,[.25,.3,.35]);for(const x of[-.9,.9])a('box',x,.65,1.75,.8,.14,.04,[.8,.25,.2]);a('box',1.4,3.9,0,.4,.9,.4,[.55,.53,.5]);}
  // ---------- Der felsige Aufstieg (Abschnitt 3) ----------
  const slate=[.47,.4,.34],slateDark=[.34,.3,.27],slateLight=[.6,.54,.47];
  // Lose Steine: breiter Haufen aus Schieferplatten in einer Spur (ausweichen – zu breit und wacklig zum Springen).
@@ -86,5 +70,11 @@ export function createHornli(r){
  // Brauner Schieferhang (wie auf dem Foto): geschichtete, schräge Platten.
  function slateSlope(k=0,h=4,side=1){for(let j=0;j<6;j++){const y=j*h/6,x=side*(j*.9),w=2.6+((k+j)%3)*.6;a('rock',x,y+.3,((j*7+k)%5-2)*.5,w,.55,2.8,j%2?slate:slateDark,0,k+j,side*.35);}
   if(k%2)a('rock',side*1.2,.25,1,.9,.3,.7,slateLight,.3,k);}
- return{looseRocks,railLane,boardwalk,slateSlope,lake,reflection,glacier,cloud,fallWall,stoneHut,abyss,scree,rockBig,woodPiece,woodBarrier,woodRail,metalBarrier,rockFace,ledge,signpost,metalStrut,beamLow,overhang,snowPatch,cliff,edge,tuft,pebbles,snowRest,stairStep,bridgeDeck,sideRail,hut};
+ // Natürliche Steinstufe quer über den Weg (flache Felsplatten, nur Optik).
+ function stoneStep(k=0){for(let j=-1;j<=1;j++){const w=2.3+((k+j)%3)*.15;a('rock',j*2.5+((k+j)%3-1)*.15,.05,((k*3+j)%3-1)*.15,w,.12,.75,(k+j)%2?rockLight:rock,0,k+j);}}
+ // Moränenblock mit Flechten (Start am Schwarzsee).
+ function moraine(k=0){a('rock',0,.5,0,1.6+(k%3)*.4,1,1.3,(k%2)?rock:rockLight,0,k);a('sphere',.2,.95+(k%3)*.1,.1,.5,.05,.4,lichen);if(k%3===0)a('rock',.9,.2,.6,.6,.35,.5,rockDark,0,k+2);}
+ // Wolkenfahne (wie am echten Matterhorn): weiche, ausgefranste Kugeln.
+ function banner(size=60,k=0){for(let j=0;j<7;j++)a('sphere',j*size*.18,Math.sin(j*1.3+k)*size*.06,((j*5+k)%3-1)*size*.05,size*(.22-j*.018),size*(.13-j*.01),size*(.18-j*.015),[.98,.99,1,49]);}
+ return{stoneStep,moraine,banner,looseRocks,railLane,boardwalk,slateSlope,glacier,cloud,abyss,scree,rockBig,woodPiece,woodBarrier,woodRail,rockFace,ledge,signpost,beamLow,overhang,snowPatch,cliff,edge,tuft,pebbles,snowRest,sideRail,hut};
 }

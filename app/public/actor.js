@@ -1,5 +1,5 @@
 import {gearGeometry} from "./gear.js?v=17";
-import {identity,multiply,compose} from "./engine3d.js?v=24";
+import {identity,multiply,compose} from "./engine3d.js?v=25";
 const components={SCALAR:1,VEC2:2,VEC3:3,VEC4:4,MAT4:16},types={5120:Int8Array,5121:Uint8Array,5122:Int16Array,5123:Uint16Array,5125:Uint32Array,5126:Float32Array};
 function trs(o,t,q,s){const[x,y,z,w]=q,x2=x+x,y2=y+y,z2=z+z,xx=x*x2,xy=x*y2,xz=x*z2,yy=y*y2,yz=y*z2,zz=z*z2,wx=w*x2,wy=w*y2,wz=w*z2;o[0]=(1-yy-zz)*s[0];o[1]=(xy+wz)*s[0];o[2]=(xz-wy)*s[0];o[3]=0;o[4]=(xy-wz)*s[1];o[5]=(1-xx-zz)*s[1];o[6]=(yz+wx)*s[1];o[7]=0;o[8]=(xz+wy)*s[2];o[9]=(yz-wx)*s[2];o[10]=(1-xx-yy)*s[2];o[11]=0;o[12]=t[0];o[13]=t[1];o[14]=t[2];o[15]=1;}
 function rotateX(q,a){const x=q[0],y=q[1],z=q[2],w=q[3],s=Math.sin(a/2),c=Math.cos(a/2);q[0]=c*x+s*w;q[1]=c*y-s*z;q[2]=c*z+s*y;q[3]=c*w-s*x;}

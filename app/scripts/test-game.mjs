@@ -240,7 +240,7 @@ check('level 6 Schwarzsee: swamp – jump between beams and sunken stones, every
  const slowRun=action({...stuck,objects:[],nextRow:1e9},{type:'step'}),normal=action({...start(),distance:100,nextRow:1e9,objects:[]},{type:'step'});assert(slowRun.speed<normal.speed*.5,'stark gebremst');
  const free=collision('mudPuddle',{jump:10});assert.equal(free.lives,3);assert(!free.events.some(e=>e.kind==='mudStuck'));
 });
-check('level 7 Hörnliweg: five sections, realistic jump/duck/lane obstacles, metal bridge and slippery snow',()=>{
+check('level 7 Hörnliweg: five sections, realistic jump/duck/lane obstacles, wooden walkways and slippery snow',()=>{
  const kindsIn=(t0,t1)=>{const seen=new Set();for(let seed=1;seed<12;seed++){let r={...start(seed),tick:t0*20,elapsed:t0,distance:14000,nextRow:14030,nextTurn:1e9,row:90};while(r.elapsed<t1){r=action({...r,lives:9,invulnerable:1},{type:'step'});for(const o of r.objects)if(o.biome===4&&!['coin','heart','magnet','shieldOrb','coinBoost','rushCharge'].includes(o.kind))seen.add(o.kind);}}return seen;};
  const s1=kindsIn(541,556),s2=kindsIn(559,574),s4=kindsIn(595,610);
  for(const k of['scree','rockBig','woodPiece','signpost'])assert(s1.has(k),'Abschnitt 1 fehlt '+k);
@@ -253,8 +253,8 @@ check('level 7 Hörnliweg: five sections, realistic jump/duck/lane obstacles, me
  const s3=kindsIn(577,580.5);for(const k of['metalStrut','metalBarrier'])assert(!s3.has(k),'Metall im Aufstieg: '+k);assert(s3.has('looseRocks')||s3.has('railLane')||s3.has('rockBig'));
  assert.equal(collision('looseRocks',{jump:10}).lives,2);assert.equal(collision('looseRocks',{lane:0}).lives,3);assert.equal(collision('railLane',{jump:10}).lives,2);assert.equal(collision('railLane',{lane:2}).lives,3);
  // Ausweichen: springen / ducken / Spur wechseln
- assert.equal(collision('rockBig',{jump:10}).lives,3);assert.equal(collision('woodRail',{lane:-1,jump:10}).lives,3);assert.equal(collision('metalBarrier',{lane:-1,jump:10}).lives,3);
- assert.equal(collision('metalStrut',{lane:-1,duck:9}).lives,3);assert.equal(collision('metalStrut',{lane:-1,jump:10}).lives,2);assert.equal(collision('overhang',{lane:-1,duck:9}).lives,3);assert.equal(collision('beamLow',{lane:-1,duck:9}).lives,3);
+ assert.equal(collision('rockBig',{jump:10}).lives,3);assert.equal(collision('woodRail',{lane:-1,jump:10}).lives,3);
+ assert.equal(collision('beamLow',{lane:-1,jump:10}).lives,2);assert.equal(collision('overhang',{lane:-1,duck:9}).lives,3);assert.equal(collision('beamLow',{lane:-1,duck:9}).lives,3);
  assert.equal(collision('rockFace',{jump:10}).lives,2);assert.equal(collision('ledge',{jump:10}).lives,2);assert.equal(collision('signpost',{lane:0}).lives,3);
  // Schneefeld: rutschig, kein Leben weg
  const sl=collision('snowPatch');assert.equal(sl.lives,3);assert(sl.events.some(e=>e.kind==='slip'));assert(sl.slow>0);

@@ -47,7 +47,7 @@ vec3 landscape(bool ground,vec2 p){float t=max(0.,environmentTime+clamp(dot(vWor
  float fine=1.-smoothstep(.15,.7,length(fwidth(p*20.)));vec3 asphalt=vec3(.34,.36,.36)*(.98+(noise(p*20.)-.5)*.08*fine),town=asphalt;
  if(t<84.)return town;if(t<96.)return mix(town,surface(meadow,p),smoothstep(84.,96.,t));
  vec3 field=surface(meadow,p);if(t>=174.&&t<354.)field*=vec3(.84,.91,.82);
- if(t<444.)return field;if(t<456.)return mix(field,rock,smoothstep(444.,456.,t));if(t<528.)return rock;vec3 lush=surface(meadow,p)*vec3(.92,1.06,.86);if(t<540.)return mix(rock,lush,smoothstep(528.,540.,t));vec3 scree=rock*vec3(1.06,.9,.74);if(t<574.)return lush;if(t<580.)return mix(lush,scree,smoothstep(574.,580.,t));if(t<592.)return scree;if(t<598.)return mix(scree,mix(rock,lush,.45),smoothstep(592.,598.,t));if(t<610.)return mix(rock,lush,.45);if(t<624.)return mix(mix(rock,lush,.45),rock,smoothstep(610.,622.,t));if(t<636.)return mix(rock,ice,smoothstep(624.,636.,t));
+ if(t<444.)return field;if(t<456.)return mix(field,rock,smoothstep(444.,456.,t));if(t<528.)return rock;vec3 sparse=mix(rock,surface(meadow,p)*vec3(.82,.86,.62),.38);vec3 scree=rock*vec3(1.04,.94,.82);vec3 slate=rock*vec3(1.08,.88,.7);if(t<540.)return mix(rock,sparse,smoothstep(528.,540.,t));if(t<556.)return sparse;if(t<562.)return mix(sparse,scree,smoothstep(556.,562.,t));if(t<574.)return scree;if(t<580.)return mix(scree,slate,smoothstep(574.,580.,t));if(t<592.)return slate;if(t<598.)return mix(slate,rock,smoothstep(592.,598.,t));if(t<624.)return rock;if(t<636.)return mix(rock,ice,smoothstep(624.,636.,t));
  if(t<714.)return ice;if(t<726.)return mix(ice,mix(rock,ice,.38),smoothstep(714.,726.,t));if(t<804.)return mix(rock,ice,.38);return mix(mix(rock,ice,.38),vec3(.88,.94,.96),smoothstep(804.,816.,t));}
 
 

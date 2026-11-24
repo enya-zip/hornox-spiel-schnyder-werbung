@@ -1,11 +1,11 @@
 import {INTRO_DURATION,COUNTDOWN_DURATION} from './intro.js?v=17';
 import {stages,getStage,DURATION,fogAt,bridgeAt,forestSection,meadowSection,meadowWindows,lakeSection,stoneAt,swampMud} from "./journey.js?v=26";
-import {createScene} from "./scene3d.js?v=79";
+import {createScene} from "./scene3d.js?v=81";
 import {setup,validateAction,applyAction} from "./rules.js?v=45";
 import {installControls} from "./controls.js?v=17";
 import {createAudio} from "./audio.js?v=23";
-import {getZone} from "./scene3d.js?v=79";
-import {copy} from "./copy.js?v=53";
+import {getZone} from "./scene3d.js?v=81";
+import {copy} from "./copy.js?v=54";
 import {turnDirection} from "./route.js?v=21";
 import {createLeaderboard} from "./leaderboard.js?v=8";
 import {LEADERBOARD} from "./leaderboard-config.js?v=4";
@@ -280,7 +280,7 @@ function lakeAmbience(){
 // Level 7 Hörnliweg: Meldung zu jedem der fünf Abschnitte und vor der Metallbrücke.
 let hornliSec=0;function hornliAmbience(){const el=state.elapsed,sec=screen==="play"&&state.phase==="playing"&&el>=540&&el<630?1+Math.min(4,Math.floor((el-540)/18)):0;
  if(sec!==hornliSec){if(sec>0)toast(t("hornliSec"+sec),3.4);hornliSec=sec;}
- if(sec===3&&!paused)for(const w of[581,589])if(el>=w-1.8&&el<w-1.55&&!lakeSounds.has("bridge"+w)){lakeSounds.add("bridge"+w);bigAlert(t("bridgeAlert7"));toast(t("bridgeHint7"),2.6);}}
+ if(sec===3&&!paused)for(const w of[581,589])if(el>=w-4.5&&el<w-4.25&&!lakeSounds.has("bridge"+w)){lakeSounds.add("bridge"+w);bigAlert(t("bridgeAlert7"));toast(t("bridgeHint7"),2.6);}}
 function hud(){if(screen==="play"&&state.phase==="playing")crowWarnings();fisherBubble();forestAmbience();meadowAmbience();lakeAmbience();hornliAmbience();
  $("score").textContent=fmt(state.score);$("coins").textContent=state.coins;$("combo").textContent=state.multiplier>1?"×"+state.multiplier:"";
  $("distance").textContent=Math.floor(state.elapsed/60)+":"+String(Math.floor(state.elapsed%60)).padStart(2,"0")+" / 15:00 · "+(getStage(state.elapsed)+1)+"/10";
