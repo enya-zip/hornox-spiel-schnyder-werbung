@@ -130,5 +130,12 @@ export function createMeadow(r){
   push(-.75,0,.35,0,.4);a('box',0,.42,0,.5,.5,.45,[.72,.5,.26]);a('box',0,.74,0,.62,.08,.56,[.55,.25,.15],0,0,.35);a('box',0,.74,0,.62,.08,.56,[.55,.25,.15],0,0,-.35);a('box',0,.3,.23,.22,.04,.02,[.15,.1,.06]);pop();
   for(let j=0;j<3;j++){const t=time*(1.6+j*.4)+j*2+k;push(1.15+Math.sin(t)*.55,2.55+Math.sin(t*1.7)*.3,Math.cos(t)*.55,0,t*2,0,.7);bee(time,j+k);pop();}
  }
- return{nestTree,fenceLow,fenceTall,bee,fence,gate,hayBale,haystack,trough,ditch,woodstack,cow,goat,chicken,dog,flower,herb,cheese,goldBell,edelweiss,flowerPatch,dew,sideFence,brook,footbridge};
+ // Honigtopf (Sammelobjekt) mit Holzdeckel, tropfendem Honig und ein paar Bienen.
+ function honeyPot(time,id=0){const y=.35+Math.sin(time*3+id)*.06;push(0,y,0,0,time*.8+id);
+  a('sphere',0,.32,0,.36,.34,.36,[.86,.55,.18]);a('cylinder',0,.62,0,.24,.1,.24,[.86,.55,.18]);a('cylinder',0,.7,0,.27,.06,.27,[.55,.36,.2]);
+  a('box',0,.3,.35,.34,.18,.02,[.98,.92,.7]);a('box',0,.3,.36,.26,.05,.01,[.55,.3,.1]);
+  for(const [x,z,h] of[[.2,.18,.22],[-.15,.25,.3],[.05,-.3,.18]])a('sphere',x,.62-h/2,z,.05,h/2,.05,[1,.72,.12,26]);pop();
+  a('ring',0,.05,0,.7,.7,.04,[1,.78,.2,49],PI/2);
+  for(let j=0;j<2;j++){const t=time*(2+j*.5)+j*3+id;push(Math.sin(t)*.7,1.1+Math.sin(t*1.8)*.25,Math.cos(t)*.7,0,t*2,0,.7);bee(time,j+id);pop();}}
+ return{honeyPot,nestTree,fenceLow,fenceTall,bee,fence,gate,hayBale,haystack,trough,ditch,woodstack,cow,goat,chicken,dog,flower,herb,cheese,goldBell,edelweiss,flowerPatch,dew,sideFence,brook,footbridge};
 }

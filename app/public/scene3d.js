@@ -12,7 +12,7 @@ import {createEffects} from './effects.js?v=17';
 import {createPath} from './route.js?v=21';
 import {getZone,bridgeAt,fogAt,forestSection,meadowSection,lakeSection,stoneAt,swampMud} from './journey.js?v=26';
 import {createBlackLake} from './blacklake.js?v=11';
-import {createMeadow} from './meadow.js?v=6';
+import {createMeadow} from './meadow.js?v=7';
 import {createForest} from './forest.js?v=5';
 export {getZone};
 const PI=Math.PI,C={ice:[.74,.87,.9,10],grass:[.44,.58,.30,11],gravel:[.7,.63,.48,12],cobble:[.65,.66,.61,13],snow:[.86,.92,.94,2],rock:[.48,.52,.53,1],wood:[.32,.22,.15,4],gold:[1,.74,.24,9],dark:[.12,.2,.23],fir:[1,1,1,7],red:[.85,.16,.19],flower:[.97,.85,.40]};
@@ -130,7 +130,6 @@ export function createScene(canvas){
     if(w<d+80&&sec<=2&&k%2===0){const dw=point(w+2,side*5);push(dw.x,dw.y,dw.z);meadow.dew(anim,k);pop();}
     const fp=point(w,side*6.4);if(clear(fp.x,fp.z,.6,w)){at(w,side*6.4);meadow.sideFence();pop();}
     /* Alpweiden: keine Schafe und keine Kühe (Wunsch Kunde) – nur Wiese, Blumen, Zäune und Hütten */
-    if(sec>=2&&k%19===(side>0?6:13)&&w<d+300){const np=point(w,side*8.4);if(clear(np.x,np.z,2.4,w)){at(w,side*8.4);push(0,0,0,0,side>0?PI:0);meadow.nestTree(anim,k);pop();pop();}}
     if(k%23===(side>0?7:18)){const hp=point(w,side*19);if(clear(hp.x,hp.z,6,w)){at(w,side*19);push(0,0,0,0,side<0?PI/2:-PI/2,0,.85);alpine.chalet(k%3);pop();pop();}}
     if(k%17===(side>0?11:3)){const tp=point(w,side*34);if(clear(tp.x,tp.z,3,w))tree(tp.x,tp.z,1.1,tp.y);}
     if(k%31<5&&side>0){const bp=point(w,side*22);if(clear(bp.x,bp.z,2,w)){at(w,side*22);meadow.brook(anim);pop();}}
@@ -256,6 +255,7 @@ export function createScene(canvas){
     push(tp.x,tp.y,tp.z,0,-tp.h);a('ring',0,.62,0,1.15,1.15,.1,hot?[1,.15+.25*(1-pulse),.15,49]:[1,.85,.25,49],PI/2);a('ring',0,.64,0,.75,.75,.06,hot?[1,.4,.35,49]:[1,.95,.6,49],PI/2,0,time*3);pop();
     if(gapT>.05||l!==far){push(tp.x+Math.sin(time*7+o.id+l)*.45,tp.y+1.3+Math.sin(time*9+l)*.3,tp.z+Math.cos(time*6+l)*.35,0,time*4,0,3.2);blacklake.fly(time,o.id+l);pop();}}
    return;}
+  if(o.kind==='honey'){const side=o.lane===0?-1:1;at(od,side*5.8);push(0,0,0,0,side>0?PI:0,0,1.15);meadow.nestTree(time,o.id);pop();pop();if(!o.resolved){at(od,(o.lane-1)*2.5);meadow.honeyPot(time,o.id);pop();}return;}
   if(o.kind==='fenceLow'||o.kind==='fenceTall'){at(od,(o.lane-1)*2.5,rise);if(toss)push(0,0,0,0,toss.spin,toss.lean);meadow[o.kind](o.id);if(toss)pop();pop();return;}
   if(['fence','gate','haystack','trough','ditch','woodstack','hayBale'].includes(o.kind)){
    // Level 5: Weide-Hindernisse.
@@ -321,7 +321,7 @@ export function createScene(canvas){
   else if(o.kind==='planter'){a('cylinder',0,.46,0,.67,.9,.67,[.55,.36,.24]);a('sphere',0,1.02,0,.65,.4,.65,[.22,.38,.18]);for(let i=0;i<7;i++)a('sphere',Math.sin(i*7)*.5,1.2,Math.cos(i*7)*.5,.13,.11,.13,C.red);}
   if(toss)pop();pop();
  }
- return{ready,resize:r.resize,emit(e,s){if(!path)path=createPath(s.seed);fx.emit(e,s,path);if(e.kind==='fishCatch')flyingFish.push(anim);if(e.kind==='hooked')reelT=anim;if(e.kind==='beeSting')stingT=anim;if(e.kind==='splash')crocAttack={t:anim,d:s.distance+1.5,lane:Math.round(s.x)};if(e.kind==='beesAppear')beeNest={d:s.distance+24,side:s.x>1.2?-1:1,t:anim};
+ return{ready,resize:r.resize,emit(e,s){if(!path)path=createPath(s.seed);fx.emit(e,s,path);if(e.kind==='fishCatch')flyingFish.push(anim);if(e.kind==='hooked')reelT=anim;if(e.kind==='beeSting')stingT=anim;if(e.kind==='splash')crocAttack={t:anim,d:s.distance+1.5,lane:Math.round(s.x)};if(e.kind==='beesAppear')beeNest={d:e.nest??s.distance,side:e.side||1,t:anim};
   if(e.kind==='powerClear'&&!['crevasse','ridgeGap','manhole','rope','branch','iceArch'].includes(e.object)){
    if(tossed.length>=12)tossed.shift();tossed.push({o:{id:e.id||0,kind:e.object,lane:e.lane,d:e.d??s.distance},time:anim,side:e.lane===0?-1:e.lane===2?1:(e.id%2?-1:1)});
   }
@@ -339,7 +339,7 @@ export function createScene(canvas){
    const goal=s.boar>0?(s.boarGap||14):40;boarVis+=(goal-boarVis)*Math.min(1,delta*(goal>boarVis?.8:2.5));boarLane+=(lane-boarLane)*Math.min(1,delta*3);
    if(boarVis<30){const back=1.4+Math.max(0,boarVis-3)*.4,off=(boarLane-1)*2.5+(Math.abs(boarLane-lane)<.5?1.2:0),q=point(d-back,off);
     push(q.x,q.y,q.z,0,PI-q.h,0,.78);forest.boar(anim,1);forest.dust(anim);pop();
-    for(const o of s.objects){if(rammed.has(o.id)||o.powerCleared||['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom','plankGap','crevasse','ridgeGap','manhole','hook','stream'].includes(o.kind))continue;
+    for(const o of s.objects){if(rammed.has(o.id)||o.powerCleared||['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom','honey','plankGap','crevasse','ridgeGap','manhole','hook','stream'].includes(o.kind))continue;
      const od=o.d-(o.approach||0)*visualSubtick;if(od<d-back+1.4&&od>d-back-3){rammed.add(o.id);if(tossed.length>=12)tossed.shift();tossed.push({o:{id:o.id,kind:o.kind,lane:o.lane,d:o.d},time:anim,side:o.lane===0?-1:o.lane===2?1:(o.id%2?-1:1)});}}
    }
   }
@@ -357,13 +357,13 @@ export function createScene(canvas){
   }
   // Level 5: Beim Angriff steht vorne am Weg ein Baum mit Bienennest; der Schwarm fliegt aus dem Nest
   // heraus und folgt dann Hornox. Je näher er ist, desto enger schwirren die Bienen um seinen Kopf.
-  if(active&&beeNest&&d<beeNest.d+25){at(beeNest.d,beeNest.side*7.5);push(0,0,0,0,beeNest.side>0?PI:0);meadow.nestTree(anim,7);pop();pop();}else if(beeNest&&d>=beeNest.d+25)beeNest=null;
+  if(beeNest&&d>=beeNest.d+340)beeNest=null;
   if(active&&(s.dog>0||dogVis<30)){
    const goal=s.dog>0?(s.dogGap||14):40;dogVis+=(goal-dogVis)*Math.min(1,delta*(goal>dogVis?.8:2.5));dogLane+=(lane-dogLane)*Math.min(1,delta*3.2);
    const fly=beeNest?Math.min(1,Math.max(0,(anim-beeNest.t)/2.4)):1,emerging=s.dog>0&&fly<1;
    if(dogVis<30||emerging){const back=Math.max(.6,(Math.min(dogVis,30)-3)*.55),spread=.5+Math.min(1.4,back*.12),q=point(d-back,(dogLane-1)*2.5);
     let cx=q.x,cy=q.y+1.9,cz=q.z;
-    if(emerging){const h=point(beeNest.d,beeNest.side*7.5),hx=h.x+Math.cos(h.h)*0,e=fly*fly*(3-2*fly),hive=[h.x-Math.sin(-h.h)*0,h.y+2.55,h.z];cx=hive[0]+(cx-hive[0])*e;cy=hive[1]+(cy-hive[1])*e+Math.sin(fly*PI)*1.2;cz=hive[2]+(cz-hive[2])*e;}
+    if(emerging){const h=point(beeNest.d,beeNest.side*(5.8-1.3)),hx=h.x+Math.cos(h.h)*0,e=fly*fly*(3-2*fly),hive=[h.x-Math.sin(-h.h)*0,h.y+2.55,h.z];cx=hive[0]+(cx-hive[0])*e;cy=hive[1]+(cy-hive[1])*e+Math.sin(fly*PI)*1.2;cz=hive[2]+(cz-hive[2])*e;}
     const sp=emerging?.25+fly*spread:spread;push(cx,cy,cz,0,PI-q.h);
     for(let j=0;j<9;j++){const t=anim*(2.2+j*.31)+j*1.9;push(Math.sin(t*1.7+j)*sp,Math.sin(t*2.6+j*.7)*.45*(emerging?fly:1),Math.cos(t*1.3+j)*sp*.8,0,t*2.4,0,.8);meadow.bee(anim,j);pop();}pop();}
   }

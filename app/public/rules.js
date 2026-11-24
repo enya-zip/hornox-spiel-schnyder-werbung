@@ -29,7 +29,7 @@ export function validateAction(s,p,a){
 function random(n){return(n*1664525+1013904223)>>>0;}
 function stage(t){return Math.min(9,Math.floor(Math.max(0,t)/90));}
 function zone(t){return [3,6,7,8,1,9,4,0,10,5][stage(t)];}
-const pickups=['coin','heart','magnet','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom','herb','cheese','goldBell','edelweiss'];
+const pickups=['coin','heart','magnet','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom','herb','cheese','goldBell','edelweiss','honey'];
 // Level 4 (Furi): morsche Holzbrücke über den Bach – in diesen Zeitfenstern brechen Bretter weg.
 function bridgeAt(t){return t>=317&&t<327;} // gleiche Zeiten wie in journey.js
 // Level 5 «Alpweiden» (6:00–7:30): Abschnitte und Challenge-Fenster (gleich wie in journey.js).
@@ -69,7 +69,7 @@ export function applyAction(s,p,a){
  let flamingoSpawned=s.flamingoSpawned||false;
  let hearts=s.hearts||0,nextHeartAt=s.nextHeartAt??40;
  let lives=s.lives,score=s.score+Math.floor(distance)-Math.floor(s.distance),coins=s.coins,chain=s.chain,bestChain=s.bestChain,multiplier=s.multiplier;
- let shield=s.shield,magnet=Math.max(0,s.magnet-1),coinBoost=Math.max(0,(s.coinBoost||0)-1),climb=Math.max(0,(s.climb||0)-1),climbReady=s.climbReady||0,nextCrowAt=s.nextCrowAt||0,nextFishAt=s.nextFishAt||0,nextBeaverAt=s.nextBeaverAt||0,nextGullAt=s.nextGullAt||0,lastHazardAt=s.lastHazardAt||0,nextFrogAt=s.nextFrogAt||0,chaseGap=s.chaseGap||0,nextCastTick=s.nextCastTick||0,lastBumpTick=s.lastBumpTick||0,attackSeq=s.attackSeq||0,hookedAttack=0,boar=Math.max(0,(s.boar||0)-1),boarGap=s.boarGap||0,boarBump=s.boarBump||0,dog=Math.max(0,(s.dog||0)-1),dogGap=s.dogGap||0,dogBump=s.dogBump||0,dogMode=s.dogMode||0,scared=s.scared||0,fish=s.fish||0,angry=Math.max(0,(s.angry||0)-1),shoes=Math.max(0,(s.shoes||0)-1),invulnerable=Math.max(0,s.invulnerable-1),slow=Math.max(0,s.slow-1);
+ let shield=s.shield,magnet=Math.max(0,s.magnet-1),coinBoost=Math.max(0,(s.coinBoost||0)-1),climb=Math.max(0,(s.climb||0)-1),climbReady=s.climbReady||0,nextCrowAt=s.nextCrowAt||0,nextFishAt=s.nextFishAt||0,nextBeaverAt=s.nextBeaverAt||0,nextGullAt=s.nextGullAt||0,lastHazardAt=s.lastHazardAt||0,nextFrogAt=s.nextFrogAt||0,chaseGap=s.chaseGap||0,nextCastTick=s.nextCastTick||0,lastBumpTick=s.lastBumpTick||0,attackSeq=s.attackSeq||0,hookedAttack=0,boar=Math.max(0,(s.boar||0)-1),boarGap=s.boarGap||0,boarBump=s.boarBump||0,dog=Math.max(0,(s.dog||0)-1),dogGap=s.dogGap||0,dogBump=s.dogBump||0,dogMode=s.dogMode||0,beeNest=s.beeNest||0,beeStings=s.beeStings||0,honeyNext=s.honeyNext||0,scared=s.scared||0,fish=s.fish||0,angry=Math.max(0,(s.angry||0)-1),shoes=Math.max(0,(s.shoes||0)-1),invulnerable=Math.max(0,s.invulnerable-1),slow=Math.max(0,s.slow-1);
  let rng=s.rng,nextId=s.nextId,nextRow=s.nextRow,row=s.row,checkpoints=s.checkpoints,arrivals=s.arrivals;
  let summitTurn=s.summitTurn||0,turnIndex=s.turnIndex,nextTurn=s.nextTurn,turnChoice=s.turnChoice,heading=s.heading,turns=s.turns,failReason=s.failReason;
  if(s.powerTicks===1){invulnerable=Math.max(invulnerable,20);events.push({kind:"powerEnd"});}
@@ -113,6 +113,9 @@ export function applyAction(s,p,a){
    }else if(item.kind==='mushroom'){
     // Level 4: Glückspilz = Bonuspunkte.
     if(aligned){score+=250;events.push({kind:'mushroom',points:250,lane:item.lane});}
+   }else if(item.kind==='honey'){
+    // Level 5: Honig am alten Bienenbaum – +150, aber der Schwarm fliegt aus dem Nest hinterher.
+    if(aligned){score+=150;events.push({kind:'honey',points:150});if(!(dog>0)){dog=60*20;dogGap=8;dogBump=tick;dogMode=1;beeStings=0;beeNest=item.d;events.push({kind:'beesAppear',reason:'honey',nest:item.d,side:item.lane===0?-1:1});}}
    }else if(['herb','cheese','goldBell','edelweiss'].includes(item.kind)){
     // Level 5: Alpenkräuter, Käse, goldene Kuhglocken, goldenes Edelweiss. «high» = schwebt über einem Hindernis, nur im Sprung.
     const pts={herb:150,cheese:200,goldBell:400,edelweiss:1000}[item.kind];if(aligned&&(!item.high||height>.4)){score+=pts;events.push({kind:'meadowPickup',item:item.kind,points:pts});}
@@ -283,7 +286,7 @@ export function applyAction(s,p,a){
   if(z===7&&row%2===1&&!heartDue)add("fishCatch",safe,22);
   // Level 4: Glückspilze geben Bonuspunkte (Haselnüsse sind die normalen Münzen).
   // Level 5: Alpenkräuter (selten), Käse, goldene Kuhglocken, goldenes Edelweiss (sehr selten). Blumen = normale Münzen.
-  if(z===1&&!heartDue){const sec=meadowSection(arrivalTime);if(sec>=2&&row%29===14)add("edelweiss",safe,22);else if(row%7===3)add("herb",safe,22);else if(row%11===5)add("cheese",safe,22);else if(row%17===9)add("goldBell",safe,22);}
+  if(z===1&&!heartDue){const sec=meadowSection(arrivalTime);if(sec>=2&&arrivalTime>=honeyNext&&safe!==1&&pattern!==0&&pattern!==4&&pattern!==5){add("honey",safe,22);honeyNext=arrivalTime+18;}/* Honig am alten Bienenbaum */else if(sec>=2&&row%29===14)add("edelweiss",safe,22);else if(row%7===3)add("herb",safe,22);else if(row%11===5)add("cheese",safe,22);else if(row%17===9)add("goldBell",safe,22);}
   if(row>8&&row%17===8&&pattern!==8)add(z===5?['climbGear','snowshoes'][Math.floor(row/17)%2]:['magnet','shieldOrb','coinBoost','rushCharge'][Math.floor(row/17)%4],safe,-8);
   row++;nextRow+=s.mode==="relaxed"?Math.max(34,38-elapsed/120):Math.max(23,26-elapsed/110);
  }
@@ -322,21 +325,16 @@ export function applyAction(s,p,a){
   if(boarGap<=3){boarGap=12;if(!invulnerable&&!climb){if(shield){shield=0;events.push({kind:'shieldHit'});}else{lives--;chain=0;multiplier=1;failReason='boar';}invulnerable=50;}events.push({kind:'boarRam'});}
   if(boar===1)events.push({kind:'boarQuit'});
  }else boarGap=0;
- // Level 5: Bienenschwarm (nutzt die Zustandsfelder dog/dogGap/dogMode). Zuerst Summen (6:26 und 6:30),
- // ab 6:32 verfolgen die Bienen Hornox bis 7:01, ab 7:07,5 nochmals schneller bis zum Levelende.
- // Sauber über Zäune springen hält sie auf Abstand, Anstossen lässt sie aufholen. Ein Stich kostet genau ein Leben.
- if(meadowSection(elapsed)>0){
-  for(const t of[386,390])if(s.elapsed<t&&elapsed>=t)events.push({kind:'beeBuzz'});
-  if(!dog&&dogMode<1&&elapsed>=392&&elapsed<420){dog=(421-392)*20;dogGap=14;dogBump=tick;dogMode=1;events.push({kind:'beesAppear',reason:'swarm'});}
-  if(dogMode<2&&s.elapsed<427.5&&elapsed>=427.5){dog=Math.max(dog,(450-427.5)*20);dogGap=dog&&dogMode===1&&s.dog>0?dogGap:14;dogBump=tick;dogMode=2;events.push({kind:'beesAppear',reason:'hunt'});}
- }
+ // Level 5: Bienenschwarm. Nur wer Honig am alten Bienenbaum nimmt, wird verfolgt. Die Bienen folgen höchstens
+ // 300 m vom Nest – wer schnell genug wegläuft (sauber springen, nicht anstossen), entkommt. Erster Stich: kurz
+ // langsamer (kein Leben weg), jeder weitere Stich in derselben Verfolgung kostet ein Leben.
  if(dog>0){
   if(events.some(e=>e.kind==='bump'||e.kind==='shieldHit')){dogGap-=3.5;dogBump=tick;}
   else{dogGap+=events.filter(e=>e.kind==='clear').length*.9+events.filter(e=>e.kind==='nearMiss').length*.35;if(tick-dogBump>60)dogGap+=.012;}
-  const hunt=dogMode===2?.03+.02*Math.min(1,(elapsed-427.5)/20):.02;
-  dogGap+=powering?.06:-hunt*(dogGap<7?1.3:1)*(s.mode==='relaxed'?.55:1);dogGap=Math.min(16,dogGap);
-  if(dogGap<=3){dogGap=12;if(!invulnerable&&!climb){if(shield){shield=0;events.push({kind:'shieldHit'});}else{lives--;chain=0;multiplier=1;failReason='bees';events.push({kind:'beeSting'});}invulnerable=50;}}
-  if(dog===1)events.push({kind:'beesQuit'});
+  dogGap+=powering?.06:-.022*(dogGap<7?1.3:1)*(s.mode==='relaxed'?.55:1)*(slow>0?1.6:1);dogGap=Math.min(16,dogGap);
+  if(dogGap<=3){dogGap=10;if(!invulnerable&&!climb){if(shield){shield=0;events.push({kind:'shieldHit'});}else{beeStings++;slow=Math.max(slow,30);if(beeStings>=2){lives--;chain=0;multiplier=1;failReason='bees';}events.push({kind:'beeSting',hurt:beeStings>=2});}invulnerable=40;}}
+  if(distance-beeNest>300){dog=0;dogGap=0;dogMode=0;events.push({kind:'beesQuit',escaped:true});}
+  else if(dog===1)events.push({kind:'beesQuit'});
  }else dogGap=0;
  if(!summitTurn&&elapsed>=785)summitTurn=Math.floor((distance+440)/680)+1;
  if(distance>=nextTurn&&elapsed<892){
@@ -352,7 +350,7 @@ export function applyAction(s,p,a){
  }
  const phase=lives<=0?"lost":elapsed>=900?"won":"playing";
  if(phase==="won"){score+=2000;events.push({kind:"summit",points:2000});}
- return{...s,phase,tick,elapsed,distance,speed,x,lives,jump,jumpCount,jumpBase,jumpY:height,fallTicks,duck,queued,buffer,coins,flamingoSpawned,powerCharge,powerTicks,hearts,nextHeartAt,score,chain,bestChain,multiplier,shield,magnet,coinBoost,climb,climbReady,shoes,nextCrowAt,nextFishAt,nextBeaverAt,nextGullAt,lastHazardAt,nextFrogAt,fish,angry,chaseGap,nextCastTick,lastBumpTick,attackSeq,boar,boarGap,boarBump,dog,dogGap,dogBump,dogMode,scared,checkpoints,arrivals,turnIndex,nextTurn,turnChoice,summitTurn,heading,turns,failReason,invulnerable,slow,rng,nextId,nextRow,row,objects,events};
+ return{...s,beeNest,beeStings,honeyNext,phase,tick,elapsed,distance,speed,x,lives,jump,jumpCount,jumpBase,jumpY:height,fallTicks,duck,queued,buffer,coins,flamingoSpawned,powerCharge,powerTicks,hearts,nextHeartAt,score,chain,bestChain,multiplier,shield,magnet,coinBoost,climb,climbReady,shoes,nextCrowAt,nextFishAt,nextBeaverAt,nextGullAt,lastHazardAt,nextFrogAt,fish,angry,chaseGap,nextCastTick,lastBumpTick,attackSeq,boar,boarGap,boarBump,dog,dogGap,dogBump,dogMode,scared,checkpoints,arrivals,turnIndex,nextTurn,turnChoice,summitTurn,heading,turns,failReason,invulnerable,slow,rng,nextId,nextRow,row,objects,events};
 }
 export function isGameOver(s){return ["lost","won"].includes(s.phase)?{over:true,winner:s.phase==="won"?s.player:null,score:s.score,coins:s.coins,distance:Math.floor(s.distance),arrivals:s.arrivals}:{over:false};}
 export function viewFor(s,p){return{...s,objects:s.objects.map(o=>({...o})),events:s.events.map(e=>({...e})),spectator:p!==s.player};}

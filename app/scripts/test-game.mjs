@@ -20,7 +20,7 @@ check('environment-specific hazards remain appropriate and every variant is reac
   9:['waterGap'],4:['hiker','lowRock','ridgeGap','rope','rockfall','boulder'],10:['hiker','lowRock','ridgeGap','rope','rockfall','boulder'],0:['iceBlock','crevasse','iceArch'],5:['iceBlock','crevasse','iceArch','crow','ibex']};
  for(const [elapsed,z]of [[30,3],[110,6],[200,7],[276,8],[364,1],[455,9],[570,4],[660,0],[750,10],[840,5]]){const found=new Set();for(let seed=1;seed<90;seed++){
   const state={...start(seed),flamingoSpawned:true,tick:elapsed*20,elapsed,distance:1000,nextRow:1030,nextTurn:99999,row:20,nextFishAt:seed%3===0?0:9999};
-  for(const o of action(state,{type:'step'}).objects){if(['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom','herb','cheese','goldBell','edelweiss'].includes(o.kind))continue;assert.equal(o.biome,z);assert(profiles[z].includes(o.kind),'wrong biome: '+o.kind);found.add(o.kind);}
+  for(const o of action(state,{type:'step'}).objects){if(['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom','herb','cheese','goldBell','edelweiss','honey'].includes(o.kind))continue;assert.equal(o.biome,z);assert(profiles[z].includes(o.kind),'wrong biome: '+o.kind);found.add(o.kind);}
  }assert.deepEqual([...found].sort(),profiles[z].sort());}
 });
 check('walkers, photo groups, bikes and wildlife approach with each simulation step',()=>{const s={...start(),nextRow:9999,objects:['hiker','pedestrian','photographers','bike','sheep'].map((kind,id)=>({id,kind,d:150,lane:0,approach:2.4}))};const out=action(s,{type:'step'});for(const o of out.objects)assert.equal(o.d,149.88);});
@@ -39,7 +39,7 @@ check('dense rows retain an open lane or one consistent jump/slide action',()=>{
  for(let seed=1;seed<=50;seed++)for(const elapsed of [30,110,200,290,390,480,570,660,750,840]){
   const initial={...start(seed),flamingoSpawned:true,tick:elapsed*20,elapsed,distance:1100,nextRow:1120,nextTurn:99999,row:20};
   const s=action(initial,{type:'step'}),rows=new Map();
-  for(const o of s.objects){if(['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom','herb','cheese','goldBell','edelweiss'].includes(o.kind))continue;if(!rows.has(o.rowId))rows.set(o.rowId,[]);rows.get(o.rowId).push(o);if(o.approach>0){incoming++;assert(Math.abs((o.d-(o.front||0)-s.distance)/(s.speed+o.approach)-(o.encounter-s.distance)/s.speed)<.00001);}}
+  for(const o of s.objects){if(['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','mushroom','herb','cheese','goldBell','edelweiss','honey'].includes(o.kind))continue;if(!rows.has(o.rowId))rows.set(o.rowId,[]);rows.get(o.rowId).push(o);if(o.approach>0){incoming++;assert(Math.abs((o.d-(o.front||0)-s.distance)/(s.speed+o.approach)-(o.encounter-s.distance)/s.speed)<.00001);}}
   for(const obstacles of rows.values()){
    if(obstacles.some(o=>o.lane===-1)){assert.equal(obstacles.length,1);continue;}
    assert([0,1,2].some(l=>obstacles.every(o=>Math.abs(o.lane-l)>=(o.hitWidth||.38))),'a safe lane remains');if(obstacles.length===2)paired++;
@@ -200,23 +200,27 @@ check('level 4: grunts, boar hunt from the gorge to the end, race mode, bridge, 
  for(let seed=1;seed<8;seed++){let r={...start(seed),tick:5400,elapsed:270,distance:6800,nextRow:6830,nextTurn:1e9,row:40};while(r.elapsed<358){r=action({...r,lives:9,invulnerable:1},{type:'step'});for(const o of r.objects)if(o.biome===8)assert(allowed.includes(o.kind),o.kind);}}
 });
 check('level 5 Alpweiden: only wooden fences (jump or find the passage), bees chase and sting, alpine collectibles',()=>{
- const allowed=['fence','fenceLow','fenceTall','coin','heart','magnet','shieldOrb','coinBoost','rushCharge','herb','cheese','goldBell','edelweiss'];
+ const allowed=['fence','fenceLow','fenceTall','coin','heart','magnet','shieldOrb','coinBoost','rushCharge','herb','cheese','goldBell','edelweiss','honey'];
  const seen=new Set();let tallRows=0;for(let seed=1;seed<10;seed++){let r={...start(seed),tick:7200,elapsed:360,distance:9000,nextRow:9030,nextTurn:1e9,row:50};while(r.elapsed<448){r=action({...r,lives:9,invulnerable:1},{type:'step'});for(const o of r.objects)if(o.biome===1){assert(allowed.includes(o.kind),'nicht erlaubt: '+o.kind);seen.add(o.kind);}
   // Hohe Zäune: immer mindestens eine Spur frei (Durchgang)
   const rows=new Map();for(const o of r.objects)if(o.kind==='fenceTall'||o.kind==='fence'||o.kind==='fenceLow')rows.set(o.d,[...(rows.get(o.d)||[]),o]);
   for(const list of rows.values())if(list.some(o=>o.kind==='fenceTall')){tallRows++;assert(new Set(list.filter(o=>o.kind==='fenceTall').map(o=>o.lane)).size<3,'kein Durchgang');assert(!list.some(o=>o.lane<0),'voller Zaun bei hohem Zaun');}}}
- for(const k of['fence','fenceLow','fenceTall','herb','cheese','goldBell'])assert(seen.has(k),'fehlt: '+k);assert(tallRows>0);
+ for(const k of['fence','fenceLow','fenceTall','herb','cheese','goldBell','honey'])assert(seen.has(k),'fehlt: '+k);assert(tallRows>0);
  // Ausweichregeln: niedrige Zäune überspringen, hoher Zaun nicht
  assert.equal(collision('fence',{lane:-1,jump:10}).lives,3);assert.equal(collision('fenceLow',{jump:10}).lives,3);assert.equal(collision('fenceTall',{jump:10}).lives,2);assert.equal(collision('fenceLow',{}).lives,2);
- // Bienen: Summen 6:26, Schwarm ab 6:32, Stich = genau ein Leben, sauberes Springen hält sie fern
- let b={...start(),tick:7719,elapsed:385.95,distance:9700,nextRow:1e9,nextTurn:1e9,objects:[]};b=action(b,{type:'step'});assert(b.events.some(e=>e.kind==='beeBuzz'));
- let d={...start(),tick:7839,elapsed:391.95,distance:9800,checkpoints:3,nextRow:1e9,nextTurn:1e9,objects:[]};d=action(d,{type:'step'});
- assert(d.dog>500);assert.equal(d.dogMode,1);assert(d.events.some(e=>e.kind==='beesAppear'));
- const stung=action({...d,shield:0,dogGap:3.01,lives:3},{type:'step'});assert(stung.events.some(e=>e.kind==='beeSting'));assert.equal(stung.lives,2);assert.equal(stung.dogGap,12);assert(stung.invulnerable>=45);
- let clean=d,stings=0,quit=false;for(let k=0;k<620;k++){clean=action({...clean,nextRow:1e9},{type:'step'});if(clean.events.some(e=>e.kind==='beeSting'))stings++;if(clean.events.some(e=>e.kind==='beesQuit'))quit=true;}assert.equal(stings,0);assert(quit);
- // Finale ab 7:07,5: schneller
- let f={...start(),tick:8549,elapsed:427.45,distance:10600,checkpoints:3,nextRow:1e9,nextTurn:1e9,objects:[]};f=action(f,{type:'step'});assert(f.dog>400);assert.equal(f.dogMode,2);
- const drift=(st,n)=>{let x={...st,dogGap:12,dogBump:st.tick};for(let k=0;k<n;k++)x=action({...x,nextRow:1e9},{type:'step'});return x.dogGap;};assert(drift(f,40)<drift({...d,dogMode:1},40));
+ // Bienen: nur nach Honig. Honig = +150 und Schwarm startet am Nest
+ let calm={...start(),tick:7840,elapsed:392,distance:9800,checkpoints:3,nextRow:1e9,nextTurn:1e9,objects:[]};for(let k=0;k<200;k++)calm=action(calm,{type:'step'});assert.equal(calm.dog,0,'ohne Honig keine Bienen');
+ const h=action({...start(),tick:7840,elapsed:392,distance:9800,checkpoints:3,nextRow:1e9,nextTurn:1e9,x:0,target:0,objects:[{id:1,kind:'honey',lane:0,d:9800.9}]},{type:'step'});
+ assert(h.events.some(e=>e.kind==='honey'));assert(h.events.some(e=>e.kind==='beesAppear'));assert(h.dog>0);assert.equal(h.beeNest,9800.9);
+ // Erster Stich: langsamer, kein Leben weg; zweiter Stich: ein Leben
+ const s1=action({...h,shield:0,dogGap:3.01,lives:3,invulnerable:0},{type:'step'});assert(s1.events.some(e=>e.kind==='beeSting'));assert.equal(s1.lives,3);assert(s1.slow>20);assert.equal(s1.beeStings,1);
+ const s2=action({...s1,dogGap:3.01,invulnerable:0},{type:'step'});assert(s2.events.some(e=>e.kind==='beeSting'&&e.hurt));assert.equal(s2.lives,2);
+ // Entkommen: sauber weglaufen, nach gut 300 m vom Nest geben die Bienen auf – ohne Stich
+ let run=h,stings=0,escaped=false;for(let k=0;k<400&&!escaped;k++){run=action({...run,nextRow:1e9},{type:'step'});if(run.events.some(e=>e.kind==='beeSting'))stings++;if(run.events.some(e=>e.kind==='beesQuit'&&e.escaped))escaped=true;}
+ assert(escaped,'entkommen');assert.equal(stings,0);assert.equal(run.dog,0);assert(run.distance-h.beeNest>300);
+ // Anstossen lässt die Bienen aufholen
+ const bumped=action({...h,objects:[{id:5,kind:'fenceTall',lane:0,d:h.distance+.9}],x:0,target:0,invulnerable:0},{type:'step'});assert(bumped.dogGap<h.dogGap-3);
+
 });
 check('level 6 Schwarzsee: swamp – jump between beams and sunken stones, every 15 s a mud plain with puddles',()=>{
  const allowed=['waterGap','mudPuddle','coin','heart','magnet','shieldOrb','coinBoost','rushCharge'];const seen=new Set();
