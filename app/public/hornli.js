@@ -75,5 +75,16 @@ export function createHornli(r){
  // Kleine Berghütte aus Holz und Stein.
  function stoneHut(k=0){a('box',0,1,0,4.2,2,3.4,[.62,.6,.56]);a('box',0,2.6,0,4.2,1.2,3.4,[.5,.34,.2]);a('box',0,3.4,-.9,4.8,.18,2.3,[.35,.32,.3],.62);a('box',0,3.4,.9,4.8,.18,2.3,[.35,.32,.3],-.62);
   a('box',-.9,1.1,1.72,.7,.8,.04,[.25,.3,.35]);a('box',.9,1.1,1.72,.7,.8,.04,[.25,.3,.35]);a('box',0,2.6,1.72,.8,.6,.04,[.25,.3,.35]);for(const x of[-.9,.9])a('box',x,.65,1.75,.8,.14,.04,[.8,.25,.2]);a('box',1.4,3.9,0,.4,.9,.4,[.55,.53,.5]);}
- return{lake,reflection,glacier,cloud,fallWall,stoneHut,abyss,scree,rockBig,woodPiece,woodBarrier,woodRail,metalBarrier,rockFace,ledge,signpost,metalStrut,beamLow,overhang,snowPatch,cliff,edge,tuft,pebbles,snowRest,stairStep,bridgeDeck,sideRail,hut};
+ // ---------- Der felsige Aufstieg (Abschnitt 3) ----------
+ const slate=[.47,.4,.34],slateDark=[.34,.3,.27],slateLight=[.6,.54,.47];
+ // Lose Steine: breiter Haufen aus Schieferplatten in einer Spur (ausweichen – zu breit und wacklig zum Springen).
+ function looseRocks(k=0){for(let j=0;j<11;j++){const x=((j*37+k*13)%11)/11*2-1,z=((j*53+k*7)%9)/9*1.6-.8,sz=.25+((j+k)%4)*.1;a('rock',x,sz*.45,z,sz*1.8,sz*.6,sz*1.3,j%3?slate:slateDark,((j%3)-1)*.25,j+k);}a('rock',0,.6,0,1,.7,.8,slateLight,.2,k);for(let j=0;j<3;j++)a('rock',-.6+j*.6,1.05,.1,.35,.18,.3,slate,.4,k+j);}
+ // Holzgeländer in einer Spur (Spur wechseln): Pfosten mit zwei Latten, verwittert.
+ function railLane(){for(const x of[-1.1,0,1.1])a('cylinder',x,.6,0,.08,1.2,.08,woodOld);for(const y of[.55,1.08])a('cylinder',0,y,0,.06,2.4,.06,wood,0,0,PI/2);a('box',0,.85,.06,.5,.18,.02,[.97,.8,.1]);}
+ // Schmaler Holzsteg für eine Spur über einer Rinne: Bohlen, Querträger, Pfosten mit Seil.
+ function boardwalk(k=0){for(let j=-2;j<=2;j++)a('box',0,.12,j*.5,2.2,.08,.44,(j+k)%2?[.56,.42,.28]:[.5,.38,.25]);for(const x of[-1,1])a('box',x,.02,0,.14,.12,2.5,[.38,.28,.18]);for(const x of[-1.15,1.15]){a('cylinder',x,.55,0,.06,.9,.06,woodOld);a('cylinder',x,.95,0,.02,2.5,.02,[.75,.68,.5],PI/2);}}
+ // Brauner Schieferhang (wie auf dem Foto): geschichtete, schräge Platten.
+ function slateSlope(k=0,h=4,side=1){for(let j=0;j<6;j++){const y=j*h/6,x=side*(j*.9),w=2.6+((k+j)%3)*.6;a('rock',x,y+.3,((j*7+k)%5-2)*.5,w,.55,2.8,j%2?slate:slateDark,0,k+j,side*.35);}
+  if(k%2)a('rock',side*1.2,.25,1,.9,.3,.7,slateLight,.3,k);}
+ return{looseRocks,railLane,boardwalk,slateSlope,lake,reflection,glacier,cloud,fallWall,stoneHut,abyss,scree,rockBig,woodPiece,woodBarrier,woodRail,metalBarrier,rockFace,ledge,signpost,metalStrut,beamLow,overhang,snowPatch,cliff,edge,tuft,pebbles,snowRest,stairStep,bridgeDeck,sideRail,hut};
 }

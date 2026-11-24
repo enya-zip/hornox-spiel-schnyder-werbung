@@ -42,6 +42,8 @@ function stoneAt(t){return t>=474&&t<492||t>=500&&t<508||t>=519&&t<538;}
 // 4 Schneefelder, 5 Blick auf Matterhorn und Hörnlihütte. Metallbrücke (nur mittlere Spur begehbar) in Abschnitt 3.
 function hornliSection(t){return t<540||t>=630?0:1+Math.min(4,Math.floor((t-540)/18));}
 function hornliBridge(t){return t>=581&&t<586||t>=589&&t<592;}
+// Schmaler Holzsteg im felsigen Aufstieg: nur eine Spur begehbar – zuerst die Mitte, danach rechts.
+function hornliSteg(t){return t>=581&&t<586?1:t>=589&&t<592?2:-1;}
 // Level 6: alle 21 s ein Wechsel – 15 s auf dem Wasser (Balken und versunkene Steine), danach 6 s Schlammebene.
 function swampMud(t){return t>=450&&t<540&&(t-450)%21>=15;}
 // Level 10: ab summitTurn wechseln die Kurven immer ab (Zickzack zum Gipfel).
@@ -139,7 +141,7 @@ export function applyAction(s,p,a){
     if(aligned){const before=powerCharge;powerCharge=Math.min(30,powerCharge+15);if(before===30)score+=100;events.push({kind:'powerPickup',power:'pickupCharge'});if(before<30&&powerCharge===30)events.push({kind:'powerReady'});}
    }else if(aligned&&powering){score+=25;events.push({kind:"powerClear",object:item.kind,lane:item.lane,d:item.d,id:item.id,points:25});item.powerCleared=true;
    }else if(aligned){
-    const safe=["trunk","fallingBranch","sign","hayBale","haystack","cow","cowWalk","hayRoll","fenceTall","rockFace","ledge","signpost"].includes(item.kind)?false:item.kind==="hook"?(item.attack==="high"?duck>0:height>.4):item.kind==="gull"?false:item.kind==="crow"?(item.attack==="snatch"&&height>.4):["iceArch","branch","awning","rope","highLog","gate","metalStrut","beamLow","overhang"].includes(item.kind)?duck>0:["crevasse","ridgeGap","manhole","plankGap","stream","ditch","waterGap"].includes(item.kind)?height>.5:height>.4;
+    const safe=["trunk","fallingBranch","sign","hayBale","haystack","cow","cowWalk","hayRoll","fenceTall","rockFace","ledge","signpost","looseRocks","railLane"].includes(item.kind)?false:item.kind==="hook"?(item.attack==="high"?duck>0:height>.4):item.kind==="gull"?false:item.kind==="crow"?(item.attack==="snatch"&&height>.4):["iceArch","branch","awning","rope","highLog","gate","metalStrut","beamLow","overhang"].includes(item.kind)?duck>0:["crevasse","ridgeGap","manhole","plankGap","stream","ditch","waterGap"].includes(item.kind)?height>.5:height>.4;
     if(!safe&&!invulnerable&&!climb){
      // Möwe: kostet kein Leben, stiehlt aber bis zu 3 Fische aus dem Rucksack.
      if(item.kind==='gull'){const lost=Math.min(fish,3);fish-=lost;invulnerable=15;events.push({kind:'gull',lost,fish});}
@@ -272,10 +274,10 @@ export function applyAction(s,p,a){
    // Level 7 «Hörnliweg»: realistische Hindernisse am Bergweg (springen, ducken, Spur wechseln).
    const sec=hornliSection(arrivalTime);
    if(pattern===8){}
-   else if(sec===3&&hornliBridge(arrivalTime)){add("ridgeGap",0);add("ridgeGap",2);}            // schmale Metallbrücke: nur Mitte
+   else if(sec===3&&hornliSteg(arrivalTime)>=0){const st=hornliSteg(arrivalTime);for(const l of[0,1,2])if(l!==st)add("ridgeGap",l);}   // schmaler Holzsteg: präzise Spurwahl
    else if(sec===1){const k=pattern%5;if(k===0){add("rockBig",one);if(busy)add("scree",two);}else if(k===1)add("scree",one);else if(k===2){add("woodPiece",-1);}else if(k===3){add("signpost",one);if(busy)add("rockBig",two);}else{add("boulder",one);if(busy)add("hiker",two);}}
    else if(sec===2){const k=pattern%5;if(k===0)add("woodRail",-1);else if(k===1)add("beamLow",-1);else if(k===2){add("ledge",one);if(busy)add("woodBarrier",two);}else if(k===3){add("woodBarrier",one);if(busy)add("rockFace",two);}else add("hiker",one);}
-   else if(sec===3){const k=pattern%5;if(k===0)add("metalStrut",-1);else if(k===1)add("metalBarrier",-1);else if(k===2){add("overhang",one);if(busy)add("rockBig",two);}else if(k===3){add("rockFace",one);if(busy)add("metalBarrier",two);}else add("scree",one);}
+   else if(sec===3){const k=pattern%5;/* Der felsige Aufstieg: Felsbrocken springen, Überhänge ducken, lose Steine ausweichen, Holzgeländer Spur wechseln */if(k===0){add("rockBig",one);if(busy)add("looseRocks",two);}else if(k===1)add("overhang",-1);else if(k===2)add("looseRocks",one);else if(k===3){add("railLane",one);if(busy)add("rockBig",two);}else{add("looseRocks",one);if(busy)add("railLane",two);}}
    else if(sec===4){const k=pattern%5;if(k===0||k===3){add("snowPatch",one);if(busy)add("snowPatch",two);}else if(k===1)add("overhang",-1);else if(k===2){add("rockBig",one);if(busy)add("scree",two);}else{add("ledge",one);add("snowPatch",two);}}
    else{const k=pattern%5;if(k===0){add("signpost",one);if(busy)add("scree",two);}else if(k===1)add("woodRail",-1);else if(k===2){add("rockBig",one);}else if(k===3)add("beamLow",-1);else{add("hiker",one);if(busy)add("woodBarrier",two);}}
   }else if(z===10){
