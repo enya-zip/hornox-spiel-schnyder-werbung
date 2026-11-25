@@ -347,7 +347,7 @@ export function createScene(canvas){
    const gapT=(od-d)/Math.max(1,speedNow),brk=Math.max(0,Math.min(1,(1.05-gapT)/.45));at(od,(o.lane-1)*2.5);forest.brokenPlank(brk,time,o.id);pop();return;}
   if(o.kind==='floatLog'){at(od,0,rise);if(toss)push(0,0,0,0,toss.spin,toss.lean);blacklake.floatLog(time,o.id);if(toss)pop();pop();return;}
   if(o.kind==='mudPuddle'){at(od,(o.lane-1)*2.5,0);blacklake.mudPuddle(time,o.id);pop();return;}
-  if(o.kind==='waterGap'&&!toss){at(od,0);for(const x of(o.lane<0?[-2.5,0,2.5]:[(o.lane-1)*2.5])){a('box',x,.0,0,2.45,.03,6.4,[.05,.18,.24,26]);for(const z of[-3.1,3.1])a('box',x,.05,z,2.4,.05,.28,[.9,.97,1,49]);for(let k=0;k<3;k++){const ph=(time*.8+k*.33+o.id*.1)%1;a('ring',x+(k-1)*.6,.04,(k-1)*1.6,.3+ph*.6,.3+ph*.6,.015,[.8,.92,1,49],PI/2);}}if(o.lane<0&&o.id%2===0){push(((o.id>>1)%3-1)*2.5,0,0,0,PI/2+(o.id%4?.3:-.3));blacklake.lurk(time,o.id);pop();}pop();return;}
+  if(o.kind==='waterGap'&&!toss){at(od,0);for(const x of(o.lane<0?[-2.5,0,2.5]:[(o.lane-1)*2.5])){a('box',x,.0,0,2.45,.03,6.4,[.05,.18,.24,26]);for(const z of[-3.1,3.1])a('box',x,.05,z,2.4,.05,.28,[.9,.97,1,49]);for(let k=0;k<3;k++){const ph=(time*.8+k*.33+o.id*.1)%1;a('ring',x+(k-1)*.6,.04,(k-1)*1.6,.3+ph*.6,.3+ph*.6,.015,[.8,.92,1,49],PI/2);}}if(o.lane<0&&o.id%2===0){push(((o.id>>1)%3-1)*2.5,0,0);blacklake.bubbles(time,o.id);pop();}   /* früher lauerndes Krokodil, jetzt nur Luftblasen */pop();return;}
   if(o.kind==='frog'&&!toss){
    // Level 6: Frosch sitzt im Wasser neben der Strecke. Takt wie in rules.js: alle 2 s (40 Ticks) ist die Zunge
    // 0,5 s (10 Ticks) draussen; vorher bläht sich der Kehlsack als Warnung. Jeder Frosch hat eine eigene Phase.
