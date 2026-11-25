@@ -11,7 +11,7 @@ import {createActor} from './actor.js?v=23';
 import {createEffects} from './effects.js?v=17';
 import {createPath} from './route.js?v=21';
 import {getZone,bridgeAt,fogAt,forestSection,meadowSection,lakeSection,stoneAt,swampMud,baseSpeed,glacierSection,ridgeNarrow,summitNarrow,SOLVAY_AT} from './journey.js?v=27';
-import {createBlackLake} from './blacklake.js?v=11';
+import {createBlackLake} from './blacklake.js?v=12';
 import {createMeadow} from './meadow.js?v=7';
 import {createForest} from './forest.js?v=5';
 import {createHornli} from './hornli.js?v=12';
@@ -305,7 +305,7 @@ export function createScene(canvas){
    push(x,y,z,0,-h,(toss?.lean||0)+sway,style===4?.83:scale);encounters.accessory(poseStyle,variant,pace);pop();
   }
  }
- let magnetNow=0,bumpT=-9,elapsedNow=0,baseNow=16,stingT=-99,beeNest=null,crocAttack=null,curObjects=[],tongueDrawn=new Set(),dogVis=40,dogLane=1,speedNow=16,flyingFish=[],flyingTokens=[],bag=[],tickNow=0,chaser=null,chaseVis=40,chaseLane=1,reelT=-9,fogNow=0,boarVis=40,boarLane=1,rammed=new Set();
+ let magnetNow=0,bumpT=-9,elapsedNow=0,baseNow=16,stingT=-99,beeNest=null,curObjects=[],tongueDrawn=new Set(),dogVis=40,dogLane=1,speedNow=16,flyingFish=[],flyingTokens=[],bag=[],tickNow=0,chaser=null,chaseVis=40,chaseLane=1,reelT=-9,fogNow=0,boarVis=40,boarLane=1,rammed=new Set();
  function obstacle(o,d,time,toss=null){if(!toss&&(rammed.has(o.id)||fogNow>0&&o.d-d>180-140*fogNow))return;const od=o.d-(toss?0:(o.approach||0)*visualSubtick);if(!toss&&(od<d-8||od>d+180||(o.resolved&&['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','springs','clover','binoculars','climbGear','snowshoes','fishCatch','token','mushroom','herb','cheese','goldBell','edelweiss'].includes(o.kind))))return;let off=(o.lane<0?0:(o.lane-1)*2.5)+(toss?.side||0),pull=0;
   // Münz-Magnet: Münzen aus anderen Spuren werden beim Näherkommen zu Hornox hinübergezogen
   if(o.kind==='coin'&&magnetNow>0&&!toss&&!o.resolved){const ahead=od-d;pull=Math.max(0,Math.min(1,(26-ahead)/22));const heroOff=(lane-1)*2.5;off+=(heroOff-off)*pull*pull;}
@@ -460,7 +460,7 @@ export function createScene(canvas){
   if(e.kind==='powerClear'&&!['crevasse','ridgeGap','manhole','rope','branch','iceArch'].includes(e.object)){
    if(tossed.length>=12)tossed.shift();tossed.push({o:{id:e.id||0,kind:e.object,lane:e.lane,d:e.d??s.distance},time:anim,side:e.lane===0?-1:e.lane===2?1:(e.id%2?-1:1)});
   }
- },resetEffects(){bumpT=-9;fx.reset();tossed=[];rushFov=0;flyingFish=[];flyingTokens=[];bag=[];chaseVis=40;chaser=null;reelT=-9;boarVis=40;dogVis=40;stingT=-99;beeNest=null;crocAttack=null;rammed=new Set();},
+ },resetEffects(){bumpT=-9;fx.reset();tossed=[];rushFov=0;flyingFish=[];flyingTokens=[];bag=[];chaseVis=40;chaser=null;reelT=-9;boarVis=40;dogVis=40;stingT=-99;beeNest=null;rammed=new Set();},
  render(s,{distance,time,delta,active,paused,reduced,screen,introTime=null,waiting=false,celebrate:cel=null}){celebrate=active&&s.phase==='won'?cel:null;if(!actor)return;const d=active?distance:0,newKey=s.seed+':summit';if(key!==newKey){key=newKey;placementCache.clear();clearCache.clear();path=createPath(s.seed,'summit');cam=0;}
   const mobile=canvas.width/canvas.height<.9;cinematic=introTime===null?null:introFrame(introTime,mobile,reduced);cinematicMetrics=cinematic?{time:introTime,heroZ:cinematic.z,doorOpen:cinematic.doorOpen,orbitDegrees:cinematic.orbitDegrees,eye:cinematic.eye,target:cinematic.target}:null;
   trackD=d;speedNow=s.speed||16;magnetNow=active?(s.magnet||0):0;elapsedNow=active?s.elapsed:0;baseNow=active?baseSpeed(s.elapsed,s.mode==='relaxed'):16;const stage=getZone(active?s.elapsed:0);const phase=active?s.elapsed:0,ease=(a,b)=>{const t=Math.max(0,Math.min(1,(phase-a)/(b-a)));return t*t*(3-2*t);};grade=.025*ease(90,110)+.015*ease(180,200)+.015*ease(360,380)+.035*ease(540,560)-.015*ease(630,650)+.035*ease(720,740)-.11*ease(785,812);visualSubtick=active&&!paused?Math.max(0,Math.min(.05,(d-s.distance)/Math.max(1,s.speed))):0;
@@ -502,7 +502,6 @@ export function createScene(canvas){
     const sp=emerging?.25+fly*spread:spread;push(cx,cy,cz,0,PI-q.h);
     for(let j=0;j<9;j++){const t=anim*(2.2+j*.31)+j*1.9;push(Math.sin(t*1.7+j)*sp,Math.sin(t*2.6+j*.7)*.45*(emerging?fly:1),Math.cos(t*1.3+j)*sp*.8,0,t*2.4,0,.8);meadow.bee(anim,j);pop();}pop();}
   }
-  if(active&&crocAttack){const u=(anim-crocAttack.t)/1.6;if(u>1)crocAttack=null;else{const rise=Math.min(1,u*4)*(u>.8?(1-u)/.2:1),open=u<.35?u/.35:u<.5?1-(u-.35)/.15*.9:.1+.1*Math.sin(u*30);at(d+6,(crocAttack.lane-1)*2.5+.4);push(0,0,0,0,PI-.3,0,1.7);blacklake.croc(anim,open,rise,1);fx&&a('ring',0,.05,0,1.2+u*2.5,1.2+u*2.5,.03,[.9,.97,1,49],PI/2);pop();pop();}}
   // Nach einem Bienenstich wird Hornox für drei Sekunden rot (pulsierend, dann verblassend).
   if(actor){const age=anim-stingT;actor.setRed(age>=0&&age<3?(1-age/3)*(.75+.25*Math.sin(age*14)):0);}
   if(active)for(const o of s.objects)obstacle(o,d,anim);

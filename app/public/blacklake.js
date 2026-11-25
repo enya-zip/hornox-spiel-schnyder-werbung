@@ -69,17 +69,5 @@ export function createBlackLake(r){
    a('box',Math.cos(ang)*r,.2+h/2,Math.sin(ang)*r,.035,h,.035,(j+k)%3?[.36,.58,.2]:[.48,.66,.26],Math.sin(ang)*tilt+sw,0,-Math.cos(ang)*tilt);}}
  // Umgestürzter Ast im Wasser.
  function fallenBranch(k){a('cylinder',0,.15,0,.14,4.2,.14,[.45,.38,.36],0,k,PI/2-.12);a('cylinder',.9,.35,.3,.06,1.4,.06,[.42,.36,.34],.5,k,.9);a('cylinder',-1.1,.3,-.2,.05,1.1,.05,[.42,.36,.34],-.4,k,-.7);}
- // Krokodil (Kopf in +z). open 0..1 = Maul auf; rise 0..1 = wie weit es aus dem Wasser kommt.
- function croc(time,open=0,rise=1,id=0){const g=[.27,.36,.18],gd=[.18,.25,.12],belly=[.7,.68,.5],mouth=[.75,.3,.28],teeth=[.96,.94,.86],jaw=-open*.75;
-  push(0,-.9+rise*.95,0,-.12*rise*open,0,0);
-  a('sphere',0,0,-1.1,.55,.32,1.3,g);for(let j=0;j<6;j++)a('cone',0,.3,-1.9+j*.4,.06,.14,.06,gd);
-  a('sphere',0,.08,.35,.42,.27,.5,g);
-  push(0,.08,.6,-open*.35,0,0);a('box',0,.06,.8,.42,.16,1.4,g);a('box',0,-.04,.8,.36,.04,1.3,mouth);for(let j=0;j<6;j++)for(const s of[-1,1])a('cone',s*.17,-.06,.3+j*.22,.025,.09,.025,teeth,PI);
-   for(const s of[-1,1]){a('sphere',s*.14,.2,1.38,.05,.04,.05,gd);}pop();
-  push(0,.0,.6,-jaw*.6,0,0);a('box',0,-.08,.75,.38,.12,1.3,belly);for(let j=0;j<6;j++)for(const s of[-1,1])a('cone',s*.16,.02,.3+j*.22,.025,.08,.025,teeth);pop();
-  for(const s of[-1,1]){a('sphere',s*.24,.34,.35,.12,.12,.12,gd);a('sphere',s*.25,.38,.43,.06,.07,.04,[.95,.8,.2]);a('sphere',s*.25,.38,.46,.02,.06,.02,[.05,.05,.05]);}
-  pop();}
- // Nur Augen und Nasenlöcher über der Wasseroberfläche (lauerndes Krokodil).
- function lurk(time,id=0){const drift=Math.sin(time*.7+id)*.15;push(drift,0,0);for(const s of[-1,1]){a('sphere',s*.22,.05,0,.12,.1,.13,[.25,.34,.17]);a('sphere',s*.23,.09,.07,.05,.05,.03,[.95,.8,.2]);a('sphere',s*.07,.03,1.15,.04,.03,.04,[.2,.27,.13]);}a('box',0,.02,.6,.3,.04,1,[.27,.36,.18,26]);pop();}
- return{swampTree,sedge,fallenBranch,croc,lurk,beam,slab,reedBed,mudPuddle,frog,fly,swarm,floatLog,stone,lily,reeds,raft,logRaft,platform,bubbles,splash};
+ return{swampTree,sedge,fallenBranch,beam,slab,reedBed,mudPuddle,frog,fly,swarm,floatLog,stone,lily,reeds,raft,logRaft,platform,bubbles,splash};
 }
