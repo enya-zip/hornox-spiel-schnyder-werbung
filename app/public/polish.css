@@ -270,3 +270,8 @@ dialog .dialog-close{border-radius:var(--radius-s)}
 @media(max-width:420px){#shop-dialog{width:calc(100vw - 32px)}}
 /* Im Laden soll man das Ladeninnere hinter dem Dialog sehen */
 #shop-dialog::backdrop{backdrop-filter:none;-webkit-backdrop-filter:none;background:#06141c40}
+/* Fernglas im Furi-Nebel: nur zwei runde Sichtfelder sind klar, aussen dunkel */
+#bino-layer{position:absolute;inset:0;pointer-events:none;background:#071216e8;
+ -webkit-mask-image:radial-gradient(circle at 40% 46%,transparent 0 23vmin,#000 24.5vmin),radial-gradient(circle at 60% 46%,transparent 0 23vmin,#000 24.5vmin);-webkit-mask-composite:source-in;
+ mask-image:radial-gradient(circle at 40% 46%,transparent 0 23vmin,#000 24.5vmin),radial-gradient(circle at 60% 46%,transparent 0 23vmin,#000 24.5vmin);mask-composite:intersect}
+#bino-layer[hidden]{display:none}

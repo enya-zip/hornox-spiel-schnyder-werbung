@@ -1,5 +1,5 @@
 import {createAlpine} from './alpine.js?v=17';
-import {createPowerups} from './powerups.js?v=17';
+import {createPowerups} from './powerups.js?v=19';
 import {createSummit} from './summit.js?v=3';
 import {createLake} from './lake.js?v=5';
 import {createEncounters} from './encounters.js?v=20';
@@ -305,8 +305,11 @@ export function createScene(canvas){
    push(x,y,z,0,-h,(toss?.lean||0)+sway,style===4?.83:scale);encounters.accessory(poseStyle,variant,pace);pop();
   }
  }
- let bumpT=-9,elapsedNow=0,baseNow=16,stingT=-99,beeNest=null,crocAttack=null,curObjects=[],tongueDrawn=new Set(),dogVis=40,dogLane=1,speedNow=16,flyingFish=[],flyingTokens=[],bag=[],tickNow=0,chaser=null,chaseVis=40,chaseLane=1,reelT=-9,fogNow=0,boarVis=40,boarLane=1,rammed=new Set();
- function obstacle(o,d,time,toss=null){if(!toss&&(rammed.has(o.id)||fogNow>0&&o.d-d>180-140*fogNow))return;const od=o.d-(toss?0:(o.approach||0)*visualSubtick);if(!toss&&(od<d-8||od>d+180||(o.resolved&&['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','token','mushroom','herb','cheese','goldBell','edelweiss'].includes(o.kind))))return;const off=(o.lane<0?0:(o.lane-1)*2.5)+(toss?.side||0),p=point(od,off),rise=toss?.y||0;
+ let magnetNow=0,bumpT=-9,elapsedNow=0,baseNow=16,stingT=-99,beeNest=null,crocAttack=null,curObjects=[],tongueDrawn=new Set(),dogVis=40,dogLane=1,speedNow=16,flyingFish=[],flyingTokens=[],bag=[],tickNow=0,chaser=null,chaseVis=40,chaseLane=1,reelT=-9,fogNow=0,boarVis=40,boarLane=1,rammed=new Set();
+ function obstacle(o,d,time,toss=null){if(!toss&&(rammed.has(o.id)||fogNow>0&&o.d-d>180-140*fogNow))return;const od=o.d-(toss?0:(o.approach||0)*visualSubtick);if(!toss&&(od<d-8||od>d+180||(o.resolved&&['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','springs','clover','binoculars','climbGear','snowshoes','fishCatch','token','mushroom','herb','cheese','goldBell','edelweiss'].includes(o.kind))))return;let off=(o.lane<0?0:(o.lane-1)*2.5)+(toss?.side||0),pull=0;
+  // Münz-Magnet: Münzen aus anderen Spuren werden beim Näherkommen zu Hornox hinübergezogen
+  if(o.kind==='coin'&&magnetNow>0&&!toss&&!o.resolved){const ahead=od-d;pull=Math.max(0,Math.min(1,(26-ahead)/22));const heroOff=(lane-1)*2.5;off+=(heroOff-off)*pull*pull;}
+  const p=point(od,off),rise=toss?.y||0;
   if(['pedestrian','hiker','ropeTeam','photographers','influencer','lostTourists','scooter','skiers','snowboarders'].includes(o.kind)){visitors(o.kind==='ropeTeam'?{...o,kind:'hiker'}:o,p,time,toss);if(o.kind!=='scooter')return;}   // Seilschaft sieht aus wie die Wanderer in Level 1
   if(o.kind==='ibex'&&!toss){
    // Steinbock galoppiert von links oder rechts auf die Piste und bleibt dann stehen (Spur kommt aus den Regeln).
@@ -419,11 +422,11 @@ export function createScene(canvas){
   else if(o.kind==='flamingo')encounters.flamingo(time);
   else if(o.kind==='electric')special.electric(time,o.id);
   else if(o.kind==='heart'){a('heart',0,2.12+Math.sin(time*3+o.id)*.12,0,.62,.62,.62,[1,.12,.27,49],0,Math.sin(time*1.4+o.id)*.35);a('ring',0,.08,0,.55,.55,.045,[1,.35,.45,49],PI/2);}
-  else if(o.kind==='coin'){if(o.biome===8)forest.nut(time,o.id);else special.coin(time,o.id);}
+  else if(o.kind==='coin'){if(o.biome===8)forest.nut(time,o.id);else special.coin(time,o.id);if(pull>.05&&Math.abs(o.lane-lane)>.3)for(let k=1;k<4;k++)a('sphere',((o.lane-1)*2.5-((lane-1)*2.5))*k*.08*(1-pull),1.05,k*.35,.07,.07,.07,[.45,1,.85,49]);}
   else if(o.kind==='token')tokens.token(o.biome,time,o.id);
   else if(['herb','cheese','goldBell','edelweiss'].includes(o.kind)){if(o.high)push(0,1.5,0);meadow[o.kind](time,o.id);if(o.high)pop();}
   else if(o.kind==='mushroom')forest.mushroom(time,o.id);
-  else if(['magnet','shieldOrb','coinBoost','rushCharge'].includes(o.kind))powerups.pickup(o.kind,time,o.id);
+  else if(['magnet','shieldOrb','coinBoost','rushCharge','springs','clover','binoculars','springs','clover','binoculars'].includes(o.kind))powerups.pickup(o.kind,time,o.id);
   else if(o.kind==='climbGear'||o.kind==='snowshoes')summit.pickup(o.kind,time,o.id);
   else if(o.kind==='fishCatch')lake.pickup(time,o.id);
   else if(o.kind==='ibex')summit.ibex(time,0,o.id);
@@ -460,18 +463,18 @@ export function createScene(canvas){
  },resetEffects(){bumpT=-9;fx.reset();tossed=[];rushFov=0;flyingFish=[];flyingTokens=[];bag=[];chaseVis=40;chaser=null;reelT=-9;boarVis=40;dogVis=40;stingT=-99;beeNest=null;crocAttack=null;rammed=new Set();},
  render(s,{distance,time,delta,active,paused,reduced,screen,introTime=null,waiting=false,celebrate:cel=null}){celebrate=active&&s.phase==='won'?cel:null;if(!actor)return;const d=active?distance:0,newKey=s.seed+':summit';if(key!==newKey){key=newKey;placementCache.clear();clearCache.clear();path=createPath(s.seed,'summit');cam=0;}
   const mobile=canvas.width/canvas.height<.9;cinematic=introTime===null?null:introFrame(introTime,mobile,reduced);cinematicMetrics=cinematic?{time:introTime,heroZ:cinematic.z,doorOpen:cinematic.doorOpen,orbitDegrees:cinematic.orbitDegrees,eye:cinematic.eye,target:cinematic.target}:null;
-  trackD=d;speedNow=s.speed||16;elapsedNow=active?s.elapsed:0;baseNow=active?baseSpeed(s.elapsed,s.mode==='relaxed'):16;const stage=getZone(active?s.elapsed:0);const phase=active?s.elapsed:0,ease=(a,b)=>{const t=Math.max(0,Math.min(1,(phase-a)/(b-a)));return t*t*(3-2*t);};grade=.025*ease(90,110)+.015*ease(180,200)+.015*ease(360,380)+.035*ease(540,560)-.015*ease(630,650)+.035*ease(720,740)-.11*ease(785,812);visualSubtick=active&&!paused?Math.max(0,Math.min(.05,(d-s.distance)/Math.max(1,s.speed))):0;
+  trackD=d;speedNow=s.speed||16;magnetNow=active?(s.magnet||0):0;elapsedNow=active?s.elapsed:0;baseNow=active?baseSpeed(s.elapsed,s.mode==='relaxed'):16;const stage=getZone(active?s.elapsed:0);const phase=active?s.elapsed:0,ease=(a,b)=>{const t=Math.max(0,Math.min(1,(phase-a)/(b-a)));return t*t*(3-2*t);};grade=.025*ease(90,110)+.015*ease(180,200)+.015*ease(360,380)+.035*ease(540,560)-.015*ease(630,650)+.035*ease(720,740)-.11*ease(785,812);visualSubtick=active&&!paused?Math.max(0,Math.min(.05,(d-s.distance)/Math.max(1,s.speed))):0;
   if(path.setSummit(active?s.summitTurn:0)){placementCache.clear();clearCache.clear();}
   if(!active||!s.summitTurn)mtn=null;else if(!mtn){const relaxed=s.mode==='relaxed',ahead=t1=>(t1-s.elapsed)*(baseSpeed(s.elapsed,relaxed)+baseSpeed(t1,relaxed))/2,dEnd=s.distance+Math.max(0,ahead(900)),dStart=s.distance+ahead(810),top=path.frame(dEnd);mtn={x:top.x,z:top.z,k:.22,p:40,R:Math.max(200,(dEnd-dStart)*.5)};}
   mtnFade=ease(785,812);
   const p=path.frame(d);origin=p;if(Math.abs(d-lastD)>50)cam=p.h;lastD=d;cam+=(p.h-cam)*Math.min(1,delta*(reduced?40:7));lane+=(s.x-lane)*Math.min(1,delta*28);if(!paused&&screen!=='result')anim+=delta;
-  jump+=((s.jumpY||0)-jump)*Math.min(1,delta*28);instances=[];touristGroups=[];flamingoInstances=0;r.begin();r.setOrigin(p.x,p.z);r.setHoles(active?s.objects.filter(o=>o.kind==='manhole'&&o.d>d-10&&o.d<d+180).map(o=>{const q=point(o.d,(o.lane-1)*2.5);return[q.x,q.z,.81];}):[]);curObjects=active?s.objects:[];r.setEnvironment(active?s.elapsed:0,s.speed||16,p.h);environment(d,active?s.elapsed:0,s.speed||16);special.snow(anim,reduced,1-Math.max(0,Math.min(1,((active?s.elapsed:0)-84)/6)),cam);tickNow=(s.tick||0)+visualSubtick*20;chaser=null;tongueDrawn=new Set();fogNow=active?fogAt(s.elapsed):0;
+  jump+=((s.jumpY||0)-jump)*Math.min(1,delta*28);instances=[];touristGroups=[];flamingoInstances=0;r.begin();r.setOrigin(p.x,p.z);r.setHoles(active?s.objects.filter(o=>o.kind==='manhole'&&o.d>d-10&&o.d<d+180).map(o=>{const q=point(o.d,(o.lane-1)*2.5);return[q.x,q.z,.81];}):[]);curObjects=active?s.objects:[];r.setEnvironment(active?s.elapsed:0,s.speed||16,p.h);environment(d,active?s.elapsed:0,s.speed||16);special.snow(anim,reduced,1-Math.max(0,Math.min(1,((active?s.elapsed:0)-84)/6)),cam);tickNow=(s.tick||0)+visualSubtick*20;chaser=null;tongueDrawn=new Set();fogNow=active?fogAt(s.elapsed)*(s.bino>0?.15:1):0;   // Fernglas: Hindernisse im Nebel wieder sichtbar
   if(active&&(s.boar>0||boarVis<30)){
    // Wildschwein rennt hinter Hornox her, rammt dabei die passierten Hindernisse aus dem Weg und kommt näher.
    const goal=s.boar>0?(s.boarGap||14):40;boarVis+=(goal-boarVis)*Math.min(1,delta*(goal>boarVis?.8:2.5));boarLane+=(lane-boarLane)*Math.min(1,delta*3);
    if(boarVis<30){const back=1.4+Math.max(0,boarVis-3)*.4,off=(boarLane-1)*2.5+(Math.abs(boarLane-lane)<.5?1.2:0),q=point(d-back,off);
     push(q.x,q.y,q.z,0,PI-q.h,0,.78);forest.boar(anim,1);forest.dust(anim);pop();
-    for(const o of s.objects){if(rammed.has(o.id)||o.powerCleared||['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','token','mushroom','honey','plankGap','crevasse','ridgeGap','manhole','hook','stream'].includes(o.kind))continue;
+    for(const o of s.objects){if(rammed.has(o.id)||o.powerCleared||['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','springs','clover','binoculars','climbGear','snowshoes','fishCatch','token','mushroom','honey','plankGap','crevasse','ridgeGap','manhole','hook','stream'].includes(o.kind))continue;
      const od=o.d-(o.approach||0)*visualSubtick;if(od<d-back+1.4&&od>d-back-3){rammed.add(o.id);if(tossed.length>=12)tossed.shift();tossed.push({o:{id:o.id,kind:o.kind,lane:o.lane,d:o.d},time:anim,side:o.lane===0?-1:o.lane===2?1:(o.id%2?-1:1)});}}
    }
   }
@@ -508,7 +511,7 @@ export function createScene(canvas){
   if(active&&s.elapsed<892&&s.nextTurn-d<100&&s.nextTurn>d){at(s.nextTurn,-path.direction(s.turnIndex)*5);a('box',0,1.4,0,.13,2.8,.13,C.wood);a('box',0,2.5,0,1.5,.7,.16,C.gold);pop();}
   const offset=active?(lane-1)*2.5:0,ax=Math.cos(p.h)*offset,az=cinematic?cinematic.z:Math.sin(p.h)*offset,powered=s.powerTicks>0,hop=celebrate!==null?Math.abs(Math.sin(Math.min(1,celebrate)*PI*3))*1.1:(!reduced&&anim-bumpT<.45?Math.sin((anim-bumpT)/.45*PI)*.6:0),lift=(powered?.28:0)+hop-(s.fallTicks?Math.sin((20-s.fallTicks)/20*PI)*2.7:0);
   a('billboard',ax,groundY(ax,az)+.025,az,2.2,1.5,1,[.1,.16,.17,8],-PI/2);
-  visibleActor=active?actor:showcase;visibleActor.update({distance:cinematic?cinematic.runDistance:active?d:0,time:anim,jump:celebrate!==null?(hop>.2?9:0):anim-bumpT<.45&&!reduced&&!s.jump?Math.max(1,Math.round(18*(1-(anim-bumpT)/.45))):active?s.jump:0,duck:active?s.duck:0,home:!active||waiting||!!cinematic&&!cinematic.walking,x:ax,y:active?groundY(ax,az)+jump*2.2+lift:0,z:az,heading:active?PI-cam:PI,impact:fx.impact(),lean:reduced?0:(s.target-lane)*-.1+fx.wobble()});
+  visibleActor=active?actor:showcase;visibleActor.update({distance:cinematic?cinematic.runDistance:active?d:0,time:anim,jump:celebrate!==null?(hop>.2?9:0):anim-bumpT<.45&&!reduced&&!s.jump?Math.max(1,Math.round(18*(1-(anim-bumpT)/.45))):active?Math.round((s.jump||0)*18/(s.jumpLen||18)):0,   /* Sprungfedern: längerer Sprung, Animation passend gestreckt */duck:active?s.duck:0,home:!active||waiting||!!cinematic&&!cinematic.walking,x:ax,y:active?groundY(ax,az)+jump*2.2+lift:0,z:az,heading:active?PI-cam:PI,impact:fx.impact(),lean:reduced?0:(s.target-lane)*-.1+fx.wobble()});
   if(active&&(s.fish||0)>0&&visibleActor===actor&&actor.joint){
    // Gesammelte Fische stecken sichtbar im Wanderrucksack (je 4 Fische ein Fisch mehr, max. 6).
    const sp=actor.joint('Spine02');if(sp){const bx=-Math.sin(cam),bz=Math.cos(cam),n=Math.min(6,Math.ceil(s.fish/4));
@@ -524,7 +527,7 @@ export function createScene(canvas){
    // Eingesammelte Gegenstände fliegen wie die Fische in Level 3 im Bogen in den Wanderrucksack.
    const sp=actor.joint('Spine02');flyingTokens=flyingTokens.filter(f=>anim-f.t<.5);if(sp)for(const f of flyingTokens){const u=(anim-f.t)/.5,bx=-Math.sin(cam),bz=Math.cos(cam),x0=ax+Math.sin(cam)*3,z0=az-Math.cos(cam)*3,x1=sp[0]+bx*.42,y1=sp[1]+.4,z1=sp[2]+bz*.42;push(x0+(x1-x0)*u,1.4+(y1-1.4)*u+Math.sin(u*PI)*1.4,z0+(z1-z0)*u,0,anim*9,0,1-u*.5);tokens.item(f.zone,anim,0);pop();}}
   if(active&&s.shoes>0&&visibleActor===actor&&actor.joint){for(const side of['Left','Right']){const f=actor.joint(side+'Foot'),t=actor.joint(side+'ToeBase');if(!f||!t)continue;const cx=(f[0]+t[0])/2,cz=(f[2]+t[2])/2,cy=Math.min(f[1],t[1]),yaw=Math.atan2(t[0]-f[0],t[2]-f[2]);push(cx,cy-.06,cz,0,yaw);summit.snowshoe();pop();}}
-  if(active&&(s.shield||s.coinBoost>0||s.magnet>0||s.climb>0||s.shoes>0)){push(ax,groundY(ax,az)+jump*2.2+lift,az,0,-cam);powerups.aura(s,anim);summit.aura(s,anim);pop();}
+  if(active&&(s.shield||s.coinBoost>0||s.magnet>0||s.climb>0||s.shoes>0||s.springs>0||s.luck)){push(ax,groundY(ax,az)+jump*2.2+lift,az,0,-cam);powerups.aura(s,anim);summit.aura(s,anim);pop();}
   if(celebrate!==null){push(ax,groundY(ax,az)+lift,az,0,-cam);push(.75,.4,.1);heights.flag(anim);pop();heights.confetti(anim,celebrate);pop();}
   rushFov+=((powered?1:0)-rushFov)*Math.min(1,delta*5);if(powered){push(ax,groundY(ax,az)+jump*2.2+lift,az,0,-cam);special.rush(anim,reduced,rushFov);pop();}
   const follow=active?offset*.35:0,dist=mobile?10.3:9.5,ex=-Math.sin(cam)*dist+Math.cos(cam)*follow,ez=Math.cos(cam)*dist+Math.sin(cam)*follow;

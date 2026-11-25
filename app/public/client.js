@@ -1,11 +1,11 @@
 import {INTRO_DURATION,COUNTDOWN_DURATION} from './intro.js?v=17';
 import {stages,getStage,DURATION,fogAt,bridgeAt,forestSection,meadowSection,meadowWindows,lakeSection,stoneAt,swampMud,baseSpeed,glacierSection,GUSTS,ridgeNarrow,summitNarrow,SOLVAY_AT} from "./journey.js?v=27";
-import {createScene} from "./scene3d.js?v=93";
-import {setup,validateAction,applyAction} from "./rules.js?v=53";
+import {createScene} from "./scene3d.js?v=96";
+import {setup,validateAction,applyAction} from "./rules.js?v=54";
 import {installControls} from "./controls.js?v=17";
 import {createAudio} from "./audio.js?v=23";
-import {getZone} from "./scene3d.js?v=93";
-import {copy} from "./copy.js?v=58";
+import {getZone} from "./scene3d.js?v=96";
+import {copy} from "./copy.js?v=59";
 import {turnDirection} from "./route.js?v=21";
 import {createLeaderboard} from "./leaderboard.js?v=8";
 import {LEADERBOARD} from "./leaderboard-config.js?v=4";
@@ -40,7 +40,7 @@ function bigAlert(text){const n=$("power-callout");n.textContent=text;n.classLis
 let fisherMood=1,fisherEscaped=false,fisherLast=0;
 function fisherBubble(){
  const b=$("fisher-bubble"),now=performance.now()/1000,dt=Math.min(.25,Math.max(0,now-(fisherLast||now)));fisherLast=now;
- $("fog-layer").style.opacity=screen==="play"?String(fogAt(state.elapsed)*.92):"0";
+ {const bino=screen==="play"&&state.bino>0;$("fog-layer").style.opacity=screen==="play"?String(fogAt(state.elapsed)*(bino?.12:.92)):"0";$("bino-layer").hidden=!bino;}
  // Wildschwein-Verfolgung (Level 4) nutzt dieselbe Bubble mit eigenem Porträt.
  if(screen==="play"&&state.phase==="playing"&&state.boar>0){const gap=state.boarGap||14,mood=gap<6?4:3;b.hidden=false;b.dataset.who="boar";b.dataset.mood=mood;b.classList.toggle("near",mood===4);b.classList.toggle("attack",false);b.classList.toggle("flash",gap<5);b.classList.toggle("with-touch",!$("touch-controls").hidden);
   $("fb-state").textContent=t(mood===4?"boarClose":state.elapsed>=337.5?"boarRaceTitle":"boarChase");$("fb-note").textContent=t("boarNote",{s:Math.ceil(state.boar/20)});$("fb-meter").style.width=Math.round(Math.max(0,Math.min(1,1-(gap-3)/13))*100)+"%";return;}
@@ -230,7 +230,9 @@ function buy(offer){if(!dispatch({type:"shop",offer}))return;audio.play("pickup"
 $("shop-buy5").onclick=()=>buy(5);$("shop-buy10").onclick=()=>buy(10);$("shop-leave").onclick=closeShop;$("shop-dialog").addEventListener("close",()=>{if(state.shop)dispatch({type:"shopClose"});});
 // Level 8–10: Abschnitts-Hinweise, Windböen, schmale Gratstellen, Solvayhütte und Gipfel-Endspurt.
 const highSeen=new Set();
+let climbHintAt=-99;
 function highAmbience(){
+ if(screen==="play"&&!paused&&state.phase==="playing"&&state.climbReady>0&&!(state.climb>0)&&time-climbHintAt>6){climbHintAt=time;toast(t("climbHint"),2.4);}
  if(paused||screen!=="play"||state.phase!=="playing")return;const el=state.elapsed,once=(k,f)=>{if(!highSeen.has(k)){highSeen.add(k);f();}};
  const gs=glacierSection(el);if(gs)once("g"+gs,()=>toast(t("glacierSec"+gs),3));
  for(const [fn,z,key] of[[ridgeNarrow,10,"ridgeNarrow"],[summitNarrow,5,"summitNarrow"]]){const n=fn(el+3);if(n>=0&&fn(el+3.2)===n&&fn(el)<0)once(key+Math.floor(el),()=>{bigAlert(t(key+(n===0?"L":"R")));audio.play("pickup",.7,.6);});}
@@ -248,8 +250,9 @@ function processEvents(){
  if(e.kind==="powerStart"){const n=$("power-callout");n.textContent=t("powerName");n.getAnimations().forEach(a=>a.cancel());n.animate([{opacity:0,transform:"translate(-50%,12px) scale(.8)"},{opacity:1,transform:"translate(-50%,0) scale(1.05)",offset:.18},{opacity:1,offset:.72},{opacity:0,transform:"translate(-50%,-14px) scale(1)"}],{duration:1500,fill:"forwards"});audio.play("jump",.72,.8);audio.play("pickup",1.5,.7);}
  if(e.kind==="climbStart"){const n=$("power-callout");n.textContent=t("climbName");n.getAnimations().forEach(a=>a.cancel());n.animate([{opacity:0,transform:"translate(-50%,12px) scale(.8)"},{opacity:1,transform:"translate(-50%,0) scale(1.05)",offset:.18},{opacity:1,transform:"translate(-50%,0) scale(1)",offset:.75},{opacity:0,transform:"translate(-50%,-8px) scale(1)"}],{duration:1400,easing:"ease-out"});toast(t("climbOn"),2.4);audio.play("pickup",1.2,.8);}
  if(e.kind==="powerClear")audio.play("pickup",1.3,.55);
- if(e.kind==="powerPickup"){toast(t(e.power),2.5);audio.play("pickup",1.6,.8);}
+ if(e.kind==="powerPickup"){toast(t(e.power),2.5);audio.play("pickup",1.6,.8);if(e.power==="pickupBoost")bigAlert("💰 2×");if(e.power==="pickupClimb"){bigAlert(t("climbHint"));climbHintAt=time;}}
  if(e.kind==="heart")heartFeedback(e.gained);if(e.kind==="world"&&e.gained)heartFeedback(true);
+ if(e.kind==="luckSaved"){bigAlert("🍀 "+t("luckSaved",{n:e.lost}));audio.play("pickup",1.3,.8);}
  if(e.kind==="gustWarn"){bigAlert(t(e.dir>0?"gustRight":"gustLeft"));audio.play("pickup",.6,.7);}
  if(e.kind==="gust")audio.play("bump",.7,.5);
  if(e.kind==="world"){levelBanner(e.stage);setTimeout(()=>{if(screen==="play")toast(t("itemIntro",{icon:itemIcon(),name:itemName()}),3.2);},2600);}
@@ -321,7 +324,7 @@ function hud(){if(screen==="play"&&state.phase==="playing")crowWarnings();fisher
  const rem=state.nextTurn-state.distance,show=active&&state.nextTurn>0&&rem<state.speed*2.8&&state.elapsed<892&&!(state.elapsed>=578&&state.elapsed<592.5);
  $("turn-cue").hidden=!show;
  if(show){const direction=turnDirection(state.seed,state.summitTurn,state.turnIndex),ready=state.turnChoice===direction;$("turn-arrow").textContent=direction<0?"↰":"↱";$("turn-label").textContent=t(direction<0?"turnLeft":"turnRight");$("turn-distance").textContent=ready?t("turnReady"):inTurn()?t("turnNow"):Math.ceil(rem)+" m";$("turn-cue").classList.toggle("now",inTurn()&&!ready);$("turn-cue").classList.toggle("accepted",ready);}
- const power=[state.magnet>0?t("magnetShort",{n:Math.ceil(state.magnet/20)}):"",state.shield?t("shieldShort"):"",state.coinBoost>0?t("boostShort",{n:Math.ceil(state.coinBoost/20)}):"",state.shoes>0?t("shoesShort",{n:Math.ceil(state.shoes/20)}):"",!state.angry&&(state.fish>0||getStage(state.elapsed)===2)?t("fishShort",{n:state.fish||0}):"",getStage(state.elapsed)===3?t("forestShort",{c:state.coins||0}):"",getStage(state.elapsed)===4?t("meadowShort",{h:"0"+Math.floor(state.elapsed/60),m:String(Math.floor(state.elapsed%60)).padStart(2,"0")}):""].filter(Boolean).join(" · ");
+ const power=[state.magnet>0?t("magnetShort",{n:Math.ceil(state.magnet/20)}):"",state.shield?t("shieldShort"):"",state.springs>0?t("springsShort",{n:Math.ceil(state.springs/20)}):"",state.luck?t("cloverShort"):"",state.bino>0?t("binoShort",{n:Math.ceil(state.bino/20)}):"",state.coinBoost>0?t("boostShort",{n:Math.ceil(state.coinBoost/20)}):"",state.shoes>0?t("shoesShort",{n:Math.ceil(state.shoes/20)}):"",!state.angry&&(state.fish>0||getStage(state.elapsed)===2)?t("fishShort",{n:state.fish||0}):"",getStage(state.elapsed)===3?t("forestShort",{c:state.coins||0}):"",getStage(state.elapsed)===4?t("meadowShort",{h:"0"+Math.floor(state.elapsed/60),m:String(Math.floor(state.elapsed%60)).padStart(2,"0")}):""].filter(Boolean).join(" · ");
  $("powerup").hidden=!active||!power;$("powerup").textContent=power;
 
  $("resort-arrival").hidden=true;
