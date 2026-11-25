@@ -289,3 +289,11 @@ dialog .dialog-close{border-radius:var(--radius-s)}
 #pickup-callout{max-width:94vw}
 #pickup-callout b{white-space:nowrap}
 #pickup-callout span{white-space:normal;max-width:88vw}
+/* Handy: Kästchen so schmal wie der Pause-Knopf (Symbol über der Zahl), damit es die Level-Anzeige nicht überschneidet */
+@media(max-width:420px){
+ #hud .bag-box{top:48px;width:40px;min-width:0;padding:5px 0;gap:6px;align-items:center;font-size:12px;border-radius:12px;box-sizing:border-box}
+ #hud .bag-box .bag-row{flex-direction:column;gap:1px}
+ #hud .bag-box svg{width:15px;height:15px}
+ #hud .bag-box i{font-size:14px;width:auto}
+ #hud .bag-box #combo{display:none}
+}
