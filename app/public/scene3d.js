@@ -15,8 +15,8 @@ import {createBlackLake} from './blacklake.js?v=11';
 import {createMeadow} from './meadow.js?v=7';
 import {createForest} from './forest.js?v=5';
 import {createHornli} from './hornli.js?v=12';
-import {createTokens} from './tokens.js?v=5';
-import {createHeights} from './heights.js?v=2';
+import {createTokens} from './tokens.js?v=10';
+import {createHeights} from './heights.js?v=3';
 export {getZone};
 const PI=Math.PI,C={ice:[.74,.87,.9,10],grass:[.44,.58,.30,11],gravel:[.7,.63,.48,12],cobble:[.65,.66,.61,13],snow:[.86,.92,.94,2],rock:[.48,.52,.53,1],wood:[.32,.22,.15,4],gold:[1,.74,.24,9],dark:[.12,.2,.23],fir:[1,1,1,7],red:[.85,.16,.19],flower:[.97,.85,.40]};
 export function createScene(canvas){
@@ -49,7 +49,7 @@ export function createScene(canvas){
   const ds=[];for(let w=Math.floor((d-32)/8)*8;w<d+650;w+=8)ds.push(w);
   const i=Math.max(0,Math.floor((d-260)/680));for(let j=i;j<i+4;j++){const v=260+j*680;if(v>ds[0]&&v<ds[ds.length-1])ds.push(v);}ds.sort((a,b)=>a-b);const points=[...new Set(ds)],batches=[[],[],[],[]],terrain=[],pavement=[];
   const edges=(w,width=4.15)=>{const p=point(w),before=path.frame(w-.01).h,after=path.frame(w+.01).h;let nx=Math.cos(before)+Math.cos(after),nz=Math.sin(before)+Math.sin(after);const denom=1+Math.cos(before-after);nx=nx/denom*width;nz=nz/denom*width;return[[p.x-nx,groundY(p.x-nx,p.z-nz),p.z-nz],[p.x+nx,groundY(p.x+nx,p.z+nz),p.z+nz]];};
-  for(let i=0;i<points.length-1;i++){const w=points[i],z=getZone(Math.max(0,elapsed+(w-d)/speed));if(z===9)continue;/* Schwarzsee: kein Weg, nur Wasser */const wd=z===7?3.3:4.15,e=edges(w,wd),f=edges(points[i+1],wd),out=batches[[4,6,7,8,9,10].includes(z)?1:z===5?0:z];for(const p of[e[0],f[0],e[1],e[1],f[0],f[1]])out.push(...p,0,1,0,1,1,1);}
+  for(let i=0;i<points.length-1;i++){const w=points[i],z=getZone(Math.max(0,elapsed+(w-d)/speed));if(z===9)continue;/* Schwarzsee: kein Weg, nur Wasser */const wd=z===7?3.3:4.15,e=edges(w,wd),f=edges(points[i+1],wd),out=batches[[4,5,6,7,8,9,10].includes(z)?1:z];for(const p of[e[0],f[0],e[1],e[1],f[0],f[1]])out.push(...p,0,1,0,1,1,1);}
   for(let i=0;i<points.length-1;i++)if([2,3].includes(getZone(Math.max(0,elapsed+(points[i]-d)/speed)))){const inner=edges(points[i],4.17),outer=edges(points[i],6.30),nextInner=edges(points[i+1],4.17),nextOuter=edges(points[i+1],6.30);for(let side=0;side<2;side++){const quad=[inner[side],outer[side],nextOuter[side],nextInner[side]].map(p=>[p[0],p[1]+.075,p[2]]);for(const j of[0,1,2,0,2,3])pavement.push(...quad[j],0,1,0,.60,.61,.57);const lo=[inner[side],nextInner[side]],hi=lo.map(p=>[p[0],p[1]+.075,p[2]]);for(const p of[lo[0],hi[0],hi[1],lo[0],hi[1],lo[1]])pavement.push(...p,0,1,0,.85,.86,.84);}}
   r.setGeometry('pavement',pavement,24);
   const cell=mtn?90:grade===0?3600:300,gx=mtn?Math.floor((origin.x-mtn.x-1800)/cell)*cell+mtn.x-origin.x:-1800,gz=mtn?Math.floor((origin.z-mtn.z-1800)/cell)*cell+mtn.z-origin.z:-1800;terrainGrid={cell,gx,gz,off:mtn?1.1:.27};for(let x=gx;x<gx+3600;x+=cell)for(let z=gz;z<gz+3600;z+=cell){const v=(xx,zz)=>[xx,groundY(xx,zz)-(mtn?1.1:.27),zz];const a=v(x,z),b=v(x+cell,z),c=v(x+cell,z+cell),e=v(x,z+cell);if(!mtn){for(const p of[a,e,c,a,c,b])terrain.push(...p,0,1,0,1,1,1);continue;}
@@ -237,9 +237,9 @@ export function createScene(canvas){
 
  // Bergladen am Ende jedes Levels (Level 1–9): Gebäude über dem Weg, Hornox läuft bei Sekunde 84,5 hinein.
  function shops(d,elapsed,speed){
-  for(let st=0;st<9;st++){const T=st*90+84.5,w=d+(T-elapsed)*speed;if(w<d-12||w>d+380)continue;at(w,0);tokens.shop(anim);pop();}
+  for(let st=0;st<9;st++){const T=st*90+84.5,w=d+(T-elapsed)*speed;if(w<d-20||w>d+380)continue;at(w,0);push(0,0,0,0,PI);tokens.shop(anim);pop();pop();}   // Eingang (Schild, Markise) zeigt zu Hornox; Halle liegt vor ihm
  }
- function environment(d,elapsed,speed){zone=getZone(elapsed);landscape(d,elapsed);road(d,elapsed,speed);street(d,elapsed,speed);lakeside(d,elapsed,speed);bridge(d,elapsed,speed);forestScenery(d,elapsed,speed);meadowScenery(d,elapsed,speed);lakeScenery9(d,elapsed,speed);hornliScenery(d,elapsed,speed);shops(d,elapsed,speed);
+ function environment(d,elapsed,speed){zone=getZone(elapsed);landscape(d,elapsed);road(d,elapsed,speed);shops(d,elapsed,speed);/* Laden früh zeichnen: in Zermatt sonst über dem Kästchen-Limit */street(d,elapsed,speed);lakeside(d,elapsed,speed);bridge(d,elapsed,speed);forestScenery(d,elapsed,speed);meadowScenery(d,elapsed,speed);lakeScenery9(d,elapsed,speed);hornliScenery(d,elapsed,speed);
   const start=Math.floor((d-22)/14)*14;
   for(let w=start;w<d+430;w+=14){const z=getZone(Math.max(0,elapsed+(w-d)/speed)),index=Math.floor(w/14),side=index%2?1:-1,off=side*(7.7+(Math.abs(index)%3)*1.4),p=point(w,off);
    if([1,2,3,8,9].includes(z)||z===7&&side<0||!clear(p.x,p.z,1.8,w))continue;
@@ -269,18 +269,17 @@ export function createScene(canvas){
     // Grat (Level 9) und Gipfelflanke (Level 10): Felskante, Abgrund links und rechts, Fixseile am Rand.
     const n=(z===10?ridgeNarrow:summitNarrow)(t);
     for(const side of[-1,1]){
-     at(w,side*4.25);for(let j=-1;j<=1;j++)a('rock',side*.15,-.08,j*2.6+((k+j)%3-1)*.3,.8,.45,1.6,(k+j)%2?C.rock:[.32,.31,.3],0,k+j,-side*.45);
-     if(z===5)a('rock',side*.35,.12,((k%3)-1)*.8,1.2,.35,2.6,C.snow,0,k,-side*.2);pop();
+     if(z===10){at(w,side*4.25);for(let j=-1;j<=1;j++)a('rock',side*.15,-.08,j*2.6+((k+j)%3-1)*.3,.8,.45,1.6,(k+j)%2?C.rock:[.32,.31,.3],0,k+j,-side*.45);pop();}   // Level 10: Wegrand frei
      const q0=point(w,0),q1=point(w,side*25),uphill=meshY(q1.x,q1.z)>meshY(q0.x,q0.z)+2;   // am Berg: bergseitig Flanke statt Abgrund
      if(!uphill){let x=4.7;for(const [wd,c] of[[.8,[.2,.21,.24]],[2,[.12,.13,.17]],[5,[.07,.08,.12]],[14,[.05,.07,.11]],[60,[.4,.46,.56]]]){band(w,side*(x+wd/2),wd,8.04,c);x+=wd;}}
-     else if(k%2===0&&w<d+340){atG(w,side*(6+(k%3)*1.5));heights.outcrop(2+(k%4),k+side);pop();}
+     else if(k%3===0&&w<d+340){atG(w,side*(11+(k%3)*2));heights.outcrop(2+(k%4),k+side);pop();}
      if(k%3===(side>0?0:2)&&w<d+300){const off=side*(30+(k%4)*7);atG(w,off);a('sphere',0,.4,0,8+(k%3)*3,.5,5,[.88,.92,.97,49]);pop();}   // Wolkenfetzen unten
      if(k%2===0){at(w,side*4.55);heights.ropePost(16);pop();}
      if(z===10&&k%13===(side>0?2:9)){const off=side*(16+(k%3)*5);at(w,off,-10);a('rock',0,5,0,3,14+(k%3)*3,2.8,[.46,.45,.43],0,k);a('rock',0,12.5+(k%3)*1.5,0,2.2,1.4,2,C.snow,0,k+1);pop();}   // Felstürme aus der Tiefe
-     if(z===5&&k%4===(side>0?1:3)&&w<d+340){atG(w,side*(8+(k%3)*2));heights.outcrop(3+(k%3)*1.5,k);pop();}
+     if(z===5&&k%5===(side>0?1:3)&&w<d+340){atG(w,side*(12+(k%3)*2));heights.outcrop(3+(k%3)*1.5,k);pop();}
     }
     // Schmale Gratstelle: eine Randspur wird zum Abgrund
-    if(n>=0&&w<d+260){at(w,(n-1)*2.5);hornli.abyss(k,n===0?1:-1,3);pop();if(z===5){at(w,(n===0?-1:1)*.2);heights.cornice(n===0?-1:1,k);pop();}}
+    if(n>=0&&w<d+260){at(w,(n-1)*2.5);hornli.abyss(k,n===0?1:-1,3);pop();}
    }
   }
   // Solvayhütte (4003 m) auf einem Felsabsatz links des Grates
@@ -431,10 +430,10 @@ export function createScene(canvas){
   else if(o.kind==='ibex')summit.ibex(time,0,o.id);
   else if(o.kind==='snowBridge')heights.snowBridge(o.lane<0?8.3:2.3,Math.max(0,Math.min(1,(16-(od-d))/9)),time,o.id);
   else if(o.kind==='serac'){const side=o.lane===0?-1:o.lane===2?1:(o.id%2?1:-1);heights.serac(Math.max(0,Math.min(1,(28-(od-d))/16)),side,o.id);}
-  else if(o.kind==='ropeTeam'){push(0,0,0,0,PI);heights.ropeTeam(time,o.id);pop();}
+  else if(o.kind==='ropeTeam')heights.ropeTeam(time,o.id);   // Bergsteiger schauen zu Hornox (lokal +z)
   else if(o.kind==='fixRope'||o.kind==='rope')heights.fixRope();
-  else if(o.kind==='rockStep')heights.rockStep(o.lane<0?8.3:2.3,o.id);
-  else if(o.kind==='rockfall'&&(o.biome===5||o.biome===10))heights.falling(time,o.id);
+  else if(o.kind==='rockStep'){a('cylinder',0,.03,0,(o.lane<0?8.3:2.3)*.55,.02,1.1,[.12,.12,.14]);heights.rockStep(o.lane<0?8.3:2.3,o.id);}
+  else if(o.kind==='rockfall'&&(o.biome===5||o.biome===10)){a('cylinder',0,.03,0,.9,.02,.9,[.12,.12,.14]);heights.falling(time,o.id);}
   else if(o.kind==='ridgeGap'&&o.lane>=0&&((o.biome===10?ridgeNarrow:summitNarrow)(elapsedNow+(od-d)/baseNow)===o.lane)){}   // schmale Gratstelle: Abgrund zeichnet die Kulisse
   else if(o.kind==='crevasse'||o.kind==='ridgeGap'){if(o.bridgeLane!==undefined&&o.lane===(o.bridgeLane+1)%3){push((o.bridgeLane-o.lane)*2.5,0,0);heights.ladder();pop();}const width=o.lane<0?8.3:2.3;a('crack',0,.025,1.15,width,2.3,1,o.kind==='ridgeGap'?[.10,.09,.07]:[.02,.12,.19,21],-PI/2);for(let i=0;i<7;i++)for(const side of[-1,1]){const x=(i/6-.5)*width,z=side*(1.03+Math.sin(i*5.2+o.id)*.1);a('rock',x,.03,z,width/14,.09,.16,o.kind==='ridgeGap'?C.rock:[.66,.88,.97,20],0,i);}}
   else if(['lowRock','rockfall','boulder'].includes(o.kind)){const small=o.kind==='lowRock';a('rock',0,small?.42:.8,0,small?.8:1,small?.62:1.1,.8,C.rock,o.kind==='rockfall'?time*2:0,o.id*.7);}

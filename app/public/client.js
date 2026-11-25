@@ -1,10 +1,10 @@
 import {INTRO_DURATION,COUNTDOWN_DURATION} from './intro.js?v=17';
 import {stages,getStage,DURATION,fogAt,bridgeAt,forestSection,meadowSection,meadowWindows,lakeSection,stoneAt,swampMud,baseSpeed,glacierSection,GUSTS,ridgeNarrow,summitNarrow,SOLVAY_AT} from "./journey.js?v=27";
-import {createScene} from "./scene3d.js?v=86";
-import {setup,validateAction,applyAction} from "./rules.js?v=51";
+import {createScene} from "./scene3d.js?v=89";
+import {setup,validateAction,applyAction} from "./rules.js?v=52";
 import {installControls} from "./controls.js?v=17";
 import {createAudio} from "./audio.js?v=23";
-import {getZone} from "./scene3d.js?v=86";
+import {getZone} from "./scene3d.js?v=89";
 import {copy} from "./copy.js?v=58";
 import {turnDirection} from "./route.js?v=21";
 import {createLeaderboard} from "./leaderboard.js?v=8";
@@ -12,7 +12,7 @@ import {LEADERBOARD} from "./leaderboard-config.js?v=4";
 const $=id=>document.getElementById(id),q=new URLSearchParams(location.search),app=$("app"),canvas=$("world"),player="guest";
 const read=k=>{try{return localStorage.getItem(k);}catch{return null;}},save=(k,v)=>{try{localStorage.setItem(k,String(v));}catch{}};
 const today=Number(new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Zurich",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date()).replaceAll("-",""));
-const qs=Number(q.get("challenge"));let seed=Number.isInteger(qs)&&qs>0&&qs<2147483648?qs:today;
+const qs=Number(q.get("challenge")),challengeSeed=Number.isInteger(qs)&&qs>0&&qs<2147483648;let seed=challengeSeed?qs:today;
 let route="summit",mode=q.get("mode")==="relaxed"||read("spa.runner.assist")==="1"?"relaxed":"classic";
 const target=Math.max(0,Math.min(1000000,Number(q.get("target"))||0));
 const browserLang=(navigator.languages||[navigator.language||""]).map(l=>String(l).slice(0,2).toLowerCase()).find(l=>Object.hasOwn(copy,l));
@@ -107,7 +107,7 @@ function skipToLevel(){
 }
 let runBest=0,bestAnnounced=false;
 function start(){
- if(!loaded)return;if(run.saving)return;$("name-dialog").open&&$("name-dialog").close();hideBoard();runBest=best();bestAnnounced=false;countToken=0;watchBoard(false);hideLevelBanner();crowsSeen=new Set();forestSec=0;forestSounds.clear();meadowSec=0;meadowSounds.clear();lakeSec=0;lakeSounds.clear();fisherMood=1;fisherEscaped=false;$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;state=setup([player]);dispatch({type:"start",seed,mode,route});setScreen("play");acc=0;renderDistance=0;countdown=0;introElapsed=0;lastCount=-1;resultSaved=false;tiltBase=null;$("countdown").hidden=true;$("countdown").textContent="";
+ if(!loaded)return;if(run.saving)return;$("name-dialog").open&&$("name-dialog").close();hideBoard();runBest=best();bestAnnounced=false;countToken=0;watchBoard(false);hideLevelBanner();crowsSeen=new Set();forestSec=0;forestSounds.clear();meadowSec=0;meadowSounds.clear();lakeSec=0;lakeSounds.clear();fisherMood=1;fisherEscaped=false;$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;state=setup([player]);if(!challengeSeed)seed=1+Math.floor(Math.random()*2147483646);/* jede Runde anders: Strecke, Kurven, Hindernisse – Herausforderungs-Links behalten ihren Startwert */dispatch({type:"start",seed,mode,route});setScreen("play");acc=0;renderDistance=0;countdown=0;introElapsed=0;lastCount=-1;resultSaved=false;tiltBase=null;$("countdown").hidden=true;$("countdown").textContent="";
  audio.unlock().catch(()=>{});audio.setActive(true);controls.reset();scene?.resetEffects();$("feedback-label").textContent="";celebrateAt=null;highSeen.clear();skipToLevel();hud();
 }
 function home(){if(run.saving)return;introElapsed=-1;hideLevelBanner();audio.setChase(false);$("power-callout").getAnimations().forEach(a=>a.cancel());$("power-callout").textContent="";$("heart-feedback").hidden=true;audio.setActive(true);scene?.resetEffects();$("feedback-label").textContent="";state=setup([player]);setScreen("home");selectMenu("run");countdown=0;renderDistance=0;$("countdown").hidden=true;$("turn-cue").hidden=true;$("tutorial").hidden=true;$("powerup").hidden=true;$("resort-arrival").hidden=true;updateCopy();}

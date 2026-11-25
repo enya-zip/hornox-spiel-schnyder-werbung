@@ -196,8 +196,7 @@ export function applyAction(s,p,a){
   if(z===4&&hornliSteg(arrivalTime)>=0)safe=hornliSteg(arrivalTime);
   const narrowAt=t=>z===10?ridgeNarrow(t):z===5?summitNarrow(t):-1,narrow=narrowAt(arrivalTime),edge=narrow>=0?narrow:Math.max(narrowAt(arrivalTime+.6),narrowAt(arrivalTime+1.2));if(edge>=0&&safe===edge)safe=edge===0?1+((rng>>>9)&1):((rng>>>9)&1);   // Münzen nie über dem Abgrund   // Münzen nur auf dem Holzsteg, nie über dem Abgrund
   const one=(safe+1)%3,two=(safe+2)%3,busy=row>=(s.mode==="relaxed"?12:5);
-  if(!flamingoSpawned&&arrivalTime>=65&&[2,3].includes(z)&&pattern!==8){add('flamingo',one);flamingoSpawned=true;}
-  else if(z===5){
+  if(z===5){   // (Flamingo in Level 1 entfernt)
    // Level 10 (Matterhorn): Felsstufen (springen), Fixseile (ducken), Steinschlag, schmaler Schneegrat,
    // Steinböcke und Krähen. Krähen-Angriffe: Sturzflug (Spur wechseln), Münzenklau (springen),
    // Scheinangriff (nicht zu früh reagieren), Doppelangriff; mindestens 8 s (plus 0–4 s) dazwischen.

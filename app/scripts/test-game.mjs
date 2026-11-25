@@ -94,14 +94,14 @@ check('new moving encounters require dodging and rush clears each safely',()=>{
   const s=action({...start(),powerTicks:60,distance:100,nextRow:99999,nextTurn:99999,objects:[{id:1,kind,lane:1,d:108}]},{type:'step'});assert.equal(s.lives,3);assert(s.events.some(e=>e.kind==='powerClear'));
  }
 });
-check('one flamingo per full run, survives world changes, resets on a new run',()=>{
+check('no flamingo any more (removed from level 1)',()=>{
  for(const seed of[1,123,20261029,9876]){
   let s=start(seed),found=new Set();
   for(let i=0;i<18000;i++){
    s=action({...s,invulnerable:30,shield:30,nextTurn:999999},{type:'step'});
    for(const o of s.objects)if(o.kind==='flamingo'){found.add(o.id);assert([2,3].includes(o.biome));}
   }
-  assert.equal(s.phase,'won');assert.equal(found.size,1);assert(s.flamingoSpawned);assert.equal(start(seed).flamingoSpawned,false);
+  assert.equal(s.phase,'won');assert.equal(found.size,0);
  }
 });
 

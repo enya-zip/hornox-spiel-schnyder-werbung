@@ -72,10 +72,13 @@ export function createTokens(r){
   // Rot-weisse Markise über dem Eingang und Laternen
   for(let k=0;k<11;k++)a('box',-4.95+k*.99,H-.15,-.55,.99,.08,1.2,k%2?[.96,.96,.93]:[.82,.13,.13],-.3);
   const sway=Math.sin(time*2)*.06;for(const s of[-1,1]){a('cylinder',s*4.2,H-.9+sway,.4,.03,.6,.03,dark);a('sphere',s*4.2,H-1.3+sway,.4,.18,.24,.18,[1,.82,.35,9]);}
-  // Grosses Ladenschild über dem Tor: Herz + Korb mit bunten Gegenständen
-  push(0,H+1.5,-.3);a('box',0,0,0,4.6,1.2,.14,[.97,.93,.82]);a('box',0,0,.03,4.8,1.4,.1,dark);
-  for(const s of[-1,1])a('sphere',-1.3+s*.2,.15,-.1,.28,.28,.06,[.88,.12,.18]);a('cone',-1.3,-.2,-.1,.42,.36,.06,[.88,.12,.18],Math.PI);
-  a('box',.7,-.1,-.1,1.6,.55,.04,[.75,.5,.25]);for(let k=0;k<3;k++)a('sphere',.2+k*.5,.28,-.12,.18,.18,.06,[[1,.78,.2],[.9,.3,.25],[.4,.7,.95]][k]);
+  // Grosses Ladenschild über dem Tor: «SHOP» in Block-Buchstaben (5×7 Pixel), links ein Herz, rechts ein Korb.
+  push(0,H+.05,-1.25);a('box',0,0,.03,6.2,1.9,.1,dark);a('box',0,0,0,5.9,1.6,.14,[.97,.93,.82]);
+  const px=.15,font={S:['01111','10000','10000','01110','00001','00001','11110'],H:['10001','10001','10001','11111','10001','10001','10001'],O:['01110','10001','10001','10001','10001','10001','01110'],P:['11110','10001','10001','11110','10000','10000','10000']};
+  // Die Halle wird um 180° gedreht gezeichnet: x gespiegelt, damit «SHOP» von vorne richtig lesbar ist.
+  [...'SHOP'].forEach((ch,i)=>{const x0=-1.62+i*.92;font[ch].forEach((row,r)=>{let c=0;while(c<5){if(row[c]!=='1'){c++;continue;}let e=c;while(e<5&&row[e]==='1')e++;a('box',-(x0+(c+e-1)/2*px),.45-r*px,-.09,(e-c)*px-.015,px*.92,.05,[.78,.12,.14]);c=e;}});});   // zusammenhängende Pixel = ein Kästchen
+  for(const s of[-1,1])a('sphere',2.45+s*.13,.12,-.1,.18,.18,.05,[.88,.12,.18]);a('cone',2.45,-.12,-.1,.27,.24,.05,[.88,.12,.18],Math.PI);
+  a('box',-2.45,-.1,-.1,.6,.36,.04,[.75,.5,.25]);for(let k=0;k<3;k++)a('sphere',-2.25-k*.2,.12,-.12,.1,.1,.05,[[1,.78,.2],[.9,.3,.25],[.4,.7,.95]][k]);
   pop();
   // Blumenkästen und Fässer vor dem Eingang
   for(const s of[-1,1]){a('cylinder',s*6.9,.5,.4,.42,1,.42,wood);a('cylinder',s*6.9,.5,.4,.44,.08,.44,dark);a('box',s*6.9,1.12,1.4,.9,.3,.35,dark);for(let k=0;k<3;k++)a('sphere',s*6.9-.3+k*.3,1.35,1.4,.14,.14,.14,k%2?[.9,.2,.3]:[1,.85,.3]);}

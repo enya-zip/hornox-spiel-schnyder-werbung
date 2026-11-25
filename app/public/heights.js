@@ -50,7 +50,7 @@ export function createHeights(r){
  // Fixseil quer über den Weg (ducken): zwei Eisenstangen und ein gespanntes Seil auf Brusthöhe.
  function fixRope(){for(const s of[-1,1]){a('cylinder',s*4.2,.95,0,.05,1.9,.05,metal);a('rock',s*4.2,.1,0,.5,.25,.5,rockDark,0,s);}a('cylinder',0,1.62,0,.05,8.4,.05,rope,0,0,PI/2);for(let k=-3;k<=3;k++)a('ring',k*1.2,1.62,0,.07,.07,.02,metal,0,PI/2);}
  // Felsstufe (springen): Gneisplatte, eine Spur oder ganze Breite.
- function rockStep(width,id){const n=Math.max(1,Math.round(width/2.4));for(let k=0;k<n;k++){const x=(k-(n-1)/2)*width/n;a('rock',x,.32,0,width/n*1.02,.64,1.3,k%2?rock:rockLight,0,id+k);a('box',x,.66,.1,width/n*.8,.04,.9,snow);}}
+ function rockStep(width,id){const n=Math.max(1,Math.round(width/2.4));for(let k=0;k<n;k++){const x=(k-(n-1)/2)*width/n;a('rock',x,.32,0,width/n*1.02,.64,1.3,k%2?rockDark:rock,0,id+k);a('box',x,.66,-.5,width/n*.8,.05,.08,[.95,.7,.15]);}}   // dunkler Fels mit gelber Kante (gut sichtbar auf Schnee)
  // Steinschlag-Brocken mit Staubwolke.
  function falling(time,id){a('rock',0,.75,0,1,1,.9,rockDark,time*3,id);for(let j=0;j<3;j++)a('sphere',((j*7)%3-1)*.4,.2+j*.15,-.6-j*.2,.3,.2,.3,[.7,.68,.64,49]);}
  // Solvayhütte (4003 m): kleine Notbiwak-Holzhütte auf einem Felsabsatz.
