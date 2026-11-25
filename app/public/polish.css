@@ -281,4 +281,4 @@ dialog .dialog-close{border-radius:var(--radius-s)}
 #hud .bag-box svg{color:var(--gold);width:18px;height:18px;flex:none}
 #hud .bag-box i{font-style:normal;font-size:16px;line-height:1;width:18px;text-align:center}
 #hud .bag-box #combo{color:var(--gold);font-size:12px}
-@media(max-width:520px){#hud .bag-box{top:92px;padding:6px 8px;font-size:13px}}
+@media(max-width:420px){#hud .bag-box{top:48px;padding:6px 8px;font-size:13px}}
