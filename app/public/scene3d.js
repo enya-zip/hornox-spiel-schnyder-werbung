@@ -305,7 +305,7 @@ export function createScene(canvas){
    push(x,y,z,0,-h,(toss?.lean||0)+sway,style===4?.83:scale);encounters.accessory(poseStyle,variant,pace);pop();
   }
  }
- let bumpT=-9,elapsedNow=0,baseNow=16,stingT=-99,beeNest=null,crocAttack=null,curObjects=[],tongueDrawn=new Set(),dogVis=40,dogLane=1,speedNow=16,flyingFish=[],flyingTokens=[],tickNow=0,chaser=null,chaseVis=40,chaseLane=1,reelT=-9,fogNow=0,boarVis=40,boarLane=1,rammed=new Set();
+ let bumpT=-9,elapsedNow=0,baseNow=16,stingT=-99,beeNest=null,crocAttack=null,curObjects=[],tongueDrawn=new Set(),dogVis=40,dogLane=1,speedNow=16,flyingFish=[],flyingTokens=[],bag=[],tickNow=0,chaser=null,chaseVis=40,chaseLane=1,reelT=-9,fogNow=0,boarVis=40,boarLane=1,rammed=new Set();
  function obstacle(o,d,time,toss=null){if(!toss&&(rammed.has(o.id)||fogNow>0&&o.d-d>180-140*fogNow))return;const od=o.d-(toss?0:(o.approach||0)*visualSubtick);if(!toss&&(od<d-8||od>d+180||(o.resolved&&['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','token','mushroom','herb','cheese','goldBell','edelweiss'].includes(o.kind))))return;const off=(o.lane<0?0:(o.lane-1)*2.5)+(toss?.side||0),p=point(od,off),rise=toss?.y||0;
   if(['pedestrian','hiker','ropeTeam','photographers','influencer','lostTourists','scooter','skiers','snowboarders'].includes(o.kind)){visitors(o.kind==='ropeTeam'?{...o,kind:'hiker'}:o,p,time,toss);if(o.kind!=='scooter')return;}   // Seilschaft sieht aus wie die Wanderer in Level 1
   if(o.kind==='ibex'&&!toss){
@@ -451,13 +451,13 @@ export function createScene(canvas){
   else if(o.kind==='planter'){a('cylinder',0,.46,0,.67,.9,.67,[.55,.36,.24]);a('sphere',0,1.02,0,.65,.4,.65,[.22,.38,.18]);for(let i=0;i<7;i++)a('sphere',Math.sin(i*7)*.5,1.2,Math.cos(i*7)*.5,.13,.11,.13,C.red);}
   if(toss)pop();pop();
  }
- return{ready,resize:r.resize,emit(e,s){if(!path)path=createPath(s.seed);fx.emit(e,s,path);if(e.kind==='fishCatch')flyingFish.push(anim);if(e.kind==='token')flyingTokens.push({t:anim,zone:e.zone});if(e.kind==='gustWarn'||e.kind==='gust'){gustT=anim;gustDir=e.dir;}if(e.kind==='hooked')reelT=anim;if(e.kind==='beeSting')stingT=anim;if(e.kind==='beesAppear')beeNest={d:e.nest??s.distance,side:e.side||1,t:anim};
+ return{ready,resize:r.resize,emit(e,s){if(!path)path=createPath(s.seed);fx.emit(e,s,path);if(e.kind==='fishCatch')flyingFish.push(anim);if(e.kind==='token'){flyingTokens.push({t:anim,zone:e.zone});bag.push(e.zone);if(bag.length>12)bag.shift();}if(e.kind==='gustWarn'||e.kind==='gust'){gustT=anim;gustDir=e.dir;}if(e.kind==='hooked')reelT=anim;if(e.kind==='beeSting')stingT=anim;if(e.kind==='beesAppear')beeNest={d:e.nest??s.distance,side:e.side||1,t:anim};
   // Aufprall (in beiden Spielmodi): Hornox stolpert mit einem Hüpfer, feste Hindernisse fliegen zur Seite.
   if(e.kind==='bump'){bumpT=anim;if(e.id&&!['crevasse','ridgeGap','manhole','rope','fixRope','branch','iceArch','waterGap','plankGap','stream','ditch','snowBridge','frog','tongue','hook','beamLow','overhang','metalStrut','awning','gate','highLog','serac','ropeTeam','hiker','pedestrian','photographers','influencer','lostTourists','skiers','snowboarders','carriage','cow','cowWalk','sheep','ibex'].includes(e.object)){rammed.add(e.id);if(tossed.length>=12)tossed.shift();tossed.push({o:{id:e.id,kind:e.object,lane:e.lane,d:e.d??s.distance,biome:e.biome},time:anim,side:e.lane===0?-1:e.lane===2?1:(e.id%2?-1:1)});}}
   if(e.kind==='powerClear'&&!['crevasse','ridgeGap','manhole','rope','branch','iceArch'].includes(e.object)){
    if(tossed.length>=12)tossed.shift();tossed.push({o:{id:e.id||0,kind:e.object,lane:e.lane,d:e.d??s.distance},time:anim,side:e.lane===0?-1:e.lane===2?1:(e.id%2?-1:1)});
   }
- },resetEffects(){bumpT=-9;fx.reset();tossed=[];rushFov=0;flyingFish=[];flyingTokens=[];chaseVis=40;chaser=null;reelT=-9;boarVis=40;dogVis=40;stingT=-99;beeNest=null;crocAttack=null;rammed=new Set();},
+ },resetEffects(){bumpT=-9;fx.reset();tossed=[];rushFov=0;flyingFish=[];flyingTokens=[];bag=[];chaseVis=40;chaser=null;reelT=-9;boarVis=40;dogVis=40;stingT=-99;beeNest=null;crocAttack=null;rammed=new Set();},
  render(s,{distance,time,delta,active,paused,reduced,screen,introTime=null,waiting=false,celebrate:cel=null}){celebrate=active&&s.phase==='won'?cel:null;if(!actor)return;const d=active?distance:0,newKey=s.seed+':summit';if(key!==newKey){key=newKey;placementCache.clear();clearCache.clear();path=createPath(s.seed,'summit');cam=0;}
   const mobile=canvas.width/canvas.height<.9;cinematic=introTime===null?null:introFrame(introTime,mobile,reduced);cinematicMetrics=cinematic?{time:introTime,heroZ:cinematic.z,doorOpen:cinematic.doorOpen,orbitDegrees:cinematic.orbitDegrees,eye:cinematic.eye,target:cinematic.target}:null;
   trackD=d;speedNow=s.speed||16;elapsedNow=active?s.elapsed:0;baseNow=active?baseSpeed(s.elapsed,s.mode==='relaxed'):16;const stage=getZone(active?s.elapsed:0);const phase=active?s.elapsed:0,ease=(a,b)=>{const t=Math.max(0,Math.min(1,(phase-a)/(b-a)));return t*t*(3-2*t);};grade=.025*ease(90,110)+.015*ease(180,200)+.015*ease(360,380)+.035*ease(540,560)-.015*ease(630,650)+.035*ease(720,740)-.11*ease(785,812);visualSubtick=active&&!paused?Math.max(0,Math.min(.05,(d-s.distance)/Math.max(1,s.speed))):0;
@@ -516,6 +516,10 @@ export function createScene(canvas){
     // Frisch gefangene Fische fliegen im Bogen in den Rucksack.
     flyingFish=flyingFish.filter(t=>anim-t<.5);for(const t of flyingFish){const u=(anim-t)/.5,x0=ax+Math.sin(cam)*3,z0=az-Math.cos(cam)*3,x1=sp[0]+bx*.42,y1=sp[1]+.4,z1=sp[2]+bz*.42;push(x0+(x1-x0)*u,1.4+(y1-1.4)*u+Math.sin(u*PI)*1.4,z0+(z1-z0)*u,0,anim*9);lake.fish(anim,9,.7);pop();}
    }}
+  if(active&&bag.length&&(s.items||0)>0&&visibleActor===actor&&actor.joint){
+   // Eingesammelte Gegenstände stecken sichtbar im Wanderrucksack (wie die Fische, höchstens 6; nach dem Laden entsprechend weniger).
+   const sp=actor.joint('Spine02'),n=Math.min(6,bag.length,s.items||0),list=bag.slice(-n);
+   if(sp)list.forEach((zone,k)=>{const side=(k-(n-1)/2)*.2,bx=-Math.sin(cam),bz=Math.cos(cam);push(sp[0]+bx*.4+Math.cos(cam)*side,sp[1]+.62+(k%2)*.08,sp[2]+bz*.4+Math.sin(cam)*side,0,-cam+(k%2?.3:-.3),0,.72);tokens.item(zone,anim,k);pop();});}
   if(active&&flyingTokens.length&&visibleActor===actor&&actor.joint){
    // Eingesammelte Gegenstände fliegen wie die Fische in Level 3 im Bogen in den Wanderrucksack.
    const sp=actor.joint('Spine02');flyingTokens=flyingTokens.filter(f=>anim-f.t<.5);if(sp)for(const f of flyingTokens){const u=(anim-f.t)/.5,bx=-Math.sin(cam),bz=Math.cos(cam),x0=ax+Math.sin(cam)*3,z0=az-Math.cos(cam)*3,x1=sp[0]+bx*.42,y1=sp[1]+.4,z1=sp[2]+bz*.42;push(x0+(x1-x0)*u,1.4+(y1-1.4)*u+Math.sin(u*PI)*1.4,z0+(z1-z0)*u,0,anim*9,0,1-u*.5);tokens.item(f.zone,anim,0);pop();}}
