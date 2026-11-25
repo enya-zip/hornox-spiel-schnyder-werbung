@@ -297,3 +297,17 @@ dialog .dialog-close{border-radius:var(--radius-s)}
  #hud .bag-box i{font-size:14px;width:auto}
  #hud .bag-box #combo{display:none}
 }
+/* Kästchen oben links: gleiches Design, aber grösser und mit kurzem Wort (z. B. «12 Brote») */
+#hud .bag-box{gap:7px;padding:10px 14px;font-size:20px;border-radius:16px;width:auto}
+#hud .bag-box .bag-row{flex-direction:row;gap:8px}
+#hud .bag-box svg{width:26px;height:26px}
+#hud .bag-box i{font-size:24px;width:26px}
+#hud .bag-box .bag-label{font-style:normal;font-size:13px;font-weight:700;color:#d8e6e2;letter-spacing:.02em}
+#hud .bag-box #combo{display:inline}
+@media(max-width:420px){
+ #hud .bag-box{top:92px;width:auto;min-width:0;padding:7px 10px;gap:5px;align-items:flex-start;font-size:17px;border-radius:14px}
+ #hud .bag-box .bag-row{flex-direction:row;gap:6px}
+ #hud .bag-box svg{width:21px;height:21px}
+ #hud .bag-box i{font-size:19px;width:21px}
+ #hud .bag-box .bag-label{font-size:11px}
+}

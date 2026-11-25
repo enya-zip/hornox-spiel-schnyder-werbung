@@ -5,7 +5,7 @@ import {setup,validateAction,applyAction} from "./rules.js?v=54";
 import {installControls} from "./controls.js?v=17";
 import {createAudio} from "./audio.js?v=23";
 import {getZone} from "./scene3d.js?v=98";
-import {copy} from "./copy.js?v=61";
+import {copy} from "./copy.js?v=62";
 import {turnDirection} from "./route.js?v=21";
 import {createLeaderboard} from "./leaderboard.js?v=8";
 import {LEADERBOARD} from "./leaderboard-config.js?v=4";
@@ -318,7 +318,7 @@ let hornliSec=0;function hornliAmbience(){const el=state.elapsed,sec=screen==="p
  if(sec!==hornliSec){if(sec>0)toast(t("hornliSec"+sec),3.4);hornliSec=sec;}
  if(sec===3&&!paused)for(const w of[581,589])if(el>=w-4.5&&el<w-4.25&&!lakeSounds.has("bridge"+w)){lakeSounds.add("bridge"+w);bigAlert(t("bridgeAlert7"));toast(t("bridgeHint7"),2.6);}}
 function hud(){if(screen==="play"&&state.phase==="playing")crowWarnings();fisherBubble();forestAmbience();meadowAmbience();lakeAmbience();hornliAmbience();highAmbience();
- $("score").textContent=fmt(state.score);$("coins").textContent=state.coins;{const ic=itemIcon();$("items").hidden=false;if($("items-icon").textContent!==ic)$("items-icon").textContent=ic;$("items-count").textContent=state.items||0;$("items").title=itemName();}$("combo").textContent=state.multiplier>1?"×"+state.multiplier:"";
+ $("score").textContent=fmt(state.score);$("coins").textContent=state.coins;{const ic=itemIcon();$("items").hidden=false;if($("items-icon").textContent!==ic)$("items-icon").textContent=ic;$("items-count").textContent=state.items||0;$("items").title=itemName();{const z=getZone(state.elapsed),il=t("bagItem"+z),cl=t("coins");if($("items-label").textContent!==il)$("items-label").textContent=il;if($("coins-label").textContent!==cl)$("coins-label").textContent=cl;}}$("combo").textContent=state.multiplier>1?"×"+state.multiplier:"";
  $("distance").textContent=Math.floor(state.elapsed/60)+":"+String(Math.floor(state.elapsed%60)).padStart(2,"0")+" / 15:00 · "+(getStage(state.elapsed)+1)+"/10";
  $("stage").textContent=t(stages[getStage(state.elapsed)].key).toUpperCase();
  $("progress").style.width=(Math.min(100,state.elapsed/DURATION*100))+"%";
