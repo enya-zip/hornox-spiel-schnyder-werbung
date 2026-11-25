@@ -1,0 +1,15 @@
+export function createPowerups(r){const a=r.add,push=r.push,pop=r.pop,PI=Math.PI,gold=[1,.73,.20,9],mint=[.23,.85,.75,49],blue=[.31,.69,.84,49];
+ function pickup(kind,time,id){const y=1.6+Math.sin(time*2.4+id)*.10;push(0,y,0,0,Math.sin(time+id)*.20);
+  const c=kind==='shieldOrb'?blue:kind==='rushCharge'?[.73,.43,1,49]:kind==='coinBoost'?gold:kind==='springs'?[1,.55,.2,49]:kind==='clover'?[.35,.9,.4,49]:kind==='binoculars'?[.75,.8,.9,49]:mint;a('ring',0,0,0,.62,.62,.15,c);a('ring',0,0,0,.70,.70,.08,c,0,PI/2);
+  if(kind==='shieldOrb'){a('roundedBox',0,.02,0,.60,.67,.16,[.13,.36,.61,25],0,0,PI/4);a('box',0,.06,.12,.08,.46,.05,[.92,.97,1,49]);a('box',0,.10,.12,.35,.08,.05,[.92,.97,1,49]);}
+  else if(kind==='coinBoost'){for(const x of[-.19,.19]){a('cylinder',x,0,0,.22,.09,.22,gold,PI/2);a('ring',x,0,.06,.15,.15,.10,[1,.92,.55,9]);}for(const sign of[-1,1])a('box',0,0,.14,.075,.42,.04,[1,.96,.78,49],0,0,sign*PI/4);}
+  else if(kind==='springs'){for(let k=0;k<6;k++)a('ring',0,-.25+k*.09,0,.17,.17,.035,[.85,.87,.9,9],PI/2);a('cylinder',0,-.3,0,.24,.05,.24,[.9,.4,.15]);a('cylinder',0,.28,0,.24,.05,.24,[.9,.4,.15]);}
+  else if(kind==='clover'){for(let k=0;k<4;k++){const t=k*PI/2+PI/4;for(const s of[-1,1])a('sphere',Math.cos(t)*.17+Math.cos(t+s*1.2)*.05,Math.sin(t)*.17+Math.sin(t+s*1.2)*.05,0,.11,.11,.03,[.2,.72,.3]);}a('cylinder',.06,-.25,0,.025,.28,.025,[.2,.6,.25],0,0,.4);a('sphere',0,0,.02,.05,.05,.02,[.55,.9,.5]);}
+  else if(kind==='binoculars'){for(const x of[-.15,.15]){a('cylinder',x,0,0,.12,.36,.12,[.18,.2,.24],PI/2);a('cylinder',x,0,.19,.1,.02,.1,[.6,.85,1,9],PI/2);}a('box',0,.02,-.02,.22,.08,.16,[.3,.32,.36]);}
+  else if(kind==='rushCharge'){for(const [x,y,rz]of[[.10,.22,-.5],[0,0,1.05],[-.10,-.22,-.5]])a('box',x,y,.04,.14,.40,.10,[1,.92,.62,49],0,0,rz);}
+  else{for(let i=0;i<=8;i++){const t=PI+i*PI/8;a('sphere',Math.cos(t)*.28,Math.sin(t)*.28+.12,0,.085,.085,.10,mint);}for(const x of[-.28,.28])a('box',x,.23,0,.16,.27,.17,[.94,.97,1,49]);}
+  pop();}
+ function aura(s,time){if(s.shield){/* blaue Schutzblase aus durchsichtigen Ringen – Hornox bleibt sichtbar */const p=1+Math.sin(time*3)*.03,c=[.4,.72,1,49];push(0,1.05,0,0,time*.6,0,p);for(let k=0;k<4;k++)a('ring',0,0,0,1.05,1.3,.022,c,0,k*PI/4);for(const y of[-.75,0,.75]){const r=1.05*Math.sqrt(1-(y/1.3)**2);a('ring',0,y,0,r,r,.022,c,PI/2);}for(let k=0;k<6;k++){const t=time*1.5+k*PI/3;a('sphere',Math.cos(t)*1.0,Math.sin(t*1.3)*.9,Math.sin(t)*1.0,.05,.05,.05,[.75,.9,1,49]);}pop();}
+  if(s.springs>0){const blink=s.springs<40&&Math.sin(time*18)>0;if(!blink)for(const x of[-.18,.18])for(let k=0;k<4;k++)a('ring',x,.04+k*.06,0,.1,.1,.02,[.85,.87,.9,9],PI/2);}
+  if(s.luck){push(0,2.45+Math.sin(time*3)*.06,0,0,time*2);for(let k=0;k<4;k++){const t=k*PI/2+PI/4;a('sphere',Math.cos(t)*.12,Math.sin(t)*.12,0,.09,.09,.025,[.2,.75,.3]);}pop();}if(s.coinBoost>0||s.magnet>0){for(let i=0;i<3;i++){const t=time*1.7+i*PI*2/3;a('sphere',Math.cos(t)*.95,.75+Math.sin(t)*.18,Math.sin(t)*.70,.08,.08,.035,s.coinBoost>0?gold:mint,0,t);}}}
+ return{pickup,aura};}

@@ -1,0 +1,28 @@
+{
+  "name": "Hornox Run",
+  "short_name": "Hornox Run",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#163b3e",
+  "theme_color": "#163b3e",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "lang": "en",
+  "description": "Ten 90-second levels from Zermatt to the Matterhorn. Collect coins and power-ups, dodge bikers and explore Blatten and Furi."
+}
