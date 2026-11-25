@@ -275,3 +275,10 @@ dialog .dialog-close{border-radius:var(--radius-s)}
  -webkit-mask-image:radial-gradient(circle at 40% 46%,transparent 0 23vmin,#000 24.5vmin),radial-gradient(circle at 60% 46%,transparent 0 23vmin,#000 24.5vmin);-webkit-mask-composite:source-in;
  mask-image:radial-gradient(circle at 40% 46%,transparent 0 23vmin,#000 24.5vmin),radial-gradient(circle at 60% 46%,transparent 0 23vmin,#000 24.5vmin);mask-composite:intersect}
 #bino-layer[hidden]{display:none}
+/* Münzen und gesammelte Gegenstände oben links, unter dem Pause-Knopf */
+#hud .bag-box{position:absolute;left:0;top:52px;display:flex;flex-direction:column;gap:5px;padding:8px 10px;border-radius:14px;background:#0b2834c9;border:1px solid #c8d7bd26;backdrop-filter:blur(8px);color:#fff6dc;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;min-width:58px}
+#hud .bag-box .bag-row{display:flex;align-items:center;gap:6px;white-space:nowrap}
+#hud .bag-box svg{color:var(--gold);width:18px;height:18px;flex:none}
+#hud .bag-box i{font-style:normal;font-size:16px;line-height:1;width:18px;text-align:center}
+#hud .bag-box #combo{color:var(--gold);font-size:12px}
+@media(max-width:520px){#hud .bag-box{top:92px;padding:6px 8px;font-size:13px}}
