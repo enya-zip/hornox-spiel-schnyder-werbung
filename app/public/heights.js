@@ -73,5 +73,14 @@ export function createHeights(r){
  function confetti(time,u){const cols=[[1,.8,.2],[.9,.2,.25],[.3,.6,1],[.4,.85,.4],[1,1,1]];
   for(let k=0;k<46;k++){const ang=k*2.4,rad=.6+((k*13)%7)*.35,up=Math.min(1,u*2.2),y=.6+up*(3+((k*5)%4))-Math.max(0,u-.45)*((k%3)+2)*2.4,spin=time*6+k;
    if(y<0)continue;a(k%4===0?'sphere':'box',Math.cos(ang)*rad*(.4+u),y,Math.sin(ang)*rad*(.4+u),.09,.09,.02,k%4===0?[1,.86,.35,9]:cols[k%5],spin,spin*.7);}}
- return{ladder,snowBridge,serac,ropeTeam,iceTower,crevasseField,drift,ridgeEdge,ropePost,fixRope,rockStep,falling,solvay,cornice,outcrop,summitCross,flag,confetti,crack};
+ // ---------- Level 3: Zum See ----------
+ // Holzeimer voller Fische (Schwanzflossen schauen heraus) – drüberspringen.
+ function fishBucket(time,id){a('cylinder',0,.32,0,.42,.64,.42,[.55,.38,.22]);for(const y of[.12,.52])a('ring',0,y,0,.43,.43,.03,metal,PI/2);a('cylinder',0,.63,0,.38,.02,.38,[.3,.5,.62,26]);
+  for(let k=0;k<4;k++){const t=k*1.7+id,wig=Math.sin(time*8+k)*.15;push(Math.cos(t)*.18,.72,Math.sin(t)*.18,0,t,wig);a('sphere',0,0,0,.07,.16,.05,[.62,.68,.72]);a('box',0,.17,0,.16,.07,.02,[.5,.56,.6]);pop();}
+  a('ring',0,.9,0,.4,.26,.02,metal,0,0,PI/2);}
+ // Angelrute quer über zwei Spuren auf Astgabeln (Kniehöhe) – Schnur hängt zum See.
+ function rodAcross(time){for(const x of[-1.3,3.7]){a('cylinder',x,.3,0,.04,.6,.04,[.42,.3,.18]);a('cylinder',x-.08,.62,0,.025,.18,.025,[.42,.3,.18],0,0,.5);a('cylinder',x+.08,.62,0,.025,.18,.025,[.42,.3,.18],0,0,-.5);}
+  a('cylinder',1.2,.66,0,.07,5.6,.07,[.15,.3,.75],0,0,PI/2);for(let k=0;k<4;k++)a('cylinder',-.3+k*1.4,.66,0,.075,.18,.075,[.95,.75,.15],0,0,PI/2);a('cylinder',-1.1,.66,0,.06,.9,.06,[.55,.35,.2],0,0,PI/2);a('cylinder',-.7,.58,.08,.09,.06,.09,[.7,.72,.75],PI/2);
+  for(let k=0;k<5;k++)a('ring',-.2+k*1,.7,0,.04,.04,.01,metal);a('cylinder',4.1,.4,.05,.008,.6,.008,[.9,.9,.9],.2);a('sphere',4.15,.12,.08,.06,.08,.06,[.95,.25,.2]);}
+ return{fishBucket,rodAcross,ladder,snowBridge,serac,ropeTeam,iceTower,crevasseField,drift,ridgeEdge,ropePost,fixRope,rockStep,falling,solvay,cornice,outcrop,summitCross,flag,confetti,crack};
 }

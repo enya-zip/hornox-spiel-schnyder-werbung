@@ -164,13 +164,13 @@ export function applyAction(s,p,a){
     if(aligned){const before=powerCharge;powerCharge=Math.min(30,powerCharge+15);if(before===30)score+=100;events.push({kind:'powerPickup',power:'pickupCharge'});if(before<30&&powerCharge===30)events.push({kind:'powerReady'});}
    }else if(aligned&&powering){score+=25;events.push({kind:"powerClear",object:item.kind,lane:item.lane,d:item.d,id:item.id,points:25});item.powerCleared=true;
    }else if(aligned){
-    const safe=["trunk","fallingBranch","sign","hayBale","haystack","cow","cowWalk","hayRoll","fenceTall","rockFace","ledge","signpost","looseRocks","railLane","serac","ropeTeam"].includes(item.kind)?false:item.kind==="hook"?(item.attack==="high"?duck>0:height>.4):item.kind==="gull"?false:item.kind==="crow"?(item.attack==="snatch"&&height>.4):item.kind==="frog"?(!tongueOut(tick,item.phase)||height>.4):["iceArch","branch","awning","rope","fixRope","highLog","gate","metalStrut","beamLow","overhang"].includes(item.kind)?duck>0:["crevasse","snowBridge","ridgeGap","manhole","plankGap","stream","ditch","waterGap"].includes(item.kind)?height>.5:height>.4;
+    const safe=["trunk","fallingBranch","sign","hayBale","haystack","cow","cowWalk","hayRoll","fenceTall","rockFace","ledge","signpost","looseRocks","railLane","serac"].includes(item.kind)?false:item.kind==="hook"?(item.attack==="high"?duck>0:height>.4):item.kind==="gull"?false:item.kind==="crow"?(item.attack==="snatch"&&height>.4):item.kind==="frog"?(!tongueOut(tick,item.phase)||height>.4):["iceArch","branch","awning","rope","fixRope","highLog","gate","metalStrut","beamLow","overhang"].includes(item.kind)?duck>0:["crevasse","snowBridge","ridgeGap","manhole","plankGap","stream","ditch","waterGap"].includes(item.kind)?height>.5:height>.4;
     if(!safe&&!invulnerable&&!climb){
      // Möwe: kostet kein Leben, stiehlt aber bis zu 3 Fische aus dem Rucksack.
      if(item.kind==='gull'){const lost=Math.min(fish,3);fish-=lost;invulnerable=15;events.push({kind:'gull',lost,fish});}
      else if(shield){shield=0;invulnerable=25;events.push({kind:"shieldHit"});}
      else if(item.kind==='crow'){const lost=Math.min(coins,10);coins-=lost;lives--;chain=0;multiplier=1;invulnerable=30;slow=12;failReason='crow';events.push({kind:'crow',lost,attack:item.attack});}
-     else{lives--;chain=0;multiplier=1;score=Math.max(0,score-40);invulnerable=item.kind==='hook'?50:30;slow=12;failReason=item.kind;events.push({kind:"bump",object:item.kind});if(item.kind==='hook'){hookedAttack=item.attackId;events.push({kind:'hooked',attack:item.attack});}if(item.kind==='waterGap')events.push({kind:'splash'});if(item.kind==='manhole'||item.kind==='waterGap'){fallTicks=20;jump=0;jumpCount=0;jumpBase=0;height=0;events.push({kind:'fall'});}}
+     else{lives--;chain=0;multiplier=1;score=Math.max(0,score-40);invulnerable=item.kind==='hook'?50:30;slow=12;failReason=item.kind;events.push({kind:"bump",object:item.kind,lane:item.lane,d:item.d,id:item.id,biome:item.biome});if(item.kind==='hook'){hookedAttack=item.attackId;events.push({kind:'hooked',attack:item.attack});}if(item.kind==='waterGap')events.push({kind:'splash'});if(item.kind==='manhole'||item.kind==='waterGap'){fallTicks=20;jump=0;jumpCount=0;jumpBase=0;height=0;events.push({kind:'fall'});}}
     }else if(safe||climb){score+=10;events.push({kind:"clear",object:item.kind,points:10});}
    }else if(item.lane>=0&&Math.abs(x-item.lane)<.95&&!invulnerable){score+=10;events.push({kind:"nearMiss",object:item.kind,points:10});}
   }
@@ -181,7 +181,7 @@ export function applyAction(s,p,a){
   const arrivalTime=elapsed+(d-distance)/speed,z=zone(arrivalTime),variant=(rng>>>16)%8;
   const add=(kind,lane,offset=0,extra=null)=>{
    const pace=s.mode==="relaxed"?.75:1;
-   const approach=(["pedestrian","photographers","hiker","ropeTeam","influencer","lostTourists","skiers","snowboarders"].includes(kind)?2.4:kind==="carriage"?4.2:kind==="scooter"?6.5:kind==="electric"?7:kind==="rockfall"?(z===5?5.2:3.5):kind==="bike"?8+Math.min(2,elapsed/120):kind==="marmot"?3.8:kind==="sheep"?2.8:kind==="trolley"?4.5:kind==="luggage"?2:kind==="crow"||kind==="gull"?6:0)*pace;
+   const approach=(["pedestrian","photographers","hiker","ropeTeam","influencer","lostTourists","skiers","snowboarders"].includes(kind)?2.4:kind==="carriage"?4.2:kind==="scooter"?6.5:kind==="electric"?7:kind==="rockfall"?(z===5?5.2:z===10?6.5:3.5):kind==="bike"?8+Math.min(2,elapsed/120):kind==="marmot"?3.8:kind==="sheep"?2.8:kind==="trolley"?4.5:kind==="luggage"?2:kind==="crow"||kind==="gull"?6:0)*pace;
    // Give incoming actors a lead so the entire row reaches the runner together.
    // This preserves the open lane and prevents faster NPCs overtaking jump/slide rows.
    const lead=Math.max(0,(d+offset-distance)/speed)*approach;
@@ -238,6 +238,10 @@ export function applyAction(s,p,a){
     if(pick==="fish"){add("fish",one);nextFishAt=arrivalTime+10;}
     else if(pick==="beaverLog"){add("beaverLog",-1);nextBeaverAt=arrivalTime+13;fullRow=true;}
     else{add("gull",one);nextGullAt=arrivalTime+11;}}
+   // Eimer mit Fischen (springen) und eine Angel quer über zwei Spuren (springen oder in die dritte Spur wechseln).
+   else if(free&&(pattern===2||pattern===5)){lastHazardAt=arrivalTime;
+    if(pattern===2)add("fishBucket",one);
+    else{const pair=(rng&4096)?[0,1]:[1,2];safe=pair[0]===0?2:0;for(const l of pair)add("rodAcross",l,0,{from:pair[0]});}}
   }else if(z===8&&bridgeAt(arrivalTime)){
    // Auf der Brücke: einzelne Bretter brechen weg (springen oder Spur wechseln), eine Spur bleibt immer frei.
    if(pattern===8){}else if(pattern%3===0&&busy){add("plankGap",one);add("plankGap",two);}else add("plankGap",one);

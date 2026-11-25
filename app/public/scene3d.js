@@ -16,7 +16,7 @@ import {createMeadow} from './meadow.js?v=7';
 import {createForest} from './forest.js?v=5';
 import {createHornli} from './hornli.js?v=12';
 import {createTokens} from './tokens.js?v=10';
-import {createHeights} from './heights.js?v=3';
+import {createHeights} from './heights.js?v=5';
 export {getZone};
 const PI=Math.PI,C={ice:[.74,.87,.9,10],grass:[.44,.58,.30,11],gravel:[.7,.63,.48,12],cobble:[.65,.66,.61,13],snow:[.86,.92,.94,2],rock:[.48,.52,.53,1],wood:[.32,.22,.15,4],gold:[1,.74,.24,9],dark:[.12,.2,.23],fir:[1,1,1,7],red:[.85,.16,.19],flower:[.97,.85,.40]};
 export function createScene(canvas){
@@ -244,7 +244,7 @@ export function createScene(canvas){
   for(let w=start;w<d+430;w+=14){const z=getZone(Math.max(0,elapsed+(w-d)/speed)),index=Math.floor(w/14),side=index%2?1:-1,off=side*(7.7+(Math.abs(index)%3)*1.4),p=point(w,off);
    if([1,2,3,8,9].includes(z)||z===7&&side<0||!clear(p.x,p.z,1.8,w))continue;
    if(z===0||z===5||z===10)continue;   // Level 8–10: eigene Kulisse in highScenery()
-   if([1,6,7,8].includes(z)){if(index%3===0||z===8)tree(p.x,p.z,.65+(Math.abs(index)%4)*.12,p.y);if([6,7].includes(z)&&index%3===0){at(w,side*(z===6?10:13));push(0,0,0,0,side<0?PI/2:-PI/2,0,z===7?.83:1);alpine.chalet(Math.abs(index)%3);pop();pop();}if(z===6&&index%23===0){at(w,side*19);alpine.chapel();pop();}if(z===8&&index%29===0){at(w,side*14);alpine.bridge();pop();}if(w<d+150){flowers(p.x,p.z,w,p.y);const f=point(w,side*4.65);flowers(f.x,f.z,w+2,f.y);}at(w,side*4.9);a('box',0,.65,0,.1,1.3,.1,C.wood);a('box',0,1.03,0,.07,.07,5,C.wood);a('box',0,.60,0,.07,.07,5,C.wood);pop();if(index%7===0&&w<d+150){const q=point(w,side*7);instances.push({actor:npc.sheep,pose:{x:q.x,y:q.y,z:q.z,heading:side*PI/2,home:true}});}}
+   if([1,6,7,8].includes(z)){if(z===6?index%3===1:(index%3===0||z===8))tree(p.x,p.z,.65+(Math.abs(index)%4)*.12,p.y);/* Blatten: Bäume nicht im Chalet */if([6,7].includes(z)&&index%3===0){at(w,side*(z===6?10:13));push(0,0,0,0,side<0?PI/2:-PI/2,0,z===7?.83:1);alpine.chalet(Math.abs(index)%3);pop();pop();}if(z===6&&index%23===0){at(w,side*19);alpine.chapel();pop();}if(z===8&&index%29===0){at(w,side*14);alpine.bridge();pop();}if(w<d+150){flowers(p.x,p.z,w,p.y);const f=point(w,side*4.65);flowers(f.x,f.z,w+2,f.y);}at(w,side*4.9);a('box',0,.65,0,.1,1.3,.1,C.wood);a('box',0,1.03,0,.07,.07,5,C.wood);a('box',0,.60,0,.07,.07,5,C.wood);pop();if(index%7===0&&w<d+150){const q=point(w,side*7);instances.push({actor:npc.sheep,pose:{x:q.x,y:q.y,z:q.z,heading:side*PI/2,home:true}});}}
    else if([9,10].includes(z)){at(w,off);a('rock',0,-.25,0,1.8,.8,2.5,C.rock,0,w*.3);if(index%3===0){a('box',0,.65,0,.10,1.6,.1,C.wood);a('box',0,1.35,0,.16,.23,.16,C.red);}pop();if(z!==10&&index%5===0)tree(p.x,p.z,.38,p.y);if(z===9&&index%31===0){const lp=point(w,side*42);if(clear(lp.x,lp.z,23,w)){at(w,side*42);const h=path.frame(w).h,sx=grade*(.55*Math.cos(h)-.83*Math.sin(h)),sz=grade*(-.55*Math.sin(h)-.83*Math.cos(h));push(0,0,0,Math.atan(-sz),0,Math.atan(sx));alpine.lake(anim);pop();pop();}}if(z===10&&index%3===0){at(w,off);a('rock',0,.24,0,1.9,.33,2.6,C.snow);pop();}}
   }
   highScenery(d,elapsed);
@@ -269,17 +269,16 @@ export function createScene(canvas){
     // Grat (Level 9) und Gipfelflanke (Level 10): Felskante, Abgrund links und rechts, Fixseile am Rand.
     const n=(z===10?ridgeNarrow:summitNarrow)(t);
     for(const side of[-1,1]){
-     if(z===10){at(w,side*4.25);for(let j=-1;j<=1;j++)a('rock',side*.15,-.08,j*2.6+((k+j)%3-1)*.3,.8,.45,1.6,(k+j)%2?C.rock:[.32,.31,.3],0,k+j,-side*.45);pop();}   // Level 10: Wegrand frei
+     if(z===10){at(w,side*5.1);for(let j=-1;j<=1;j++)a('rock',side*.1,-.12,j*2.6+((k+j)%3-1)*.3,.6,.3,1.4,(k+j)%2?C.rock:[.32,.31,.3],0,k+j,-side*.45);pop();}   // Felskante ausserhalb des Wegs
      const q0=point(w,0),q1=point(w,side*25),uphill=meshY(q1.x,q1.z)>meshY(q0.x,q0.z)+2;   // am Berg: bergseitig Flanke statt Abgrund
      if(!uphill){let x=4.7;for(const [wd,c] of[[.8,[.2,.21,.24]],[2,[.12,.13,.17]],[5,[.07,.08,.12]],[14,[.05,.07,.11]],[60,[.4,.46,.56]]]){band(w,side*(x+wd/2),wd,8.04,c);x+=wd;}}
      else if(k%3===0&&w<d+340){atG(w,side*(11+(k%3)*2));heights.outcrop(2+(k%4),k+side);pop();}
      if(k%3===(side>0?0:2)&&w<d+300){const off=side*(30+(k%4)*7);atG(w,off);a('sphere',0,.4,0,8+(k%3)*3,.5,5,[.88,.92,.97,49]);pop();}   // Wolkenfetzen unten
-     if(k%2===0){at(w,side*4.55);heights.ropePost(16);pop();}
      if(z===10&&k%13===(side>0?2:9)){const off=side*(16+(k%3)*5);at(w,off,-10);a('rock',0,5,0,3,14+(k%3)*3,2.8,[.46,.45,.43],0,k);a('rock',0,12.5+(k%3)*1.5,0,2.2,1.4,2,C.snow,0,k+1);pop();}   // Felstürme aus der Tiefe
      if(z===5&&k%5===(side>0?1:3)&&w<d+340){atG(w,side*(12+(k%3)*2));heights.outcrop(3+(k%3)*1.5,k);pop();}
     }
     // Schmale Gratstelle: eine Randspur wird zum Abgrund
-    if(n>=0&&w<d+260){at(w,(n-1)*2.5);hornli.abyss(k,n===0?1:-1,3);pop();}
+    if(n>=0&&w<d+300){const tw=n===0?1:-1;at(w,(n-1)*2.5);a('box',-tw*.5,.035,0,3.5,.02,8.04,[.03,.04,.06]);a('box',-tw*.4,.04,0,2.6,.02,8.04,[.06,.08,.12]);a('box',tw*1.22,.06,0,.16,.05,8.04,[.97,.97,.94]);if(k%2===0)a('cylinder',tw*1.22,.45,0,.05,.8,.05,[.95,.75,.1]);pop();}   // schmale Gratstelle: Randspur = Abgrund, helle Kante, gelbe Markierstangen
    }
   }
   // Solvayhütte (4003 m) auf einem Felsabsatz links des Grates
@@ -306,9 +305,9 @@ export function createScene(canvas){
    push(x,y,z,0,-h,(toss?.lean||0)+sway,style===4?.83:scale);encounters.accessory(poseStyle,variant,pace);pop();
   }
  }
- let elapsedNow=0,baseNow=16,stingT=-99,beeNest=null,crocAttack=null,curObjects=[],tongueDrawn=new Set(),dogVis=40,dogLane=1,speedNow=16,flyingFish=[],flyingTokens=[],tickNow=0,chaser=null,chaseVis=40,chaseLane=1,reelT=-9,fogNow=0,boarVis=40,boarLane=1,rammed=new Set();
+ let bumpT=-9,elapsedNow=0,baseNow=16,stingT=-99,beeNest=null,crocAttack=null,curObjects=[],tongueDrawn=new Set(),dogVis=40,dogLane=1,speedNow=16,flyingFish=[],flyingTokens=[],tickNow=0,chaser=null,chaseVis=40,chaseLane=1,reelT=-9,fogNow=0,boarVis=40,boarLane=1,rammed=new Set();
  function obstacle(o,d,time,toss=null){if(!toss&&(rammed.has(o.id)||fogNow>0&&o.d-d>180-140*fogNow))return;const od=o.d-(toss?0:(o.approach||0)*visualSubtick);if(!toss&&(od<d-8||od>d+180||(o.resolved&&['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','token','mushroom','herb','cheese','goldBell','edelweiss'].includes(o.kind))))return;const off=(o.lane<0?0:(o.lane-1)*2.5)+(toss?.side||0),p=point(od,off),rise=toss?.y||0;
-  if(['pedestrian','hiker','photographers','influencer','lostTourists','scooter','skiers','snowboarders'].includes(o.kind)){visitors(o,p,time,toss);if(o.kind!=='scooter')return;}
+  if(['pedestrian','hiker','ropeTeam','photographers','influencer','lostTourists','scooter','skiers','snowboarders'].includes(o.kind)){visitors(o.kind==='ropeTeam'?{...o,kind:'hiker'}:o,p,time,toss);if(o.kind!=='scooter')return;}   // Seilschaft sieht aus wie die Wanderer in Level 1
   if(o.kind==='ibex'&&!toss){
    // Steinbock galoppiert von links oder rechts auf die Piste und bleibt dann stehen (Spur kommt aus den Regeln).
    const dir=o.dir||1,waiting=dir>0?o.lane<=-2.59:o.lane>=4.59,moving=!waiting&&Math.abs(o.lane-o.target)>.01,hop=moving?Math.abs(Math.sin(time*7+o.id))*.45:0,q=point(od,(o.lane-1)*2.5);
@@ -428,6 +427,8 @@ export function createScene(canvas){
   else if(o.kind==='climbGear'||o.kind==='snowshoes')summit.pickup(o.kind,time,o.id);
   else if(o.kind==='fishCatch')lake.pickup(time,o.id);
   else if(o.kind==='ibex')summit.ibex(time,0,o.id);
+  else if(o.kind==='fishBucket')heights.fishBucket(time,o.id);
+  else if(o.kind==='rodAcross'){if(o.lane===o.from)heights.rodAcross(time);}   // einmal gezeichnet, reicht über beide Spuren
   else if(o.kind==='snowBridge')heights.snowBridge(o.lane<0?8.3:2.3,Math.max(0,Math.min(1,(16-(od-d))/9)),time,o.id);
   else if(o.kind==='serac'){const side=o.lane===0?-1:o.lane===2?1:(o.id%2?1:-1);heights.serac(Math.max(0,Math.min(1,(28-(od-d))/16)),side,o.id);}
   else if(o.kind==='ropeTeam')heights.ropeTeam(time,o.id);   // Bergsteiger schauen zu Hornox (lokal +z)
@@ -451,10 +452,12 @@ export function createScene(canvas){
   if(toss)pop();pop();
  }
  return{ready,resize:r.resize,emit(e,s){if(!path)path=createPath(s.seed);fx.emit(e,s,path);if(e.kind==='fishCatch')flyingFish.push(anim);if(e.kind==='token')flyingTokens.push({t:anim,zone:e.zone});if(e.kind==='gustWarn'||e.kind==='gust'){gustT=anim;gustDir=e.dir;}if(e.kind==='hooked')reelT=anim;if(e.kind==='beeSting')stingT=anim;if(e.kind==='beesAppear')beeNest={d:e.nest??s.distance,side:e.side||1,t:anim};
+  // Aufprall (in beiden Spielmodi): Hornox stolpert mit einem Hüpfer, feste Hindernisse fliegen zur Seite.
+  if(e.kind==='bump'){bumpT=anim;if(e.id&&!['crevasse','ridgeGap','manhole','rope','fixRope','branch','iceArch','waterGap','plankGap','stream','ditch','snowBridge','frog','tongue','hook','beamLow','overhang','metalStrut','awning','gate','highLog','serac','ropeTeam','hiker','pedestrian','photographers','influencer','lostTourists','skiers','snowboarders','carriage','cow','cowWalk','sheep','ibex'].includes(e.object)){rammed.add(e.id);if(tossed.length>=12)tossed.shift();tossed.push({o:{id:e.id,kind:e.object,lane:e.lane,d:e.d??s.distance,biome:e.biome},time:anim,side:e.lane===0?-1:e.lane===2?1:(e.id%2?-1:1)});}}
   if(e.kind==='powerClear'&&!['crevasse','ridgeGap','manhole','rope','branch','iceArch'].includes(e.object)){
    if(tossed.length>=12)tossed.shift();tossed.push({o:{id:e.id||0,kind:e.object,lane:e.lane,d:e.d??s.distance},time:anim,side:e.lane===0?-1:e.lane===2?1:(e.id%2?-1:1)});
   }
- },resetEffects(){fx.reset();tossed=[];rushFov=0;flyingFish=[];flyingTokens=[];chaseVis=40;chaser=null;reelT=-9;boarVis=40;dogVis=40;stingT=-99;beeNest=null;crocAttack=null;rammed=new Set();},
+ },resetEffects(){bumpT=-9;fx.reset();tossed=[];rushFov=0;flyingFish=[];flyingTokens=[];chaseVis=40;chaser=null;reelT=-9;boarVis=40;dogVis=40;stingT=-99;beeNest=null;crocAttack=null;rammed=new Set();},
  render(s,{distance,time,delta,active,paused,reduced,screen,introTime=null,waiting=false,celebrate:cel=null}){celebrate=active&&s.phase==='won'?cel:null;if(!actor)return;const d=active?distance:0,newKey=s.seed+':summit';if(key!==newKey){key=newKey;placementCache.clear();clearCache.clear();path=createPath(s.seed,'summit');cam=0;}
   const mobile=canvas.width/canvas.height<.9;cinematic=introTime===null?null:introFrame(introTime,mobile,reduced);cinematicMetrics=cinematic?{time:introTime,heroZ:cinematic.z,doorOpen:cinematic.doorOpen,orbitDegrees:cinematic.orbitDegrees,eye:cinematic.eye,target:cinematic.target}:null;
   trackD=d;speedNow=s.speed||16;elapsedNow=active?s.elapsed:0;baseNow=active?baseSpeed(s.elapsed,s.mode==='relaxed'):16;const stage=getZone(active?s.elapsed:0);const phase=active?s.elapsed:0,ease=(a,b)=>{const t=Math.max(0,Math.min(1,(phase-a)/(b-a)));return t*t*(3-2*t);};grade=.025*ease(90,110)+.015*ease(180,200)+.015*ease(360,380)+.035*ease(540,560)-.015*ease(630,650)+.035*ease(720,740)-.11*ease(785,812);visualSubtick=active&&!paused?Math.max(0,Math.min(.05,(d-s.distance)/Math.max(1,s.speed))):0;
@@ -503,9 +506,9 @@ export function createScene(canvas){
   tossed=tossed.filter(t=>anim-t.time<1.1);if(active)for(const t of tossed){const age=Math.max(0,anim-t.time),u=age/1.1;obstacle(t.o,d,anim,{side:t.side*(u*7),y:Math.sin(u*PI)*2.6,spin:reduced?0:t.side*u*2.4,lean:reduced?0:t.side*u*.65});}
   // Der Fischer erscheint nicht am Ufer; wütend rennt er hinter Hornox her (siehe vor der Hindernis-Schleife). Zustand zusätzlich als Bubble unten links (client.js).
   if(active&&s.elapsed<892&&s.nextTurn-d<100&&s.nextTurn>d){at(s.nextTurn,-path.direction(s.turnIndex)*5);a('box',0,1.4,0,.13,2.8,.13,C.wood);a('box',0,2.5,0,1.5,.7,.16,C.gold);pop();}
-  const offset=active?(lane-1)*2.5:0,ax=Math.cos(p.h)*offset,az=cinematic?cinematic.z:Math.sin(p.h)*offset,powered=s.powerTicks>0,hop=celebrate!==null?Math.abs(Math.sin(Math.min(1,celebrate)*PI*3))*1.1:0,lift=(powered?.28:0)+hop-(s.fallTicks?Math.sin((20-s.fallTicks)/20*PI)*2.7:0);
+  const offset=active?(lane-1)*2.5:0,ax=Math.cos(p.h)*offset,az=cinematic?cinematic.z:Math.sin(p.h)*offset,powered=s.powerTicks>0,hop=celebrate!==null?Math.abs(Math.sin(Math.min(1,celebrate)*PI*3))*1.1:(!reduced&&anim-bumpT<.45?Math.sin((anim-bumpT)/.45*PI)*.6:0),lift=(powered?.28:0)+hop-(s.fallTicks?Math.sin((20-s.fallTicks)/20*PI)*2.7:0);
   a('billboard',ax,groundY(ax,az)+.025,az,2.2,1.5,1,[.1,.16,.17,8],-PI/2);
-  visibleActor=active?actor:showcase;visibleActor.update({distance:cinematic?cinematic.runDistance:active?d:0,time:anim,jump:celebrate!==null?(hop>.2?9:0):active?s.jump:0,duck:active?s.duck:0,home:!active||waiting||!!cinematic&&!cinematic.walking,x:ax,y:active?groundY(ax,az)+jump*2.2+lift:0,z:az,heading:active?PI-cam:PI,impact:fx.impact(),lean:reduced?0:(s.target-lane)*-.1+fx.wobble()});
+  visibleActor=active?actor:showcase;visibleActor.update({distance:cinematic?cinematic.runDistance:active?d:0,time:anim,jump:celebrate!==null?(hop>.2?9:0):anim-bumpT<.45&&!reduced&&!s.jump?Math.max(1,Math.round(18*(1-(anim-bumpT)/.45))):active?s.jump:0,duck:active?s.duck:0,home:!active||waiting||!!cinematic&&!cinematic.walking,x:ax,y:active?groundY(ax,az)+jump*2.2+lift:0,z:az,heading:active?PI-cam:PI,impact:fx.impact(),lean:reduced?0:(s.target-lane)*-.1+fx.wobble()});
   if(active&&(s.fish||0)>0&&visibleActor===actor&&actor.joint){
    // Gesammelte Fische stecken sichtbar im Wanderrucksack (je 4 Fische ein Fisch mehr, max. 6).
    const sp=actor.joint('Spine02');if(sp){const bx=-Math.sin(cam),bz=Math.cos(cam),n=Math.min(6,Math.ceil(s.fish/4));
