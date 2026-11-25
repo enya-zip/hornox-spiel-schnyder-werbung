@@ -29,6 +29,8 @@ export function validateAction(s,p,a){
  if(a.type==="step"&&Object.keys(a).length===1)return{ok:true};
  return{ok:false,error:"action"};
 }
+// Level 6: Frösche strecken alle 2 s (40 Ticks) für 0,5 s (10 Ticks) die Zunge heraus; jeder Frosch mit eigener Phase.
+const FROG_PERIOD=40,FROG_OUT=10;function tongueOut(tick,phase){return(tick+phase)%FROG_PERIOD<FROG_OUT;}
 const SHOP_MAX_LIVES=5,SHOP_AT=84.5;   // Eingang des Bergladens bei Sekunde 84,5 jedes Levels; der Laden öffnet sofort beim Eintreten
 // Ab Level 7 (9:00) steigt das Tempo pro Level weiter an: klassisch bis +4 (Level 10 ≈ 31), entspannt nur bis +1,5.
 function lateSpeed(t,mode){const k=Math.max(0,Math.min(1,(t-540)/360));return mode==="relaxed"?k*1.5:k*4;}
@@ -130,8 +132,9 @@ export function applyAction(s,p,a){
    }else if(item.kind==='coinBoost'){
     if(aligned){coinBoost=200;events.push({kind:'powerPickup',power:'pickupBoost'});}
    }else if(item.kind==='token'){
-    // Level-Sammelobjekt (Münze, Blatt, Tannenzapfen, Blume, Seestein, Beeren, Eiskristall, Bergkristall, Gipfelstern) für den Bergladen.
-    if(aligned){items++;score+=50;events.push({kind:'token',items,zone:item.biome,lane:item.lane});}
+    // Level-Sammelobjekt (Wanderkarte, Roggenbrot, Waldnüsse, Blume, Frosch, Wanderstock, Eispickel, Stirnlampe, Gipfelfahne):
+    // gleiche Logik wie die Fische in Level 3 – landet im Rucksack, keine Extrapunkte; für den Bergladen.
+    if(aligned){items++;events.push({kind:'token',items,zone:item.biome,lane:item.lane});}
    }else if(item.kind==='fishCatch'){
     // Level 3: Fische landen im Wanderrucksack. Bei 10 Fischen wird der Fischer aufmerksam,
     // bei 20 Fischen wütend: dann wirft er 20 Sekunden lang die Angel nach Hornox.
@@ -161,7 +164,7 @@ export function applyAction(s,p,a){
     if(aligned){const before=powerCharge;powerCharge=Math.min(30,powerCharge+15);if(before===30)score+=100;events.push({kind:'powerPickup',power:'pickupCharge'});if(before<30&&powerCharge===30)events.push({kind:'powerReady'});}
    }else if(aligned&&powering){score+=25;events.push({kind:"powerClear",object:item.kind,lane:item.lane,d:item.d,id:item.id,points:25});item.powerCleared=true;
    }else if(aligned){
-    const safe=["trunk","fallingBranch","sign","hayBale","haystack","cow","cowWalk","hayRoll","fenceTall","rockFace","ledge","signpost","looseRocks","railLane","serac","ropeTeam"].includes(item.kind)?false:item.kind==="hook"?(item.attack==="high"?duck>0:height>.4):item.kind==="gull"?false:item.kind==="crow"?(item.attack==="snatch"&&height>.4):["iceArch","branch","awning","rope","fixRope","highLog","gate","metalStrut","beamLow","overhang"].includes(item.kind)?duck>0:["crevasse","snowBridge","ridgeGap","manhole","plankGap","stream","ditch","waterGap"].includes(item.kind)?height>.5:height>.4;
+    const safe=["trunk","fallingBranch","sign","hayBale","haystack","cow","cowWalk","hayRoll","fenceTall","rockFace","ledge","signpost","looseRocks","railLane","serac","ropeTeam"].includes(item.kind)?false:item.kind==="hook"?(item.attack==="high"?duck>0:height>.4):item.kind==="gull"?false:item.kind==="crow"?(item.attack==="snatch"&&height>.4):item.kind==="frog"?(!tongueOut(tick,item.phase)||height>.4):["iceArch","branch","awning","rope","fixRope","highLog","gate","metalStrut","beamLow","overhang"].includes(item.kind)?duck>0:["crevasse","snowBridge","ridgeGap","manhole","plankGap","stream","ditch","waterGap"].includes(item.kind)?height>.5:height>.4;
     if(!safe&&!invulnerable&&!climb){
      // Möwe: kostet kein Leben, stiehlt aber bis zu 3 Fische aus dem Rucksack.
      if(item.kind==='gull'){const lost=Math.min(fish,3);fish-=lost;invulnerable=15;events.push({kind:'gull',lost,fish});}
@@ -295,6 +298,11 @@ export function applyAction(s,p,a){
    else if(swampMud(arrivalTime)){if(row%2===0||pattern%3===1){add("mudPuddle",one);if(busy&&pattern%2===0)add("mudPuddle",two);}}
    else if(row%2===0)add("waterGap",-1);
    else if(pattern%3===1&&busy){add("waterGap",one);add("waterGap",two);}
+   else if(pattern===0||pattern===3||pattern===5){
+    // Frosch im Wasser (ersetzt die Krokodile): Zunge über die Randspur, bei «busy»-Reihen mit Muster 5 bis zur Mitte.
+    const side=(rng&2048)?1:-1,edge=side<0?0:2,lanes=busy&&pattern===5?[edge,1]:[edge],phase=(row*23+((rng>>>12)%7)*5)%FROG_PERIOD;
+    if(lanes.includes(safe))safe=2-edge;for(const l of lanes)add("frog",l,0,{side,phase,attackId:row,reach:lanes.length});
+   }
   }else if(z===4){
    // Level 7 «Hörnliweg»: realistische Hindernisse am Bergweg (springen, ducken, Spur wechseln).
    const sec=hornliSection(arrivalTime);

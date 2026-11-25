@@ -15,7 +15,7 @@ import {createBlackLake} from './blacklake.js?v=11';
 import {createMeadow} from './meadow.js?v=7';
 import {createForest} from './forest.js?v=5';
 import {createHornli} from './hornli.js?v=12';
-import {createTokens} from './tokens.js?v=4';
+import {createTokens} from './tokens.js?v=5';
 import {createHeights} from './heights.js?v=2';
 export {getZone};
 const PI=Math.PI,C={ice:[.74,.87,.9,10],grass:[.44,.58,.30,11],gravel:[.7,.63,.48,12],cobble:[.65,.66,.61,13],snow:[.86,.92,.94,2],rock:[.48,.52,.53,1],wood:[.32,.22,.15,4],gold:[1,.74,.24,9],dark:[.12,.2,.23],fir:[1,1,1,7],red:[.85,.16,.19],flower:[.97,.85,.40]};
@@ -228,7 +228,7 @@ export function createScene(canvas){
     if(w<d+380&&k%2===(side>0?0:1)){const tp=point(w,side*(9.5+(k%3)*2.6));if(clear(tp.x,tp.z,1.5,w)){at(w,side*(9.5+(k%3)*2.6));blacklake.swampTree(anim,k);pop();}}
     if(w<d+380&&k%3===(side>0?1:2)){at(w+3,side*(15+(k%4)*3));blacklake.swampTree(anim,k+7);pop();}
     if(w<d+200&&k%7===(side>0?3:5)){at(w,side*7.2);push(0,0,0,0,side*.6);blacklake.fallenBranch(k);pop();pop();}
-    if(w<d+200&&k%13===(side>0?4:10)){at(w,side*6.8);push(0,0,0,0,side>0?-PI/2:PI/2);blacklake.lurk(anim,k);pop();pop();}
+    if(w<d+200&&k%13===(side>0?4:10)){at(w,side*6.8);push(0,0,0,0,side>0?-PI/2:PI/2);blacklake.lily(anim,k);pop();pop();}
     if(k%9===(side>0?2:6)&&w<d+300){at(w,side*(14+(k%3)*2));a('rock',0,.05,0,1.4,.5,1.1,C.rock,0,k);pop();}
     if(k%60===(side>0?17:47)){const cp=point(w,side*55);if(clear(cp.x,cp.z,8,w)){at(w,side*55);a('rock',0,-.3,0,9,1.6,7,[.4,.45,.35],0,k);a('sphere',0,.6,0,6,.8,5,[.32,.55,.24]);push(0,1,0,0,-side*PI/2);alpine.chapel();pop();pop();}}
    }
@@ -307,7 +307,7 @@ export function createScene(canvas){
    push(x,y,z,0,-h,(toss?.lean||0)+sway,style===4?.83:scale);encounters.accessory(poseStyle,variant,pace);pop();
   }
  }
- let elapsedNow=0,baseNow=16,stingT=-99,beeNest=null,crocAttack=null,curObjects=[],tongueDrawn=new Set(),dogVis=40,dogLane=1,speedNow=16,flyingFish=[],tickNow=0,chaser=null,chaseVis=40,chaseLane=1,reelT=-9,fogNow=0,boarVis=40,boarLane=1,rammed=new Set();
+ let elapsedNow=0,baseNow=16,stingT=-99,beeNest=null,crocAttack=null,curObjects=[],tongueDrawn=new Set(),dogVis=40,dogLane=1,speedNow=16,flyingFish=[],flyingTokens=[],tickNow=0,chaser=null,chaseVis=40,chaseLane=1,reelT=-9,fogNow=0,boarVis=40,boarLane=1,rammed=new Set();
  function obstacle(o,d,time,toss=null){if(!toss&&(rammed.has(o.id)||fogNow>0&&o.d-d>180-140*fogNow))return;const od=o.d-(toss?0:(o.approach||0)*visualSubtick);if(!toss&&(od<d-8||od>d+180||(o.resolved&&['coin','magnet','heart','shieldOrb','coinBoost','rushCharge','climbGear','snowshoes','fishCatch','token','mushroom','herb','cheese','goldBell','edelweiss'].includes(o.kind))))return;const off=(o.lane<0?0:(o.lane-1)*2.5)+(toss?.side||0),p=point(od,off),rise=toss?.y||0;
   if(['pedestrian','hiker','photographers','influencer','lostTourists','scooter','skiers','snowboarders'].includes(o.kind)){visitors(o,p,time,toss);if(o.kind!=='scooter')return;}
   if(o.kind==='ibex'&&!toss){
@@ -347,6 +347,16 @@ export function createScene(canvas){
   if(o.kind==='floatLog'){at(od,0,rise);if(toss)push(0,0,0,0,toss.spin,toss.lean);blacklake.floatLog(time,o.id);if(toss)pop();pop();return;}
   if(o.kind==='mudPuddle'){at(od,(o.lane-1)*2.5,0);blacklake.mudPuddle(time,o.id);pop();return;}
   if(o.kind==='waterGap'&&!toss){at(od,0);for(const x of(o.lane<0?[-2.5,0,2.5]:[(o.lane-1)*2.5])){a('box',x,.0,0,2.45,.03,6.4,[.05,.18,.24,26]);for(const z of[-3.1,3.1])a('box',x,.05,z,2.4,.05,.28,[.9,.97,1,49]);for(let k=0;k<3;k++){const ph=(time*.8+k*.33+o.id*.1)%1;a('ring',x+(k-1)*.6,.04,(k-1)*1.6,.3+ph*.6,.3+ph*.6,.015,[.8,.92,1,49],PI/2);}}if(o.lane<0&&o.id%2===0){push(((o.id>>1)%3-1)*2.5,0,0,0,PI/2+(o.id%4?.3:-.3));blacklake.lurk(time,o.id);pop();}pop();return;}
+  if(o.kind==='frog'&&!toss){
+   // Level 6: Frosch sitzt im Wasser neben der Strecke. Takt wie in rules.js: alle 2 s (40 Ticks) ist die Zunge
+   // 0,5 s (10 Ticks) draussen; vorher bläht sich der Kehlsack als Warnung. Jeder Frosch hat eine eigene Phase.
+   if(tongueDrawn.has('f'+o.attackId))return;tongueDrawn.add('f'+o.attackId);
+   const side=o.side||1,edge=side<0?0:2,far=o.reach===2?1:edge,frogOff=side*5.3,tipOff=(far-1)*2.5-side*1.1,len=Math.abs(tipOff-frogOff)-.8;
+   const ph=((tickNow+o.phase)%40+40)%40,ext=ph<10?(ph<1.5?ph/1.5:ph<8.5?1:(10-ph)/1.5):0,warn=ph>=30?(ph-30)/10:0;
+   const fp=point(od,frogOff);push(fp.x,fp.y,fp.z,0,-fp.h);a('cylinder',0,.03,0,1.2,.03,1.2,[.25,.6,.25]);if(ext>0)a('ring',0,.05,0,1.4+ext*.4,1.4+ext*.4,.03,[.85,.95,1,49],PI/2);
+   push(0,.06,0,0,-side*PI/2,0,1.6);blacklake.frog(time,o.id,warn*.8+ext*.3,warn*(.5+.5*Math.sin(time*16)),len/1.6*ext,false);pop();pop();
+   return;
+  }
   if(o.kind==='tongue'&&!toss){
    // Frosch sitzt neben der Strecke: Kehlsack bläht sich (Warnung), dann schiesst die Zunge über 1–2 Spuren und zieht sich zurück.
    if(tongueDrawn.has(o.attackId))return;tongueDrawn.add(o.attackId);
@@ -441,11 +451,11 @@ export function createScene(canvas){
   else if(o.kind==='planter'){a('cylinder',0,.46,0,.67,.9,.67,[.55,.36,.24]);a('sphere',0,1.02,0,.65,.4,.65,[.22,.38,.18]);for(let i=0;i<7;i++)a('sphere',Math.sin(i*7)*.5,1.2,Math.cos(i*7)*.5,.13,.11,.13,C.red);}
   if(toss)pop();pop();
  }
- return{ready,resize:r.resize,emit(e,s){if(!path)path=createPath(s.seed);fx.emit(e,s,path);if(e.kind==='fishCatch')flyingFish.push(anim);if(e.kind==='gustWarn'||e.kind==='gust'){gustT=anim;gustDir=e.dir;}if(e.kind==='hooked')reelT=anim;if(e.kind==='beeSting')stingT=anim;if(e.kind==='splash')crocAttack={t:anim,d:s.distance+1.5,lane:Math.round(s.x)};if(e.kind==='beesAppear')beeNest={d:e.nest??s.distance,side:e.side||1,t:anim};
+ return{ready,resize:r.resize,emit(e,s){if(!path)path=createPath(s.seed);fx.emit(e,s,path);if(e.kind==='fishCatch')flyingFish.push(anim);if(e.kind==='token')flyingTokens.push({t:anim,zone:e.zone});if(e.kind==='gustWarn'||e.kind==='gust'){gustT=anim;gustDir=e.dir;}if(e.kind==='hooked')reelT=anim;if(e.kind==='beeSting')stingT=anim;if(e.kind==='beesAppear')beeNest={d:e.nest??s.distance,side:e.side||1,t:anim};
   if(e.kind==='powerClear'&&!['crevasse','ridgeGap','manhole','rope','branch','iceArch'].includes(e.object)){
    if(tossed.length>=12)tossed.shift();tossed.push({o:{id:e.id||0,kind:e.object,lane:e.lane,d:e.d??s.distance},time:anim,side:e.lane===0?-1:e.lane===2?1:(e.id%2?-1:1)});
   }
- },resetEffects(){fx.reset();tossed=[];rushFov=0;flyingFish=[];chaseVis=40;chaser=null;reelT=-9;boarVis=40;dogVis=40;stingT=-99;beeNest=null;crocAttack=null;rammed=new Set();},
+ },resetEffects(){fx.reset();tossed=[];rushFov=0;flyingFish=[];flyingTokens=[];chaseVis=40;chaser=null;reelT=-9;boarVis=40;dogVis=40;stingT=-99;beeNest=null;crocAttack=null;rammed=new Set();},
  render(s,{distance,time,delta,active,paused,reduced,screen,introTime=null,waiting=false,celebrate:cel=null}){celebrate=active&&s.phase==='won'?cel:null;if(!actor)return;const d=active?distance:0,newKey=s.seed+':summit';if(key!==newKey){key=newKey;placementCache.clear();clearCache.clear();path=createPath(s.seed,'summit');cam=0;}
   const mobile=canvas.width/canvas.height<.9;cinematic=introTime===null?null:introFrame(introTime,mobile,reduced);cinematicMetrics=cinematic?{time:introTime,heroZ:cinematic.z,doorOpen:cinematic.doorOpen,orbitDegrees:cinematic.orbitDegrees,eye:cinematic.eye,target:cinematic.target}:null;
   trackD=d;speedNow=s.speed||16;elapsedNow=active?s.elapsed:0;baseNow=active?baseSpeed(s.elapsed,s.mode==='relaxed'):16;const stage=getZone(active?s.elapsed:0);const phase=active?s.elapsed:0,ease=(a,b)=>{const t=Math.max(0,Math.min(1,(phase-a)/(b-a)));return t*t*(3-2*t);};grade=.025*ease(90,110)+.015*ease(180,200)+.015*ease(360,380)+.035*ease(540,560)-.015*ease(630,650)+.035*ease(720,740)-.11*ease(785,812);visualSubtick=active&&!paused?Math.max(0,Math.min(.05,(d-s.distance)/Math.max(1,s.speed))):0;
@@ -504,6 +514,9 @@ export function createScene(canvas){
     // Frisch gefangene Fische fliegen im Bogen in den Rucksack.
     flyingFish=flyingFish.filter(t=>anim-t<.5);for(const t of flyingFish){const u=(anim-t)/.5,x0=ax+Math.sin(cam)*3,z0=az-Math.cos(cam)*3,x1=sp[0]+bx*.42,y1=sp[1]+.4,z1=sp[2]+bz*.42;push(x0+(x1-x0)*u,1.4+(y1-1.4)*u+Math.sin(u*PI)*1.4,z0+(z1-z0)*u,0,anim*9);lake.fish(anim,9,.7);pop();}
    }}
+  if(active&&flyingTokens.length&&visibleActor===actor&&actor.joint){
+   // Eingesammelte Gegenstände fliegen wie die Fische in Level 3 im Bogen in den Wanderrucksack.
+   const sp=actor.joint('Spine02');flyingTokens=flyingTokens.filter(f=>anim-f.t<.5);if(sp)for(const f of flyingTokens){const u=(anim-f.t)/.5,bx=-Math.sin(cam),bz=Math.cos(cam),x0=ax+Math.sin(cam)*3,z0=az-Math.cos(cam)*3,x1=sp[0]+bx*.42,y1=sp[1]+.4,z1=sp[2]+bz*.42;push(x0+(x1-x0)*u,1.4+(y1-1.4)*u+Math.sin(u*PI)*1.4,z0+(z1-z0)*u,0,anim*9,0,1-u*.5);tokens.item(f.zone,anim,0);pop();}}
   if(active&&s.shoes>0&&visibleActor===actor&&actor.joint){for(const side of['Left','Right']){const f=actor.joint(side+'Foot'),t=actor.joint(side+'ToeBase');if(!f||!t)continue;const cx=(f[0]+t[0])/2,cz=(f[2]+t[2])/2,cy=Math.min(f[1],t[1]),yaw=Math.atan2(t[0]-f[0],t[2]-f[2]);push(cx,cy-.06,cz,0,yaw);summit.snowshoe();pop();}}
   if(active&&(s.shield||s.coinBoost>0||s.magnet>0||s.climb>0||s.shoes>0)){push(ax,groundY(ax,az)+jump*2.2+lift,az,0,-cam);powerups.aura(s,anim);summit.aura(s,anim);pop();}
   if(celebrate!==null){push(ax,groundY(ax,az)+lift,az,0,-cam);push(.75,.4,.1);heights.flag(anim);pop();heights.confetti(anim,celebrate);pop();}

@@ -1,32 +1,49 @@
 // Level-Sammelobjekte für den Bergladen: in jedem Level ein Gegenstand, der zum Thema passt.
 // Zone → Gegenstand (Level 3 «Zum See» sammelt Fische, siehe lake.js):
-//  3 Zermatt: Goldmünze · 6 Blatten: buntes Blatt · 8 Füri: Tannenzapfen · 1 Alpweiden: Alpenblume
-//  9 Schwarzsee: bunter Seestein · 4 Hörnliweg: wilde Beeren · 0 Gletscher: Eiskristall
-//  10 Hörnligrat: Bergkristall · 5 Matterhorn: goldener Gipfelstern
-// Alle schweben über der Spur, drehen sich und haben einen weichen Leuchtring – so unterscheiden sie sich von Münzen.
+//  3 Zermatt: Wanderkarte · 6 Blatten: Walliser Roggenbrot · 8 Füri: Waldnüsse · 1 Alpweiden: Blume
+//  9 Schwarzsee: Frosch · 4 Hörnliweg: Wanderstock · 0 Gletscher: Eispickel · 10 Hörnligrat: Stirnlampe
+//  5 Matterhorn: Gipfelfahne (Schweizer Flagge)
+// Alle schweben über der Spur, drehen sich und haben einen weichen Leuchtring (wie der Fisch in Level 3).
 export function createTokens(r){
  const a=r.add,push=r.push,pop=r.pop,PI=Math.PI;
  const glow=c=>a('ring',0,.06,0,.8,.8,.05,[...c,49],PI/2);
- const leafColors=[[.95,.45,.1],[.85,.18,.12],[.98,.75,.15],[.75,.32,.12]];
- const stoneColors=[[.2,.68,.7],[.55,.35,.75],[.85,.4,.45],[.3,.55,.85]];
- function goldCoin(id){a('cylinder',0,0,0,.36,.09,.36,[1,.78,.22],PI/2);for(const s of[-1,1]){a('ring',0,0,s*.05,.33,.33,.06,[1,.9,.5,9]);star(.14,s*.052,[1,.95,.6]);}}
- function star(size,z,c){for(let k=0;k<5;k++){const t=k*PI*2/5;a('box',Math.sin(t)*size*.45,Math.cos(t)*size*.45,z,size*.32,size*.95,.03,c,0,0,-t);}}
- function leaf(id){const c=leafColors[Math.abs(id)%4];a('sphere',0,0,0,.34,.03,.2,c,0,0,.3);a('sphere',.05,0,.02,.26,.035,.12,c.map(v=>v*.85),0,.5,.3);a('cylinder',0,0,0,.02,.62,.02,[.45,.3,.15],PI/2,0,.3+PI/2);for(const s of[-1,1])a('cylinder',s*.1,0,.03,.012,.22,.012,c.map(v=>v*.7),PI/2,0,s*.9);}
- function pinecone(){for(let j=0;j<6;j++){const y=-.24+j*.1,w=.2-Math.abs(j-2.2)*.035;for(let k=0;k<6;k++){const t=k*PI/3+j*.5;a('sphere',Math.cos(t)*w*.7,y,Math.sin(t)*w*.7,w*.55,.07,w*.55,j%2?[.5,.32,.17]:[.42,.26,.13],Math.sin(t)*.6,0,-Math.cos(t)*.6);}}a('cylinder',0,.36,0,.03,.1,.03,[.35,.24,.12]);}
+ const wood=[.55,.38,.22],woodDark=[.36,.24,.13],metal=[.72,.74,.78],metalDark=[.38,.4,.44],red=[.86,.1,.12],white=[1,1,1];
+ // 01 Wanderkarte: dreifach gefaltet, Papier mit Wald, See und roter Wanderroute.
+ function trailMap(){for(let k=-1;k<=1;k++){push(k*.2,0,0,0,0,k*.32);a('box',0,0,0,.2,.32,.02,[.96,.93,.82]);a('box',.02,.06,.012,.12,.1,.005,[.45,.68,.38]);a('box',-.04,-.08,.012,.1,.07,.005,[.45,.7,.9]);pop();}
+  for(let k=0;k<5;k++)a('box',-.28+k*.14,-.02+Math.sin(k*1.7)*.07,.03,.12,.025,.006,[.85,.15,.12],0,0,Math.sin(k*2.1)*.6);a('box',0,.2,.02,.56,.05,.01,[.25,.45,.3]);}
+ // 02 Walliser Roggenbrot: dunkler, runder, flacher Laib mit hellen Rissen und Mehl.
+ function ryeBread(){a('sphere',0,0,0,.36,.2,.36,[.42,.26,.14]);a('sphere',0,.06,0,.3,.14,.3,[.5,.32,.17]);
+  for(let k=0;k<5;k++){const t=k*PI*2/5;a('box',Math.cos(t)*.16,.17,Math.sin(t)*.16,.16,.02,.03,[.78,.62,.42],0,-t);}for(let k=0;k<6;k++)a('sphere',Math.cos(k*2.3)*.2,.15,Math.sin(k*1.9)*.2,.04,.01,.04,[.95,.93,.88]);}
+ // 04 Waldnüsse: Haselnüsse mit grüner Hülle und eine Baumnuss an einem Zweig.
+ function forestNuts(){a('cylinder',0,.18,0,.025,.5,.025,woodDark,0,0,1.2);
+  for(const [x,y,z] of[[-.14,0,0],[.06,-.04,.1],[.12,.04,-.08]]){a('sphere',x,y,z,.11,.12,.11,[.62,.38,.18]);a('sphere',x,y+.06,z,.1,.05,.1,[.8,.62,.4]);for(let k=0;k<4;k++)a('sphere',x+Math.cos(k*1.6)*.08,y+.1,z+Math.sin(k*1.6)*.08,.07,.03,.05,[.45,.65,.25],0,k*1.6);}
+  a('sphere',-.02,-.16,-.1,.13,.12,.13,[.55,.42,.28]);for(let k=0;k<4;k++)a('box',-.02,-.16,-.1,.27,.02,.02,[.42,.3,.18],0,k*.8);
+  for(const s of[-1,1])a('sphere',s*.24,.22,.02,.16,.02,.08,[.35,.6,.22],0,s*.4,s*.3);}
+ // 05 Blume (Alpenblume mit Stiel und Blatt).
  function alpineFlower(id){const c=[[.98,.98,.95],[.95,.55,.75],[.55,.5,.95],[1,.85,.25]][Math.abs(id)%4];for(let k=0;k<8;k++){const t=k*PI/4;a('sphere',Math.cos(t)*.22,0,Math.sin(t)*.22,.15,.04,.08,c,0,-t);}a('sphere',0,.03,0,.1,.08,.1,[1,.75,.15]);a('cylinder',0,-.4,0,.025,.7,.025,[.3,.55,.22]);a('sphere',.1,-.45,0,.12,.03,.05,[.35,.6,.25],0,0,.5);}
- function seaStone(id){const c=stoneColors[Math.abs(id)%4];a('sphere',0,0,0,.3,.2,.24,c);a('sphere',-.06,.07,-.05,.12,.06,.09,c.map(v=>Math.min(1,v*1.5)));a('sphere',.08,-.02,.1,.05,.03,.04,[1,1,1,49]);}
- function berries(){const c=[[.75,.08,.15],[.85,.12,.2],[.32,.12,.45]];for(let k=0;k<7;k++){const t=k*1.9,rr=k?.13:0;a('sphere',Math.cos(t)*rr,Math.sin(k*2.3)*.06+(k?0:.04),Math.sin(t)*rr,.1,.1,.1,c[k%3]);}for(const s of[-1,1])a('sphere',s*.2,.12,0,.16,.025,.08,[.3,.55,.22],0,s*.6,s*.4);a('cylinder',0,.16,0,.015,.14,.015,[.4,.3,.15]);}
- function iceCrystal(){a('cone',0,.2,0,.16,.36,.16,[.75,.92,1,49]);a('cone',0,-.2,0,.16,.36,.16,[.75,.92,1,49],PI);for(const s of[-1,1])a('cone',s*.2,0,0,.07,.2,.07,[.85,.96,1,49],0,0,-s*PI/2);a('sphere',0,0,0,.06,.06,.06,[1,1,1,9]);}
- function rockCrystal(){const pts=[[0,0,.12,.5,0],[.13,-.06,.08,.34,.4],[-.12,-.06,.08,.3,-.35],[.04,-.08,.07,.26,.15]];for(const [x,y,w,h,tilt] of pts){a('cylinder',x,y,0,w,h*.6,w,[.88,.9,.95,49],0,0,tilt);a('cone',x-Math.sin(tilt)*h*.42,y+Math.cos(tilt)*h*.42,0,w,h*.28,w,[.95,.97,1,49],0,0,tilt);}a('rock',0,-.24,0,.3,.1,.22,[.45,.43,.42]);}
- function summitStar(){star(.55,0,[1,.82,.2]);star(.42,.02,[1,.95,.55]);a('sphere',0,0,0,.08,.08,.05,[1,1,.85,9]);}
- // zone = Biome des Objekts; Rückgabe false, wenn diese Zone kein eigenes Token hat.
+ // 06 Frosch zum Einsammeln: klein und freundlich, auf einem Seerosenblatt (die grossen Frösche mit Zunge sitzen im Wasser).
+ function smallFrog(){a('cylinder',0,-.2,0,.38,.02,.38,[.25,.6,.25]);a('sphere',0,-.06,0,.24,.16,.26,[.35,.8,.3]);a('sphere',0,-.1,.08,.2,.1,.2,[.95,.92,.6]);
+  for(const s of[-1,1]){a('sphere',s*.11,.08,.12,.08,.08,.08,[.35,.8,.3]);a('sphere',s*.12,.1,.18,.05,.05,.04,white);a('sphere',s*.12,.1,.21,.025,.03,.02,[.05,.05,.05]);a('sphere',s*.2,-.16,-.1,.1,.06,.14,[.25,.6,.2]);}
+  a('box',0,-.02,.24,.16,.015,.02,[.18,.45,.15]);}
+ // 07 Wanderstock: Holzstock mit Lederschlaufe, Griff und Metallspitze.
+ function walkingStick(){push(0,0,0,0,0,.35);a('cylinder',0,0,0,.035,1.15,.035,wood);a('cylinder',0,.5,0,.05,.18,.05,woodDark);a('ring',0,.58,.04,.08,.12,.02,[.6,.3,.15],0,0,.2);
+  a('cone',0,-.62,0,.03,.1,.03,metal,PI);for(let k=0;k<3;k++)a('box',0,-.25+k*.25,.035,.04,.015,.005,woodDark);pop();}
+ // 08 Eispickel: Schaft, Metallkopf mit Haue und Schaufel, Handschlaufe.
+ function iceAxe(){push(0,0,0,0,0,.3);a('cylinder',0,-.05,0,.035,1,.035,[.2,.35,.7]);a('cone',0,-.6,0,.035,.12,.035,metal,PI);
+  a('box',0,.47,0,.62,.08,.06,metal);a('box',-.3,.43,0,.12,.06,.05,metalDark,0,0,-.4);a('box',.28,.47,0,.14,.04,.16,metal);a('ring',0,.1,.04,.07,.14,.02,[.95,.6,.1]);pop();}
+ // 09 Stirnlampe: Kopfband, Lampengehäuse und leuchtendes Licht.
+ function headlamp(){a('ring',0,0,0,.24,.24,.07,[.9,.3,.1]);a('ring',0,0,0,.21,.21,.05,[.15,.15,.18]);
+  a('box',0,0,.24,.18,.13,.1,[.2,.2,.24]);a('cylinder',0,0,.3,.06,.03,.06,[1,.98,.75,9],PI/2);a('cone',0,0,.55,.18,.45,.18,[1,.97,.7,49],-PI/2);}
+ // 10 Gipfelfahne: Schweizer Flagge (rotes Quadrat, weisses Kreuz) an einem Stock, weht im Wind.
+ function summitFlag(time){a('cylinder',-.28,-.1,0,.025,.95,.025,[.85,.85,.88]);a('sphere',-.28,.38,0,.04,.04,.04,[1,.8,.3,9]);
+  push(.02,.18,0,0,Math.sin(time*5)*.12,0);a('box',0,0,0,.56,.56,.03,red);a('box',0,0,.018,.34,.1,.01,white);a('box',0,0,.018,.1,.34,.01,white);a('box',0,0,-.018,.34,.1,.01,white);a('box',0,0,-.018,.1,.34,.01,white);pop();}
+ // Nur der Gegenstand (ohne Leuchtring/Schweben) – auch für den Flug in den Rucksack.
+ function item(zone,time,id){if(zone===3)trailMap();else if(zone===6)ryeBread();else if(zone===8)forestNuts();else if(zone===1)alpineFlower(id);else if(zone===9)smallFrog();
+  else if(zone===4)walkingStick();else if(zone===0)iceAxe();else if(zone===10)headlamp();else summitFlag(time);}
  function token(zone,time,id){
   const bob=1.1+Math.sin(time*3+id)*.1,spin=time*1.8+id;
-  glow(zone===0||zone===10?[.6,.85,1]:zone===9?[.4,.9,.85]:zone===4?[1,.45,.5]:zone===6?[1,.6,.25]:zone===8?[.8,.6,.35]:zone===1?[1,.85,.95]:[1,.85,.35]);
-  push(0,bob,0,0,spin,0,1.5);
-  if(zone===3)goldCoin(id);else if(zone===6)leaf(id);else if(zone===8)pinecone();else if(zone===1)alpineFlower(id);else if(zone===9)seaStone(id);
-  else if(zone===4)berries();else if(zone===0)iceCrystal();else if(zone===10)rockCrystal();else summitStar();
-  pop();
+  glow(zone===0||zone===10?[.6,.85,1]:zone===9?[.45,.95,.5]:zone===4?[.9,.7,.4]:zone===6?[1,.7,.35]:zone===8?[.8,.6,.35]:zone===1?[1,.85,.95]:zone===5?[1,.4,.4]:[1,.85,.35]);
+  push(0,bob,0,0,spin,0,1.5);item(zone,time,id);pop();
  }
  // Bergladen über dem Weg: Hornox läuft durch das offene Tor hinein (dann öffnet sich der Laden) und hinten wieder hinaus.
  // Lokales System: Eingang bei z=0, Laufrichtung +z. Hohe, offene Halle (Dach erst ab 6,8 m), damit die Kamera
@@ -63,5 +80,5 @@ export function createTokens(r){
   // Blumenkästen und Fässer vor dem Eingang
   for(const s of[-1,1]){a('cylinder',s*6.9,.5,.4,.42,1,.42,wood);a('cylinder',s*6.9,.5,.4,.44,.08,.44,dark);a('box',s*6.9,1.12,1.4,.9,.3,.35,dark);for(let k=0;k<3;k++)a('sphere',s*6.9-.3+k*.3,1.35,1.4,.14,.14,.14,k%2?[.9,.2,.3]:[1,.85,.3]);}
  }
- return{token,shop};
+ return{token,item,shop};
 }

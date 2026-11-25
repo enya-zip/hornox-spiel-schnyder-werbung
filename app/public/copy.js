@@ -1450,3 +1450,14 @@ Object.assign(copy.zh,{"mountain":"Hörnliweg（霍恩利小径）","ridge":"Hö
  "summitIntro":"🏔️ 峰顶山坡：跳过岩阶，在固定绳下蹲下，小心落石。","summitNarrowL":"⚠️ 雪脊 – 左边是深渊！","summitNarrowR":"⚠️ 雪脊 – 右边是深渊！","summitFinal":"🏁 跑向山顶十字架！","summitReached":"🎉 登顶成功 – 4478 米！",
  "seracBump":"被冰塔砸中 – 躲开冰塔！","ropeTeamBump":"撞上了结组队伍 – 换道！","snowBridgeBump":"雪桥塌了 – 跳！","fixRopeBump":"被固定绳挂住 – 蹲下！","rockStepBump":"被岩阶绊倒 – 跳！",
  "climbReadyAria":"穿上攀登装备（E键）","climbActiveAria":"攀登装备生效中，还剩{n}秒"});
+// Neue Level-Sammelobjekte und Frösche im Schwarzsee (statt Krokodilen).
+Object.assign(copy.de,{"itemName3":"Wanderkarten","itemName6":"Walliser Roggenbrote","itemName7":"Fische","itemName8":"Waldnüsse","itemName1":"Blumen","itemName9":"Frösche","itemName4":"Wanderstöcke","itemName0":"Eispickel","itemName10":"Stirnlampen","itemName5":"Gipfelfahnen",
+ "swampStart":"🌾 Sumpfgebiet: Spring von Balken zu Stein – im Wasser sitzen Frösche: Weiche ihren Zungen aus! 🐸"});
+Object.assign(copy.en,{"itemName3":"hiking maps","itemName6":"Valais rye breads","itemName7":"fish","itemName8":"forest nuts","itemName1":"flowers","itemName9":"frogs","itemName4":"walking sticks","itemName0":"ice axes","itemName10":"headlamps","itemName5":"summit flags",
+ "swampStart":"🌾 Swamp: jump from beam to stone – frogs sit in the water: dodge their tongues! 🐸"});
+Object.assign(copy.fr,{"itemName3":"cartes de randonnée","itemName6":"pains de seigle valaisans","itemName7":"poissons","itemName8":"noix des bois","itemName1":"fleurs","itemName9":"grenouilles","itemName4":"bâtons de marche","itemName0":"piolets","itemName10":"lampes frontales","itemName5":"drapeaux du sommet",
+ "swampStart":"🌾 Marais : saute de poutre en pierre – des grenouilles sont dans l'eau : évite leur langue ! 🐸"});
+Object.assign(copy.ja,{"itemName3":"登山地図","itemName6":"ヴァレーのライ麦パン","itemName7":"魚","itemName8":"森の木の実","itemName1":"花","itemName9":"カエル","itemName4":"登山杖","itemName0":"ピッケル","itemName10":"ヘッドランプ","itemName5":"山頂の旗",
+ "swampStart":"🌾 湿地：丸太から石へ跳ぼう – 水の中のカエルの舌をよけよう！🐸"});
+Object.assign(copy.zh,{"itemName3":"徒步地图","itemName6":"瓦莱黑麦面包","itemName7":"鱼","itemName8":"林中坚果","itemName1":"花朵","itemName9":"青蛙","itemName4":"登山杖","itemName0":"冰镐","itemName10":"头灯","itemName5":"山顶旗帜",
+ "swampStart":"🌾 沼泽：从木梁跳到石头上 – 水里有青蛙，躲开它们的舌头！🐸"});
